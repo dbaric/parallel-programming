@@ -11,7 +11,7 @@ static class Zadatak3_Lambda
     public static void Pokreni()
     {
         Calc3 kvadrat = x => x * x;
-        Console.WriteLine($"kvadrat(7) = {kvadrat(7)}");
+        Console.WriteLine($"kvadrat(7) = {kvadrat(7)}");   // kvadrat(7) = 49
 
         Calc3 zbroji = x =>
         {
@@ -19,13 +19,20 @@ static class Zadatak3_Lambda
             for (int i = 1; i <= x; i++) s += i;
             return s;
         };
-        Console.WriteLine($"zbroj 1..10 = {zbroji(10)}");
+        Console.WriteLine($"zbroj 1..10 = {zbroji(10)}");   // zbroj 1..10 = 55
 
         // Lambda "hvata" varijable iz okoline (closure).
         int faktor = 3;
         Calc3 puta = x => x * faktor;
-        Console.WriteLine($"puta(5), faktor = 3: {puta(5)}");
+        Console.WriteLine($"puta(5), faktor = 3: {puta(5)}");   // puta(5), faktor = 3: 15
         faktor = 10;
-        Console.WriteLine($"puta(5), faktor = 10: {puta(5)}");   // zašto je rezultat drukčiji?
+        Console.WriteLine($"puta(5), faktor = 10: {puta(5)}");   // puta(5), faktor = 10: 50, zašto je rezultat drukčiji?
+        // Lambda pamti varijablu faktor a ne njezinu vrijednost
+
+        Calc3 abs = x => x < 0 ? -x : x;
+        Console.WriteLine($"abs(-8) = {abs(-8)}");   // abs(-8) = 8
+
+        Action vrijeme = () => Console.WriteLine($"Trenutno vrijeme: {DateTime.Now:HH:mm:ss}");   // Trenutno vrijeme: 16:26:51
+        vrijeme();
     }
 }

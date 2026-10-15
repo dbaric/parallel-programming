@@ -1,1 +1,8 @@
 .DS_Store
+
+# .NET
+bin/
+obj/
+*.user
+.vs/
+.idea/

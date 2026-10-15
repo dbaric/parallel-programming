@@ -12,6 +12,13 @@ class Stog<T>
 
     public void Stavi(T x) => elementi.Add(x);
 
+    public void ZaSvaki(Action<T> akcija)
+    {
+        for (int i = elementi.Count - 1; i >= 0; i--) akcija(elementi[i]);
+    }
+
+    public int Broji(Predicate<T> uvjet) => elementi.Count(x => uvjet(x));
+
     public T Skini()
     {
         if (elementi.Count == 0) throw new InvalidOperationException("Stog je prazan.");
@@ -27,10 +34,13 @@ static class Zadatak5_GenerickaKlasa
     {
         var brojevi = new Stog<int>();
         for (int i = 1; i <= 5; i++) brojevi.Stavi(i * 10);
-        Console.WriteLine($"Skinuto: {brojevi.Skini()}, veličina: {brojevi.Velicina}");
+        Console.WriteLine($"Skinuto: {brojevi.Skini()}, veličina: {brojevi.Velicina}");   // Skinuto: 50, veličina: 4
 
         var rijeci = new Stog<string>();
         rijeci.Stavi("paralelno");
         rijeci.Stavi("programiranje");
+        rijeci.ZaSvaki(Console.WriteLine);   // programiranje / paralelno
+
+        Console.WriteLine($"Brojeva većih od 20: {brojevi.Broji(x => x > 20)}");   // Brojeva većih od 20: 2
     }
 }
