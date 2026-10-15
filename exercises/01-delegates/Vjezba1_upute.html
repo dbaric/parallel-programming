@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vježba 1: delegati i lambda izrazi</title>
+<link rel="stylesheet" href="stil.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Vježba 1: delegati i lambda izrazi u C#</h1>
+  <p class="lead">Paralelno programiranje, tjedan 1. Nakon vježbe znate predati funkciju kao argument, što je preduvjet za <code>Task.Run</code> i <code>Parallel.For</code> u idućim tjednima.</p>
+
+  <h2>Priprema</h2>
+  <div class="card">
+    <ul class="tight">
+      <li>Instalirajte <b>.NET 10 SDK</b> s <a href="https://dotnet.microsoft.com/en-us/download">dotnet.microsoft.com/en-us/download</a>. Provjera u terminalu: <code>dotnet --list-sdks</code> mora ispisati verziju 10.x.</li>
+      <li>Visual Studio 2026 ili JetBrains Rider: otvorite <code>Vjezba1.sln</code>. Visual Studio Code (uz proširenje C# Dev Kit): File &gt; Open Folder, ova mapa, konfiguracija »Vježba 1: zadatak N«. Naredbeni redak: <code>dotnet run</code> u mapi zadatka.</li>
+      <li>Ako imate samo Visual Studio 2022, u <code>Directory.Build.props</code> (i u <code>.vscode/launch.json</code>) promijenite <code>net10.0</code> u <code>net8.0</code>; zadaci rade jednako.</li>
+      <li>Svaki zadatak je zaseban projekt (mapa <code>ZadatakN_*</code> s datotekom <code>ZadatakN_*.cs</code>) i pokreće se samostalno: u Visual Studiju desni klik na projekt &gt; Set as Startup Project, u Rideru odaberite projekt u popisu konfiguracija. Što treba napraviti, opisano je u nastavku, pod svakim zadatkom.</li>
+    </ul>
+  </div>
+
+  <p class="muted">Za zadatak 5 pogledajte i odjeljak o generičkoj klasi <code>Stog&lt;T&gt;</code> u <a href="Vizualizacije/delegati.html">delegati.html</a> (mapa »Vizualizacije«).</p>
+  <h2>Zadaci</h2>
+  <div class="card">
+    <h3>Zadatak 1: delegati <span class="pill">Zadatak1_Delegati.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: delegat Calc(int x) te metode Oduzmi i Pomnozi (konstanta n = 50).</p><b>Što trebate napraviti:</b><ol class="tight"><li>Dodajte metodu Podijeli koja vraća x / n i pozovite je kroz delegat.</li><li>Napravite jedan delegat koji pri pozivu izvršava i Oduzmi i Pomnozi te ga pozovite s 100.</li><li>Ispišite oboje.GetInvocationList().Length. Koju vrijednost vraća poziv i zašto?</li></ol>
+    <div class="out"><b>Primjer ispisa</b><pre>Oduzmi(100)  = 50
+Pomnozi(100) = 5000
+Podijeli(100) = 2
+oboje(100) = 5000
+Broj metoda u listi poziva: 2</pre></div>
+  </div>
+  <div class="card">
+    <h3>Zadatak 2: univerzalna funkcija <span class="pill">Zadatak2_UniverzalnaFunkcija.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: delegat Uvjet, funkcija Ispisi(niz, uvjet) te uvjeti JeParan i JeVeciOdDeset.</p><b>Što trebate napraviti:</b><ol class="tight"><li>Napišite uvjet JeDjeljivSTri i pozovite Ispisi s njim.</li><li>Promijenite Ispisi tako da vrati broj ispisanih elemenata, pa taj broj ispišite.</li></ol>
+    <div class="out"><b>Primjer ispisa</b><pre>Parni: 8 12 20 4
+Veći od 10: 12 15 20
+Djeljivi s 3: 3 12 15
+Ispisano elemenata: 3</pre></div>
+  </div>
+  <div class="card">
+    <h3>Zadatak 3: lambda izrazi <span class="pill">Zadatak3_Lambda.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: lambde kvadrat i zbroji te primjer s closureom (varijabla faktor).</p><b>Što trebate napraviti:</b><ol class="tight"><li>Pokrenite program. Zašto prvi poziv puta(5) daje 15, a drugi 50?</li><li>Napišite lambdu za apsolutnu vrijednost bez Math.Abs i ispišite abs(-8).</li><li>Napišite lambdu bez parametara koja ispisuje trenutno vrijeme i pozovite je (treba vam Action, vidi zadatak 4).</li></ol>
+    <div class="out"><b>Primjer ispisa</b><pre>kvadrat(7) = 49
+zbroj 1..10 = 55
+puta(5), faktor = 3: 15
+puta(5), faktor = 10: 50
+abs(-8) = 8
+Trenutno vrijeme: 17:56:03</pre></div>
+  </div>
+  <div class="card">
+    <h3>Zadatak 4: generički delegati <span class="pill">Zadatak4_GenerickiDelegati.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: primjeri s Func, Action i Predicate te niz { 5, -2, 9, 0, -7, 4 }.</p><b>Što trebate napraviti:</b><ol class="tight"><li>Napišite lambdu tipa Func&lt;double, double, double&gt; koja računa hipotenuzu pravokutnog trokuta s katetama a i b (Math.Sqrt) te je pozovite s 3 i 4.</li><li>Pomoću Array.FindAll i Predicate&lt;int&gt; pronađite parne brojeve niza i ispišite ih.</li><li>Napišite lambdu tipa Action&lt;int[]&gt; (prima niz cijelih brojeva, ne vraća ništa) koja ispisuje sve elemente niza odvojene razmakom u jednom retku. Spremite je u varijablu i pozovite s nizom iz zadatka.</li></ol>
+    <div class="out"><b>Primjer ispisa</b><pre>Hipotenuza(3, 4) = 5
+Parni: -2, 0, 4
+5 -2 9 0 -7 4</pre></div>
+  </div>
+  <div class="card">
+    <h3>Zadatak 5: generička klasa <span class="pill">Zadatak5_GenerickaKlasa.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: klasa Stog&lt;T&gt; s metodama Stavi, Skini i svojstvom Velicina.</p><b>Što trebate napraviti:</b><ol class="tight"><li>Dodajte metodu ZaSvaki(Action&lt;T&gt;) koja za svaki element (od vrha prema dnu) poziva akciju.</li><li>Dodajte metodu Broji(Predicate&lt;T&gt;) koja vraća broj elemenata koji zadovoljavaju uvjet.</li><li>Na stogu riječi ispišite elemente s ZaSvaki, a na stogu brojeva (nakon Skini) prebrojite one veće od 20.</li></ol>
+    <div class="out"><b>Primjer ispisa</b><pre>Skinuto: 50, veličina: 4
+programiranje
+paralelno
+Brojeva većih od 20: 2</pre></div>
+  </div>
+
+  <h2>Predaja</h2>
+  <p>Vježba se evidentira prisustvom (najmanje 70 % termina vježbi). Ocjenjuju se dvije domaće zadaće, o kojima će biti riječi kasnije.</p>
+  <footer>Interaktivni prikazi uz ovu vježbu: <a href="Vizualizacije/delegati.html">delegati.html</a> u mapi »Vizualizacije«.</footer>
+
+  </div>
+</body>
+</html>

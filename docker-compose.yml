@@ -1,0 +1,22 @@
+services:
+  dotnet:
+    build: .
+    image: pp-dotnet10
+    working_dir: /workspace
+    volumes:
+      # mount the whole repo so every exercise is available
+      - .:/workspace
+      - nuget-cache:/root/.nuget/packages
+    stdin_open: true
+    tty: true
+
+  web:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      # static HTML (instructions, visualizations) from all exercises
+      - ./exercises:/usr/share/nginx/html:ro
+
+volumes:
+  nuget-cache:

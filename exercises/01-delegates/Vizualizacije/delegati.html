@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Delegati i lambda izrazi</title>
+<link rel="stylesheet" href="stil.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Delegati i lambda izrazi</h1>
+  <p class="lead">Delegat je tip koji opisuje potpis metode; varijabla tipa delegata čuva <b>listu metoda</b> koje se pozivaju redom. Zato se metoda može predati drugoj metodi (kao što <code>Task.Run</code> prima posao koji treba izvršiti). Ovdje se vidi što se događa s listom poziva i s rezultatom.</p>
+
+  <h2>1. Lista poziva (multicast)</h2>
+  <div class="expl">
+    <b class="t">Što vidite</b>
+    <p>Delegat <code>Calc</code> pokazuje na jednu ili više metoda koje primaju <code>int</code> i vraćaju <code>int</code>. Gumbi <code>+=</code> dodaju metodu na kraj liste poziva. Gumbi <code>−=</code> uklanjaju <b>zadnju pojavu</b> te metode, a ako je u listi nema, ništa se ne mijenja. Pri pozivu delegata izvršavaju se sve metode u listi, redom, sve s istim x. Iznad liste je naredba u C#-u koja je napravila zadnju promjenu.</p>
+    <b class="t">Što učiniti</b>
+    <ul>
+      <li>Lista počinje s Oduzmi (<code>Calc racun = Oduzmi;</code>). Dodajte Pomnozi i promatrajte koju vrijednost delegat vraća.</li>
+      <li>Dodajte još jednom Oduzmi pa kliknite »−= Oduzmi«: uklanja se zadnja pojava. Zatim »−= Pomnozi« ukloni metodu iz sredine liste. Isprobajte i »−=« za metodu koje nema u listi.</li>
+      <li>Kliknite »racun = null« ili uklonite sve metode: lista je prazna, a delegat <code>null</code>.</li>
+      <li>Upišite x = 100000000: Pomnozi prelije raspon tipa <code>int</code>, kao u C#-u.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <p class="mono" style="margin:0 0 10px">delegate int Calc(int x);  &nbsp; const int n = 50;</p>
+    <div class="row">
+      <label>Ulaz x: <input type="text" id="x" value="100" style="min-width:70px;width:80px"></label>
+      <button id="aSub">+= Oduzmi</button>
+      <button id="aMul">+= Pomnozi</button>
+      <button id="aDiv">+= Podijeli</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button id="rSub">−= Oduzmi</button>
+      <button id="rMul">−= Pomnozi</button>
+      <button id="rDiv">−= Podijeli</button>
+      <button id="clr">racun = null</button>
+    </div>
+    <p class="mono" id="op" style="margin:12px 0 0"></p>
+    <div style="margin-top:8px"><b>Lista poziva:</b> <span id="lst"></span> <span class="muted" id="len" style="font-size:13px"></span></div>
+    <p class="muted" style="font-size:13px;margin:6px 0 0">Brojevi se računaju kao <code>int</code> u C#-u: rezultat izvan raspona se prelije, a dijeljenje odbacuje decimale.</p>
+    <div class="log" id="out" style="max-height:170px"></div>
+    <div class="row" style="margin-top:10px"><div class="kpi"><small>Vrijednost koju vraća poziv delegata</small><span class="big" id="ret">–</span></div></div>
+  </div>
+  <div class="prob"><b>Problem:</b> pri pozivu se izvrše sve metode u listi, ali delegat vraća samo rezultat <b>zadnje</b>; ostali se tiho odbacuju. Prazan delegat je <code>null</code> i njegov poziv baca <code>NullReferenceException</code>. Kod taskova je to bitno: ako jedan od poslova koje ste predali ne uspije ili njegov rezultat nestane, to često nećete odmah primijetiti.</div>
+  <div class="sol"><b>Rješenje:</b> kad su potrebni svi rezultati, prođite listom ručno (<code>GetInvocationList()</code>), a prazan delegat štitite s <code>?.Invoke(x)</code>.</div>
+
+  <h2>2. Univerzalna funkcija s uvjetom</h2>
+  <div class="expl">
+    <b class="t">Što vidite</b>
+    <p>Jedna funkcija <code>Ispisi</code> obrađuje niz, a <i>što</i> ispisuje određuje delegat <code>Uvjet</code> koji joj predate. Zeleni elementi zadovoljavaju uvjet, ostali se preskaču.</p>
+    <b class="t">Što učiniti</b>
+    <p>Promijenite niz i uvjet. Primijetite da se funkcija nije mijenjala, samo ponašanje koje joj predajete. Isti obrazac koristi <code>Task.Run(posao)</code>: biblioteka zna <i>kako</i> izvesti posao, a vi joj kažete <i>koji</i>.</p>
+  </div>
+  <div class="card">
+    <p class="mono" style="margin:0 0 10px">static void Ispisi(int[] niz, Uvjet uvjet)</p>
+    <div class="row">
+      <label>Niz: <input type="text" id="niz" value="3, 8, 12, 15, 20, 7, 4"></label>
+      <label>Uvjet: <select id="uv">
+        <option value="x % 2 == 0">paran: x % 2 == 0</option>
+        <option value="x > 10">x &gt; 10</option>
+        <option value="x % 3 == 0">djeljiv s 3</option>
+        <option value="x < 8">x &lt; 8</option>
+      </select></label>
+    </div>
+    <div class="cells" id="cells" style="margin-top:12px"></div>
+    <p class="mono" id="res" style="margin:10px 0 0"></p>
+  </div>
+
+  <h2>3. Lambda i closure</h2>
+  <div class="expl">
+    <b class="t">Što vidite</b>
+    <p>Lambda <code>x =&gt; x * faktor</code> koristi varijablu <code>faktor</code> koja je izvan nje. Kliknite »Pozovi« pa promijenite klizač i ponovno pozovite.</p>
+    <b class="t">Što učiniti</b>
+    <p>Postavite faktor, pozovite, promijenite faktor i pozovite opet. Isti poziv daje drukčiji rezultat jer lambda čita <i>trenutnu</i> vrijednost varijable.</p>
+  </div>
+  <div class="card">
+    <p class="mono" style="margin:0 0 10px">int faktor = <b id="fv"></b>;  Calc3 puta = x =&gt; x * faktor;</p>
+    <div class="row">
+      <label>faktor: <input type="range" id="f" min="1" max="10" value="3"></label>
+      <button id="callp" class="primary">Pozovi puta(5)</button>
+      <button id="snap">Usporedi s kopijom vrijednosti</button>
+    </div>
+    <div class="log" id="clog" style="max-height:140px"></div>
+  </div>
+  <div class="prob"><b>Problem:</b> lambda ne kopira <code>faktor</code> nego čuva referencu na varijablu. Ako je mijenja netko drugi (petlja, druga nit), lambda vidi promjenu. Kod taskova to znači da rezultat ovisi o tome <i>kada</i> se task pokrene, što ne kontrolirate. Pogledajte stranicu <a href="../../Tjedan%2002%20-%20Taskovi%20i%20zamke/Vizualizacije/zamke.html">»Zamke«</a> (tjedan 2, odjeljak 1) gdje se to događa u petlji.</div>
+  <div class="sol"><b>Rješenje:</b> ako vam treba vrijednost u trenutku stvaranja lambde, spremite je u lokalnu varijablu i nju koristite u lambdi.</div>
+  <h2>4. Koji ugrađeni delegat trebam?</h2>
+  <div class="expl">
+    <b class="t">Što vidite</b>
+    <p>Umjesto vlastitog <code>delegate</code> tipa koristimo ugrađene: <code>Action</code> (ne vraća ništa), <code>Func</code> (vraća vrijednost, zadnji tip u zagradi je povratni) i <code>Predicate</code> (vraća <code>bool</code>). Birate koliko parametara metoda ima i što vraća, a stranica pokazuje odgovarajući tip.</p>
+    <b class="t">Što učiniti</b>
+    <p>Postavite 1 parametar i povratni tip bool: dobit ćete <code>Predicate&lt;int&gt;</code>. Postavite 0 parametara i bez povratne vrijednosti: obični <code>Action</code>.</p>
+  </div>
+  <div class="card">
+    <div class="row">
+      <label>Parametara: <select id="np"><option>0</option><option selected>1</option><option>2</option><option>3</option></select></label>
+      <label>Vraća: <select id="rt"><option value="">ništa (void)</option><option value="bool" selected>bool</option><option value="int">int</option><option value="string">string</option></select></label>
+    </div>
+    <p class="mono" id="dt1" style="margin:12px 0 4px"></p>
+    <p class="mono muted" id="dt2" style="margin:0"></p>
+    <table style="margin-top:10px"><tr><th>Tip</th><th>Vraća</th><th>Primjer iz vježbe</th></tr>
+      <tr><td><code>Action&lt;...&gt;</code></td><td>ništa</td><td><code>Action&lt;string&gt; pozdrav = ime =&gt; Console.WriteLine(ime);</code></td></tr>
+      <tr><td><code>Func&lt;..., R&gt;</code></td><td>R</td><td><code>Func&lt;int, int, int&gt; zbroj = (a, b) =&gt; a + b;</code></td></tr>
+      <tr><td><code>Predicate&lt;T&gt;</code></td><td>bool</td><td><code>Predicate&lt;int&gt; pozitivan = x =&gt; x &gt; 0;</code></td></tr></table>
+  </div>
+
+  <h2>5. Generička klasa Stog&lt;T&gt;</h2>
+  <div class="expl">
+    <b class="t">Što vidite</b>
+    <p>Stog je struktura u kojoj se zadnji stavljeni element prvi skida. <code>ZaSvaki(Action&lt;T&gt;)</code> prolazi elementima od vrha prema dnu i za svaki poziva zadanu akciju. <code>Broji(Predicate&lt;T&gt;)</code> broji elemente koji zadovoljavaju uvjet. Zadaću metode (što raditi s elementom) dajemo kao delegat, pa jedna klasa služi za mnogo namjena.</p>
+    <b class="t">Što učiniti</b>
+    <p>Stavite nekoliko brojeva, promijenite uvjet i pozovite <code>Broji</code>. Pozovite <code>ZaSvaki</code> i pratite redoslijed.</p>
+  </div>
+  <div class="card">
+    <div class="row">
+      <label>Vrijednost: <input type="text" id="sv" value="30" style="min-width:70px;width:80px"></label>
+      <button id="push" class="primary">Stavi</button>
+      <button id="pop">Skini</button>
+      <label>Uvjet: <select id="sp"><option value="x > 20">x &gt; 20</option><option value="x % 2 == 0">paran</option><option value="x < 10">x &lt; 10</option></select></label>
+      <button id="cnt">Broji</button>
+      <button id="each">ZaSvaki (ispis)</button>
+    </div>
+    <div style="display:flex;gap:18px;margin-top:12px;align-items:flex-end;flex-wrap:wrap">
+      <div id="stack" style="display:flex;flex-direction:column;gap:4px;min-width:90px"></div>
+      <div id="sout" class="log" style="flex:1;min-width:220px;margin-top:0"></div>
+    </div>
+  </div>
+  <div class="prob"><b>Problem:</b> <code>Skini()</code> na praznom stogu ne smije tiho vratiti krivu vrijednost. U vježbi se baca <code>InvalidOperationException</code>. Isprobajte: skidajte dok stog nije prazan.</div>
+
+  <h2>Pitanja za razmišljanje</h2>
+  <ul class="tight">
+    <li>Zašto <code>Task.Run</code> prima delegat, a ne gotov rezultat?</li>
+    <li>Što se dogodi ako multicast delegat sadrži metodu koja baca iznimku?</li>
+    <li>Koja je razlika između predavanja vrijednosti i predavanja reference na varijablu?</li>
+  </ul>
+
+  <div class="note"><b>Reference</b><ul><li><a href="https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/delegates/">Microsoft Learn: Delegates</a></li></ul></div>
+  <footer>Dopuna uz vježbu 1 (delegati i lambda izrazi), tjedan 1.</footer>
+</div>
+<script src="zajednicko.js"></script>
+<script>
+const N = 50;
+// Kao int u C#-u: 32 bita, prelijevanje bez iznimke, cjelobrojno dijeljenje.
+const METH = {
+  Oduzmi: x => (x - N) | 0,
+  Pomnozi: x => Math.imul(x, N),
+  Podijeli: x => Math.trunc(x / N)
+};
+let list = ['Oduzmi'], op = 'Calc racun = Oduzmi;';
+// racun -= M uklanja ZADNJU pojavu metode M; ako je nema, lista ostaje ista.
+function ukloni(l, m) { const i = l.lastIndexOf(m); return i < 0 ? l.slice() : l.slice(0, i).concat(l.slice(i + 1)); }
+// Prihvaća samo cijeli broj u rasponu tipa int.
+function procitajInt(s) { if (!/^\s*-?\d+\s*$/.test(s)) return NaN; const v = Number(s); return v >= -2147483648 && v <= 2147483647 ? v : NaN; }
+function call() {
+  const x = procitajInt($('x').value);
+  $('op').textContent = op;
+  $('lst').innerHTML = list.length ? list.map(n => `<span class="pill">${n}</span>`).join(' → ') : '<span class="pill warn">prazna (null)</span>';
+  $('len').textContent = list.length ? `GetInvocationList().Length = ${list.length}` : '';
+  if (isNaN(x)) { $('out').textContent = 'Unesite cijeli broj tipa int (od −2147483648 do 2147483647).'; $('ret').textContent = '–'; return; }
+  if (!list.length) { $('out').innerHTML = 'Delegat je null; poziv bi bacio NullReferenceException (zato se piše <code>racun?.Invoke(x)</code>).'; $('ret').textContent = '–'; return; }
+  let r;
+  $('out').innerHTML = list.map(n => { r = METH[n](x); return `<div>${n}(${x}) = ${r}</div>`; }).join('');
+  $('ret').textContent = r;
+}
+const dodaj = m => () => { list.push(m); op = `racun += ${m};`; call(); };
+const makni = m => () => {
+  const prije = list.length;
+  list = ukloni(list, m);
+  op = `racun -= ${m};` + (list.length === prije ? '   // te metode nema u listi: ništa se ne mijenja'
+    : (list.length ? '   // uklonjena zadnja pojava' : '   // lista je prazna: racun je null'));
+  call();
+};
+$('aSub').onclick = dodaj('Oduzmi'); $('aMul').onclick = dodaj('Pomnozi'); $('aDiv').onclick = dodaj('Podijeli');
+$('rSub').onclick = makni('Oduzmi'); $('rMul').onclick = makni('Pomnozi'); $('rDiv').onclick = makni('Podijeli');
+$('clr').onclick = () => { list = []; op = 'racun = null;'; call(); };
+$('x').oninput = call;
+call();
+
+function filt() {
+  const arr = $('niz').value.split(',').map(s => parseInt(s.trim(), 10)).filter(v => !isNaN(v));
+  const expr = $('uv').value;
+  const f = new Function('x', 'return ' + expr);
+  let cnt = 0;
+  $('cells').innerHTML = arr.map(v => {
+    const ok = f(v); if (ok) cnt++;
+    return `<div class="cellbox ${ok ? 'done' : ''}"><small>${ok ? 'ispis' : 'preskok'}</small><b>${v}</b></div>`;
+  }).join('');
+  $('res').textContent = `Ispisano elemenata: ${cnt} od ${arr.length}`;
+}
+$('niz').oninput = filt; $('uv').onchange = filt;
+filt();
+
+let faktor = 3;
+const clg = m => { const d = document.createElement('div'); d.textContent = m; $('clog').appendChild(d); $('clog').scrollTop = 1e9; };
+$('f').oninput = () => { faktor = +$('f').value; $('fv').textContent = faktor; clg(`faktor = ${faktor}`); };
+$('fv').textContent = faktor;
+$('callp').onclick = () => clg(`puta(5) = ${5 * faktor}   (lambda čita trenutni faktor = ${faktor})`);
+$('snap').onclick = () => clg(`Da je faktor kopiran pri deklaraciji (3): 5 * 3 = 15. Closure daje 5 * ${faktor} = ${5 * faktor}.`);
+
+// ---- 4. koji delegat
+function delType() {
+  const n = +$('np').value, r = $('rt').value;
+  const names = ['int', 'string', 'double'], ps = ['a', 'b', 'c'];
+  const T = names.slice(0, n);
+  let type, name;
+  if (!r) { type = n ? `Action<${T.join(', ')}>` : 'Action'; name = 'akcija'; }
+  else if (r === 'bool' && n === 1) { type = `Predicate<${T[0]}>`; name = 'uvjet'; }
+  else { type = `Func<${T.concat([r]).join(', ')}>`; name = 'funkcija'; }
+  const params = n === 1 ? ps[0] : `(${ps.slice(0, n).join(', ')})`;
+  const ex = !r ? `Console.WriteLine(${n ? ps[0] : '"bok"'})` : (r === 'bool' ? (n ? `${ps[0]} > 0` : 'true') : (r === 'int' ? '42' : '"tekst"'));
+  return { type, line: `${type} ${name} = ${n === 0 ? '()' : params} => ${ex};`, note: (r === 'bool' && n === 1) ? 'Predicate<T> je isto što i Func<T, bool>, samo kraće.' : '' };
+}
+function drawDel() {
+  const d = delType();
+  $('dt1').textContent = d.type; $('dt2').textContent = d.line + (d.note ? '   // ' + d.note : '');
+}
+$('np').onchange = drawDel; $('rt').onchange = drawDel; drawDel();
+
+// ---- 5. stog
+let stog = [30, 12, 45];
+function drawStack() {
+  $('stack').innerHTML = stog.length ? stog.slice().reverse().map((v, i) => `<div class="cellbox ${i === 0 ? 'src' : ''}"><b>${v}</b>${i === 0 ? '<small>vrh</small>' : ''}</div>`).join('') : '<span class="muted">prazan</span>';
+}
+function slog(m) { const d = document.createElement('div'); d.textContent = m; $('sout').appendChild(d); $('sout').scrollTop = 1e9; }
+$('push').onclick = () => { const v = parseInt($('sv').value, 10); if (!isNaN(v)) { stog.push(v); slog(`Stavi(${v})`); drawStack(); } };
+$('pop').onclick = () => { if (!stog.length) slog('InvalidOperationException: Stog je prazan.'); else slog(`Skini() = ${stog.pop()}`); drawStack(); };
+$('cnt').onclick = () => { const f = new Function('x', 'return ' + $('sp').value); slog(`Broji(x => ${$('sp').value}) = ${stog.filter(f).length}`); };
+$('each').onclick = () => { slog('ZaSvaki: ' + stog.slice().reverse().join(', ')); };
+drawStack();
+</script>
+</body>
+</html>
