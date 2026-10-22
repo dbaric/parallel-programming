@@ -34,7 +34,10 @@ static class Zadatak3_Zamke
     {
         var zadaci = new List<Task<int>>();
         for (int i = 0; i < 4; i++)
-            zadaci.Add(Task.Run(() => i * 10));
+        {
+            int j = i;   // vlastita kopija po iteraciji; lambda je prije hvatala zajedničko i (koje je na kraju 4)
+            zadaci.Add(Task.Run(() => j * 10));   // 0 10 20 30
+        }
 
         Console.WriteLine("Zamka A   Očekivano: 0 10 20 30");
         Console.WriteLine("          Dobiveno:  " + string.Join(" ", zadaci.Select(z => z.Result)));
@@ -47,8 +50,8 @@ static class Zadatak3_Zamke
         long brojac = 0;
 
         var sat = Stopwatch.StartNew();
-        var a = Task.Run(() => { for (int i = 0; i < koraka; i++) brojac++; });
-        var b = Task.Run(() => { for (int i = 0; i < koraka; i++) brojac++; });
+        var a = Task.Run(() => { for (int i = 0; i < koraka; i++) Interlocked.Increment(ref brojac); });   // atomarno povećanje, nema izgubljenih ažuriranja
+        var b = Task.Run(() => { for (int i = 0; i < koraka; i++) Interlocked.Increment(ref brojac); });   // brojac = 20000000 (≈ 80 ms naspram ≈ 23 ms nezaštićeno, koje gubi ≈ polovicu ažuriranja)
         Task.WaitAll(a, b);
         sat.Stop();
 
@@ -68,7 +71,7 @@ static class Zadatak3_Zamke
         Console.WriteLine($"Zamka C   Petlja 1, b[i] = a[i] * 2: zbroj = {b.Sum(x => (long)x)}, očekivano {2L * n}");
 
         long zbroj = 0;
-        Parallel.For(0, n, i => { zbroj += a[i]; });
+        Parallel.For(0, n, i => Interlocked.Add(ref zbroj, a[i]));   // atomarno zbrajanje; zbroj = 1000000 (petlja 1 je uvijek točna: svaka iteracija piše svoj b[i])
         Console.WriteLine($"          Petlja 2, zbroj += a[i]:   zbroj = {zbroj}, očekivano {n}");
     }
 
@@ -78,17 +81,13 @@ static class Zadatak3_Zamke
         Console.WriteLine("Zamka D   Očekivano: " + string.Join(" ", Enumerable.Range(0, 20)));
         Console.Write("          Dobiveno:  ");
 
-        var zadaci = new List<Task>();
+        var zadaci = new List<Task<Entitet>>();
         for (int i = 0; i < 20; i++)
         {
-            var rnd = new Random();
-            zadaci.Add(Task.Run(() =>
-            {
-                var e = new Entitet(i, rnd.Next(100));
-                Console.Write(e.Id + " ");
-            }));
+            int j = i;   // greška 1: zatvaranje nad i, svaki Entitet je dobio isti Id
+            zadaci.Add(Task.Run(() => new Entitet(j, Random.Shared.Next(100))));   // greška 2: new Random() u istoj milisekundi daje iste nizove; Random.Shared je siguran za niti
         }
         Task.WaitAll(zadaci.ToArray());
-        Console.WriteLine();
+        Console.WriteLine(string.Join(" ", zadaci.Select(z => z.Result).OrderBy(e => e.Id).Select(e => e.Id)));   // 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 (redom po Id-u, ne po završetku taska)
     }
 }

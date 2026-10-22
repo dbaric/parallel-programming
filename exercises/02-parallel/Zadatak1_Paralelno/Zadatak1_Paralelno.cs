@@ -31,6 +31,13 @@ static class Zadatak1_Paralelno
         return broj;
     }
 
+    static (T, U) Paralelno<T, U>(Func<T> f, Func<U> g)
+    {
+        var tf = Task.Run(f);   // f ide na nit iz fonda
+        var tg = Task.Run(g);   // g ide istodobno na drugu nit
+        return (tf.Result, tg.Result);   // Result blokira dok taskovi ne završe; vraća (rf, rg)
+    }
+
     public static void Pokreni()
     {
         Func<long> f = () => Zbroji(1, 3_000_000_000L);
@@ -40,6 +47,11 @@ static class Zadatak1_Paralelno
         long rf = f();
         int rg = g();
         sat.Stop();
-        Console.WriteLine($"Slijedno:   f = {rf}, g = {rg}  ({sat.ElapsedMilliseconds} ms)");
+        Console.WriteLine($"Slijedno:   f = {rf}, g = {rg}  ({sat.ElapsedMilliseconds} ms)");   // Slijedno:   f = 4500000001500000000, g = 216816  (1056 ms)
+
+        sat.Restart();
+        var (pf, pg) = Paralelno(f, g);   // isti rezultati kao slijedno
+        sat.Stop();
+        Console.WriteLine($"Paralelno:  f = {pf}, g = {pg}  ({sat.ElapsedMilliseconds} ms)");   // Paralelno:  f = 4500000001500000000, g = 216816  (833 ms ≈ max(tf, tg); ubrzanje najviše 2, ograničeno dužim poslom i brojem jezgri)
     }
 }
