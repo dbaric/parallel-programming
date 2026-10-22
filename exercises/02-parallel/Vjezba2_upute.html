@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vježba 2: taskovi i prve zamke</title>
+<link rel="stylesheet" href="stil.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Vježba 2: taskovi i prve zamke paralelnog programa</h1>
+  <p class="lead">Paralelno programiranje, tjedan 2. Nakon vježbe znate pokrenuti posao na više taskova, izmjeriti ubrzanje i prepoznati prve zamke paralelnog programa.</p>
+
+  <h2>Priprema</h2>
+  <div class="card">
+    <ul class="tight">
+      <li>Visual Studio 2026 ili JetBrains Rider: otvorite <code>Vjezba2/Vjezba2.sln</code>. Visual Studio Code (uz proširenje C# Dev Kit): File &gt; Open Folder, mapa <code>Vjezba2</code>, konfiguracija »Vježba 2: zadatak N«. Naredbeni redak: <code>dotnet run</code> u mapi zadatka.</li>
+      <li>Projekt cilja <b>.NET 10</b> (LTS). Ako imate samo Visual Studio 2022, u <code>Directory.Build.props</code> (i u <code>.vscode/launch.json</code>) promijenite <code>net10.0</code> u <code>net8.0</code>; zadaci rade jednako.</li>
+      <li>Svaki zadatak je zaseban projekt (mapa <code>ZadatakN_*</code> s datotekom <code>ZadatakN_*.cs</code>) i pokreće se samostalno: u Visual Studiju desni klik na projekt &gt; Set as Startup Project, u Rideru odaberite projekt u popisu konfiguracija.</li>
+      <li>Vremena u zadacima 1 i 2 mjerite u <b>Release</b> konfiguraciji, inače su rezultati nepouzdani: u Visual Studiju i Rideru odaberite konfiguraciju Release, u VS Codeu konfiguraciju pokretanja »(Release)«, a u naredbenom retku <code>dotnet run -c Release</code>.</li>
+      <li>Prije vježbe pogledajte prezentaciju za vježbu 2 i prikaz <a href="../Vizualizacije/zamke.html">zamke.html</a> (mapa »Vizualizacije«).</li>
+    </ul>
+  </div>
+
+  <h2>Zadaci</h2>
+  <div class="card">
+    <h3>Zadatak 1: Paralelno&lt;T, U&gt; <span class="pill">Zadatak1_Paralelno.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: funkcije <code>f</code> (zbroj brojeva od 1 do 3·10<sup>9</sup>, vraća <code>long</code>) i <code>g</code> (broj prostih brojeva do 3·10<sup>6</sup>, vraća <code>int</code>) te njihov slijedni poziv s mjerenjem vremena.</p>
+    <b>Što trebate napraviti:</b>
+    <ol class="tight">
+      <li>Napišite metodu <code>static (T, U) Paralelno&lt;T, U&gt;(Func&lt;T&gt; f, Func&lt;U&gt; g)</code> koja izvodi <code>f</code> i <code>g</code> istodobno, svaku u svom tasku, i vraća oba rezultata.</li>
+      <li>Pozovite je s <code>f</code> i <code>g</code>. Rezultati moraju biti jednaki slijednima.</li>
+      <li>Usporedite vrijeme sa slijednim. Koliko je najviše ubrzanje za dva posla i o čemu ovisi?</li>
+    </ol>
+    <div class="note">Metodu nemojte nazvati <code>Parallel</code>: to je ime klase iz <code>System.Threading.Tasks</code>.</div>
+    <div class="out"><b>Primjer ispisa (Release, procesor sa 6 jezgri i 12 logičkih)</b><pre>Slijedno:   f = 4500000001500000000, g = 216816  (1687 ms)
+Paralelno:  f = 4500000001500000000, g = 216816  (831 ms)</pre><small>Vremena ovise o računalu; rezultati f i g moraju biti isti.</small></div>
+  </div>
+
+  <div class="card">
+    <h3>Zadatak 2: zbroj na k taskova <span class="pill">Zadatak2_Task.cs</span></h3>
+    <p>Zbrojite brojeve od 1 do 10<sup>9</sup>. Slijedna i jednotaskna verzija su zadane.</p>
+    <ul class="tight">
+      <li>Podijelite posao na 2, 4, 8 i 16 taskova. Provjerite da je zbroj uvijek isti.</li>
+      <li>Ispišite broj jezgri (<code>Environment.ProcessorCount</code>). Za svaki k uzmite najkraće od tri mjerenja i izračunajte ubrzanje S = T(slijedno) / T(k taskova) i učinkovitost S / k.</li>
+      <li>Isto napravite s <code>Parallel.For</code>. Zašto S nije jednak k?</li>
+    </ul>
+    <div class="out"><b>Primjer ispisa (Release, procesor sa 6 jezgri i 12 logičkih)</b><pre>Jezgri (logičkih): 12
+Slijedno:   500000000500000000  (256 ms)
+1 task:     500000000500000000  (259 ms)
+
+Task.Run
+k     vrijeme     S     S/k   zbroj
+2      131 ms    1,95   0,98   ispravan
+4       70 ms    3,66   0,91   ispravan
+8       46 ms    5,57   0,70   ispravan
+16      49 ms    5,22   0,33   ispravan
+
+Parallel.For
+k     vrijeme     S     S/k   zbroj
+2      127 ms    2,02   1,01   ispravan
+4       64 ms    4,00   1,00   ispravan
+8       46 ms    5,57   0,70   ispravan
+16      51 ms    5,02   0,31   ispravan</pre><small>Točne vrijednosti u ovom ispisu ne morate dobiti, ali oblik rezultata mora biti isti. Zbroj mora uvijek biti 500000000500000000.</small></div>
+  </div>
+
+  <div class="card">
+    <h3>Zadatak 3: zamke <span class="pill">Zadatak3_Zamke.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: četiri programa koja se prevedu, ali ne rade ono što očekujete. Za svaki pokrenite program više puta, objasnite ispis i popravite kod.</p>
+    <b>Što trebate napraviti:</b>
+    <ol class="tight">
+      <li><b>Zamka A:</b> taskovi u petlji <code>for</code> računaju <code>i * 10</code>.</li>
+      <li><b>Zamka B:</b> dva taska povećavaju isti brojač po 10 milijuna puta. Zapišite koliko se ažuriranja gubi. Popravite i izmjerite vrijeme obje verzije.</li>
+      <li><b>Zamka C:</b> usporedite <code>b[i] = a[i] * 2</code> sa <code>zbroj += a[i]</code>. Koja je petlja uvijek točna i zašto? Popravite drugu petlju.</li>
+      <li><b>Zamka D:</b> program treba stvoriti 20 objekata <code>Entitet</code> s jedinstvenim Id-om od 0 do 19 i slučajnim brojem te ih ispisati redom po Id-u. Program ima dvije greške.</li>
+    </ol>
+    <div class="note">Cilj nije naučiti sve o sinkronizaciji danas, nego vidjeti da ispravnost nije zajamčena. Mehanizme zaštite zajedničkih podataka obradit ćemo na predavanju o data raceu (tjedan 4).</div>
+    <div class="out"><b>Zadani kod: ispis se mijenja pri pokretanju</b><pre>Zamka A   Očekivano: 0 10 20 30
+          Dobiveno:  40 40 40 40
+Zamka B   Očekivano: 20000000
+          Dobiveno:  10238038  (22,6 ms)
+Zamka C   Petlja 1, b[i] = a[i] * 2: zbroj = 2000000, očekivano 2000000
+          Petlja 2, zbroj += a[i]:   zbroj = 148596, očekivano 1000000
+Zamka D   Očekivano: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19
+          Dobiveno:  20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20</pre><small>Brojevi u retcima »Dobiveno« su primjer; u vašem pokretanju bit će drukčiji. Kad popravite kod, ispis mora odgovarati retcima »Očekivano«.</small></div>
+  </div>
+
+  <h2>Predaja</h2>
+  <p>Vježba se evidentira prisustvom (najmanje 70 % termina vježbi). Ocjenjuju se dvije domaće zadaće, o kojima će biti riječi kasnije.</p>
+  <footer>Interaktivni prikazi uz ovu vježbu: <a href="../Vizualizacije/zamke.html">zamke.html</a> (mapa »Vizualizacije« ovog tjedna) i <a href="../../Tjedan%2001%20-%20Uvod/Vizualizacije/amdahl.html">amdahl.html</a> (mapa »Vizualizacije« tjedna 1).</footer>
+
+  </div>
+</body>
+</html>

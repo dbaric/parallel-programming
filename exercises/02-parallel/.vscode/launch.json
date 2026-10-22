@@ -1,0 +1,71 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Vježba 2: zadatak 1 (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-debug",
+      "program": "${workspaceFolder}/Zadatak1_Paralelno/bin/Debug/net10.0/Zadatak1_Paralelno.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak1_Paralelno",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 2: zadatak 1 (Release)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-release",
+      "program": "${workspaceFolder}/Zadatak1_Paralelno/bin/Release/net10.0/Zadatak1_Paralelno.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak1_Paralelno",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 2: zadatak 2 (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-debug",
+      "program": "${workspaceFolder}/Zadatak2_Task/bin/Debug/net10.0/Zadatak2_Task.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak2_Task",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 2: zadatak 2 (Release)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-release",
+      "program": "${workspaceFolder}/Zadatak2_Task/bin/Release/net10.0/Zadatak2_Task.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak2_Task",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 2: zadatak 3 (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-debug",
+      "program": "${workspaceFolder}/Zadatak3_Zamke/bin/Debug/net10.0/Zadatak3_Zamke.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak3_Zamke",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 2: zadatak 3 (Release)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-release",
+      "program": "${workspaceFolder}/Zadatak3_Zamke/bin/Release/net10.0/Zadatak3_Zamke.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak3_Zamke",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    }
+  ]
+}
