@@ -34,13 +34,40 @@ static class Zadatak1_GlavaListe
         return glave.Count;
     }
 
-    // TODO a): tri uzastopna Parallel.For (kraj petlje čeka sve iteracije); vrati broj pronađenih glava
-    // TODO b): p taskova i Barrier; svaki task obrađuje čvorove i = id, id + p, ...; ograda između koraka
+    // Tri uzastopna Parallel.For: kraj svake petlje je ograda
+    static int TriPetlje(int[] next)
+    {
+        int n = next.Length;
+        var M = new int[n];
+        Parallel.For(0, n, i => M[i] = 0);   // korak 1 za sve
+        Parallel.For(0, n, i => { if (next[i] >= 0) M[next[i]] = 1; });   // korak 2 za sve; svaki čvor ima najviše jednog prethodnika, pa nema sudara
+        return M.Count(m => m == 0);   // korak 3: ostane 0 samo ćelija glave; 1
+    }
+
+    // p taskova, čvorovi i = id, id + p, ...; Barrier između koraka
+    static int SOgradom(int[] next, int p)
+    {
+        int n = next.Length;
+        var M = new int[n];
+        int glave = 0;
+        using var ograda = new Barrier(p);
+        Task.WaitAll(Enumerable.Range(0, p).Select(id => Task.Run(() =>
+        {
+            for (int i = id; i < n; i += p) M[i] = 0;
+            ograda.SignalAndWait();   // nitko ne piše jedinice prije nego svi upišu nule
+            for (int i = id; i < n; i += p) if (next[i] >= 0) M[next[i]] = 1;
+            ograda.SignalAndWait();   // nitko ne čita M prije nego svi upišu jedinice
+            for (int i = id; i < n; i += p) if (M[i] == 0) Interlocked.Increment(ref glave);
+        })).ToArray());
+        return glave;   // 1
+    }
 
     public static void Pokreni()
     {
         var (next, glava) = NapraviListu(N);
         Console.WriteLine($"Lista od {N} čvorova, prava glava: {glava}");
-        Console.WriteLine($"Parallel.For, bez ograde:  {BezOgrade(next)} glava");
+        Console.WriteLine($"Parallel.For, bez ograde:  {BezOgrade(next)} glava");   // 1000 glava (krivo: čvor prepiše jedinicu prethodnika ili pročita prerano)
+        Console.WriteLine($"Tri Parallel.For:          {TriPetlje(next)} glava");   // 1 glava
+        Console.WriteLine($"Barrier, 12 taskova:       {SOgradom(next, 12)} glava");   // 1 glava
     }
 }

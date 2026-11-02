@@ -29,9 +29,25 @@ static class Zadatak2_Async
         var sat = Stopwatch.StartNew();
         for (int i = 0; i < 3; i++) await Dohvati(i);
         sat.Stop();
-        Console.WriteLine($"jedno po jedno, 3 × Delay:  {sat.ElapsedMilliseconds} ms");
+        Console.WriteLine($"jedno po jedno, 3 × Delay:  {sat.ElapsedMilliseconds} ms");   // ≈ 3003 ms
 
-        // TODO a): isto s Task.WhenAll nad 3 poziva Dohvati, pa nad 100 poziva
-        // TODO b): Task.WhenAll(Racunaj(N), Racunaj(N), Racunaj(N)) bez Task.Run, pa s Task.Run; usporedite s tri poziva jedan po jedan
+        foreach (int k in new[] { 3, 100 })
+        {
+            sat.Restart();
+            await Task.WhenAll(Enumerable.Range(0, k).Select(Dohvati));   // sva čekanja se preklapaju, nit se za to vrijeme vraća u fond
+            Console.WriteLine($"Task.WhenAll, {k} × Delay:  {sat.ElapsedMilliseconds} ms");   // ≈ 1001 ms za 3, ≈ 1004 ms za 100: čekanje ne treba jezgre
+        }
+
+        sat.Restart();
+        for (int i = 0; i < 3; i++) await Racunaj(N);
+        Console.WriteLine($"Racunaj, jedan po jedan:     {sat.ElapsedMilliseconds} ms");   // npr. 1030 ms
+
+        sat.Restart();
+        await Task.WhenAll(Racunaj(N), Racunaj(N), Racunaj(N));   // bez await u metodi, svaki poziv se izvede do kraja u ovoj niti
+        Console.WriteLine($"WhenAll, bez Task.Run:       {sat.ElapsedMilliseconds} ms");   // npr. 1017 ms ≈ jedan po jedan
+
+        sat.Restart();
+        await Task.WhenAll(Task.Run(() => Racunaj(N)), Task.Run(() => Racunaj(N)), Task.Run(() => Racunaj(N)));   // tri izračuna na tri niti iz fonda
+        Console.WriteLine($"WhenAll, s Task.Run:         {sat.ElapsedMilliseconds} ms");   // npr. 348 ms ≈ trećina; async služi za čekanje, a posao koji računa ide na Task.Run
     }
 }
