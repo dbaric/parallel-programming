@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Paralelno programiranje: tjedan 4</title>
+<link rel="stylesheet" href="stil.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Tjedan 4: data race, lock i Interlocked</h1>
+  <p class="lead">Predavanje pita što kad se podatak mora dijeliti: kako ga zaštititi (kritični odsječak, lock, atomarne operacije), koliko zaštita stoji i koje nove zamke donosi. Prikazi pokazuju redoslijede koraka dvaju taskova: vi birate koji task ide idući, a program prebroji što daju svi mogući redoslijedi.</p>
+
+  <h2>Prikazi za ovaj tjedan</h2>
+  <div class="card">
+    <h3><a href="brojac.html">Brojač: lock, svaka svoja brava i Interlocked</a> <span class="pill">predavanje 4</span></h3>
+    <p style="margin:0 0 6px">Dva taska povećavaju isti brojač, korak po korak: bez zaštite, s jednom zajedničkom bravom, sa svojom bravom za svaki task i s Interlocked.Increment; zatim svi mogući redoslijedi.</p>
+    <p class="muted" style="margin:0;font-size:14px">Zamke: data race (izgubljeno povećanje); svaki task svoja brava. Nastavak odjeljka 6 tjedna 2.</p>
+  </div>
+  <div class="card">
+    <h3><a href="racun_stog.html">Provjeri, pa promijeni i stog: CompareExchange</a> <span class="pill">predavanje 4</span></h3>
+    <p style="margin:0 0 6px">Isplata s računa u kojoj je svaki korak atomaran, a rezultat ipak kriv; stavljanje na stog u kojem se gubi čvor. Popravci: lock oko oba koraka i CompareExchange u petlji.</p>
+    <p class="muted" style="margin:0;font-size:14px">Zamke: race condition bez data racea (provjeri, pa promijeni); izgubljen čvor u povezanoj listi.</p>
+  </div>
+
+  <h2>Koji slajd predavanja 4 koristi koji prikaz</h2>
+  <table>
+    <tr><th>Slajd</th><th>Tema</th><th>Prikaz</th></tr>
+    <tr><td>3–4</td><td>Data race na brojaču; brojac++ su tri koraka</td><td><a href="brojac.html">Brojač</a>, način »bez zaštite«; <a href="../../Tjedan%2002%20-%20Taskovi%20i%20zamke/Vizualizacije/tjedan2.html">tjedan 2, odjeljak 6</a></td></tr>
+    <tr><td>7–9</td><td>Kritični odsječak, lock, popravak lockom</td><td><a href="brojac.html">Brojač</a>, način »jedna zajednička brava«</td></tr>
+    <tr><td>11</td><td>Zamka: svaki task svoja brava</td><td><a href="brojac.html">Brojač</a>, način »svaki task svoja brava«</td></tr>
+    <tr><td>12</td><td>Interlocked</td><td><a href="brojac.html">Brojač</a>, način »Interlocked.Increment«</td></tr>
+    <tr><td>15–16</td><td>Provjeri, pa promijeni; lock oko oba koraka i CompareExchange</td><td><a href="racun_stog.html">Račun i stog, odjeljak 1</a></td></tr>
+    <tr><td>18–19</td><td>Stog kao lista; CompareExchange</td><td><a href="racun_stog.html">Račun i stog, odjeljak 2</a></td></tr>
+  </table>
+  <p class="muted" style="font-size:14px">Za ostale slajdove prikaza nema namjerno: cijena sinkronizacije (slajdovi 13–14) izmjerena je i nacrtana na slajdu, List&lt;T&gt; (slajd 17) gubi elemente na isti način kao brojač, a zastoj (slajd 20) se detaljno obrađuje u tjednu 7. Vježba 4 još nije izrađena.</p>
+
+  <h2>Što biste nakon tjedna 4 trebali znati</h2>
+  <ul class="tight">
+    <li>Objasniti zašto se gubi povećanje kad više taskova piše isti podatak (data race) i razliku između data racea i race conditiona.</li>
+    <li>Zaštititi kritični odsječak lockom, s jednom zajedničkom bravom.</li>
+    <li>Kada je dovoljan Interlocked, a kada treba lock ili CompareExchange (provjeri, pa promijeni).</li>
+    <li>Znati da sinkronizacija košta i da je najbolje ne dijeliti promjenjiv podatak (izolacija, lokalno pa jednom).</li>
+  </ul>
+  <footer>Prethodni tjedan: <a href="../../Tjedan%2003%20-%20Amdahlov%20zakon/Vizualizacije/index.html">tjedan 3</a>. Idući tjedan: <a href="../../Tjedan%2005%20-%20Modeli%20racunala%20i%20kanceliranje/Vizualizacije/index.html">tjedan 5</a>.</footer>
+</div>
+<script src="zajednicko.js"></script>
+</body>
+</html>

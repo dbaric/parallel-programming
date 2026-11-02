@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Provjeri, pa promijeni i stog</title>
+<link rel="stylesheet" href="stil.css">
+<style>
+.prog{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;white-space:pre;overflow-x:auto;line-height:1.6}
+.prog .on{background:var(--soft);color:var(--acc);font-weight:700}
+.prog .ceka{background:var(--badbg);color:var(--bad);font-weight:700}
+.lista{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:8px 0}
+.cvor{min-width:40px;height:40px;padding:0 8px;border-radius:8px;border:2px solid var(--acc);display:flex;align-items:center;justify-content:center;font-weight:700;background:var(--card)}
+.cvor.vrh{border-color:var(--acc2);background:var(--soft2);font-weight:600;font-size:13px}
+.cvor.izgubljen{border-color:var(--bad);background:var(--badbg)}
+.strel{color:var(--muted);font-size:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Provjeri, pa promijeni i stog: CompareExchange</h1>
+  <p class="lead">Uz predavanje 4 (slajdovi 15–16 i 18–19). Dvije zamke u kojima zaštita svakog pojedinog koraka nije dovoljna: isplata s računa i stavljanje na stog. Vi birate koji task izvodi idući korak; gumb ispod prebroji što daju svi mogući redoslijedi. To je broj mogućih redoslijeda, a ne vjerojatnost: raspoređivač ih ne bira jednako često, pa se iz omjera ne može izračunati koliko često se greška dogodi u stvarnom programu.</p>
+
+  <h2>1. Račun: provjeri, pa promijeni</h2>
+  <div class="expl">
+    <b class="t">Što vidite</b>
+    <p>Na računu je 1 €. Dva taska žele isplatiti po 1 €, ali samo ako ima novca. Svaki pojedini korak je atomaran (Interlocked), kao na slajdu 15. Tri načina:</p>
+    <ul>
+      <li><b>provjeri, pa promijeni:</b> pročitaj stanje; ako je barem 1, smanji ga i povećaj isplatu;</li>
+      <li><b>lock oko oba koraka:</b> provjera i promjena unutar iste brave (slajd 16);</li>
+      <li><b>CompareExchange:</b> pročitaj staro stanje; ako ga ima, upiši staro − 1, ali samo ako je stanje još jednako staro; inače pokušaj ponovno (slajd 16).</li>
+    </ul>
+    <b class="t">Što učiniti</b>
+    <p>U prvom načinu neka oba taska naprave provjeru prije nego što itko smanji stanje. Zatim isti redoslijed klikova pokušajte u druga dva načina. Kad CompareExchange ne uspije, pratite što task radi.</p>
+  </div>
+  <div class="card">
+    <div class="row">
+      <label>Način: <select id="r_nacin"><option value="pp" selected>provjeri, pa promijeni (svaki korak atomaran)</option><option value="lock">lock oko oba koraka</option><option value="cas">CompareExchange u petlji</option></select></label>
+      <button id="r_A" class="primary">korak A</button>
+      <button id="r_B" class="primary">korak B</button>
+      <button id="r_reset">Ispočetka</button>
+    </div>
+    <div class="grid2" style="margin-top:12px">
+      <div><h3>task A</h3><div id="r_progA" class="prog"></div><div id="r_locA" class="muted" style="font-size:13px;margin-top:4px"></div></div>
+      <div><h3>task B</h3><div id="r_progB" class="prog"></div><div id="r_locB" class="muted" style="font-size:13px;margin-top:4px"></div></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div class="kpi"><small>stanje</small><span class="big" id="r_stanje"></span></div>
+      <div class="kpi"><small>isplaćeno</small><span class="big" id="r_isplata"></span></div>
+    </div>
+    <div id="r_rez" style="margin-top:8px"></div>
+    <div id="r_log" class="log"></div>
+    <div class="row" style="margin-top:12px"><button id="r_svi">Prebroji sve redoslijede za ovaj način</button></div>
+    <div id="r_svih" style="margin-top:8px"></div>
+  </div>
+  <div class="prob"><b>Problem:</b> svaki korak je zaštićen, pa nema data racea, ali cjelina od dva koraka nije: između provjere i promjene drugi task stigne isplatiti zadnji euro. To je race condition (slajd 5). Na predavanju: 10.000 €, 12 taskova, stanje −4 i −5.</div>
+  <div class="sol"><b>Rješenje:</b> provjera i promjena moraju biti jedna cjelina: lock oko oba koraka ili CompareExchange, koji upiše novo stanje samo ako je staro još ono koje je task pročitao. Na predavanju oba daju stanje 0 i isplatu 10.000.</div>
+
+  <h2>2. Stog: kako se gubi čvor</h2>
+  <div class="expl">
+    <b class="t">Što vidite</b>
+    <p>Stog kao povezana lista: vrh → 2 → 1. Task A stavlja 4, a task B 5. <code>Push</code> su dva koraka: (1) novi čvor pokazuje na trenutni vrh, (2) vrh postaje novi čvor (slajd 18). S CompareExchange korak (2) uspije samo ako je vrh još onaj iz koraka (1); inače task ponovi korak (1) (slajd 19).</p>
+    <b class="t">Što učiniti</b>
+    <p>Bez zaštite: neka oba taska naprave korak (1) prije koraka (2). Koji čvor nestane? Zatim isti redoslijed s CompareExchange.</p>
+  </div>
+  <div class="card">
+    <div class="row">
+      <label>Način: <select id="s_nacin"><option value="bez" selected>bez zaštite</option><option value="cas">CompareExchange u petlji</option></select></label>
+      <button id="s_A" class="primary">korak A (Push 4)</button>
+      <button id="s_B" class="primary">korak B (Push 5)</button>
+      <button id="s_reset">Ispočetka</button>
+    </div>
+    <div class="grid2" style="margin-top:12px">
+      <div><h3>task A: Push(4)</h3><div id="s_progA" class="prog"></div></div>
+      <div><h3>task B: Push(5)</h3><div id="s_progB" class="prog"></div></div>
+    </div>
+    <div class="muted" style="font-size:13px;margin-top:10px">stog od vrha</div>
+    <div id="s_lista" class="lista"></div>
+    <div id="s_rez" style="margin-top:8px"></div>
+    <div id="s_log" class="log"></div>
+    <div class="row" style="margin-top:12px"><button id="s_svi">Prebroji sve redoslijede za ovaj način</button></div>
+    <div id="s_svih" style="margin-top:8px"></div>
+  </div>
+  <div class="prob"><b>Problem:</b> oba taska pročitaju isti vrh, pa drugi upis vrha prepiše prvi. Čvor prvog taska pokazuje na stari vrh, ali na njega ne pokazuje nitko: izgubljen je. Na predavanju (12 taskova po 100.000): izgubljeno više od milijun čvorova od 1,2 milijuna.</div>
+  <div class="sol"><b>Rješenje:</b> CompareExchange postavi vrh samo ako je još onaj koji je task pročitao; inače task ponovi. Tako radi i <code>ConcurrentStack&lt;T&gt;</code> (slajd 19). Na predavanju: 1.200.000 čvorova, izgubljeno 0.</div>
+
+  <h2>Pitanja za razmišljanje</h2>
+  <ul class="tight">
+    <li>U odjeljku 1 nema data racea, a rezultat je kriv. Zašto Interlocked na svakom koraku nije dovoljan?</li>
+    <li>Kad CompareExchange ne uspije, task ponovi čitanje. Može li se dogoditi da task ponavlja zauvijek? Što bi za to moralo vrijediti?</li>
+    <li>Zašto je redoslijed koraka (1) pa (2) u <code>Push</code> važan i kad radi samo jedan task?</li>
+    <li>Kada biste odabrali lock, a kada CompareExchange (slajd 21)?</li>
+  </ul>
+  <footer>Izvori: predavanje 4, slajdovi 5, 15–16 i 18–21 (Microsoft Learn: Interlocked.CompareExchange; izvorni kod .NET-a, ConcurrentStack); mjerenja DataRaceDemo, primjeri 6 i 8 (Tjedan 04 - Data race/Predavanje/DataRaceDemo, ispis_2026-10-25.txt).</footer>
+</div>
+<script src="zajednicko.js"></script>
+<script>
+// ---------- zajedničko: svi redoslijedi dvaju taskova ----------
+const kopija = s => JSON.parse(JSON.stringify(s));
+// sc: { novo(), moze(st, t), gotov(st, t), korak(st, t), kljuc(st) } → { ključ ishoda: broj redoslijeda }
+function sviRedoslijedi(sc, nacin) {
+  const h = {};
+  (function dfs(st) {
+    const r = [0, 1].filter(t => sc.moze(st, t));
+    if (!r.length) { const k = sc.kljuc(st); h[k] = (h[k] || 0) + 1; return; }
+    for (const t of r) { const s2 = kopija(st); sc.korak(s2, t); dfs(s2); }
+  })(sc.novo(nacin));
+  return h;
+}
+
+// ---------- račun (slajdovi 15–16) ----------
+const RACUN = {
+  // pc: pp 0 provjera, 1 smanji, 2 isplata++; lock 0 uđi, 1 provjera, 2 promjena, 3 izađi;
+  // cas 0 čitaj staro, 1 CompareExchange, 2 isplata++. pc = −1: gotov.
+  novo: nacin => ({ nacin, stanje: 1, isplata: 0, pc: [0, 0], ok: [null, null], staro: [null, null], brava: null }),
+  gotov: (st, t) => st.pc[t] < 0,
+  ceka: (st, t) => st.nacin === 'lock' && st.pc[t] === 0 && st.brava !== null && st.brava !== t,
+  moze(st, t) { return !this.gotov(st, t) && !this.ceka(st, t); },
+  korak(st, t) {
+    const T = 'AB'[t], pc = st.pc[t];
+    if (st.nacin === 'pp') {
+      if (pc === 0) { st.ok[t] = st.stanje >= 1; st.pc[t] = st.ok[t] ? 1 : -1; return `${T}: Read(stanje) = ${st.stanje} → ${st.ok[t] ? 'ima novca' : 'nema novca, kraj'}`; }
+      if (pc === 1) { st.stanje--; st.pc[t] = 2; return `${T}: Decrement(stanje) → ${st.stanje}`; }
+      st.isplata++; st.pc[t] = -1; return `${T}: Increment(isplata) → ${st.isplata}`;
+    }
+    if (st.nacin === 'lock') {
+      if (pc === 0) { st.brava = t; st.pc[t] = 1; return `${T}: uzima bravu`; }
+      if (pc === 1) { st.ok[t] = st.stanje >= 1; st.pc[t] = st.ok[t] ? 2 : 3; return `${T}: stanje = ${st.stanje} → ${st.ok[t] ? 'ima novca' : 'nema novca'}`; }
+      if (pc === 2) { st.stanje--; st.isplata++; st.pc[t] = 3; return `${T}: stanje-- (${st.stanje}), isplata++ (${st.isplata})`; }
+      st.brava = null; st.pc[t] = -1; return `${T}: otpušta bravu`;
+    }
+    if (pc === 0) {
+      st.staro[t] = st.stanje;
+      if (st.staro[t] < 1) { st.pc[t] = -1; return `${T}: staro = ${st.staro[t]} → nema novca, kraj`; }
+      st.pc[t] = 1; return `${T}: staro = Read(stanje) = ${st.staro[t]}`;
+    }
+    if (pc === 1) {
+      const zatekao = st.stanje;
+      if (zatekao === st.staro[t]) { st.stanje = st.staro[t] - 1; st.pc[t] = 2; return `${T}: CompareExchange zatekao ${zatekao} = staro → stanje = ${st.stanje}`; }
+      st.pc[t] = 0; return `${T}: CompareExchange zatekao ${zatekao} ≠ staro ${st.staro[t]} → ponovi`;
+    }
+    st.isplata++; st.pc[t] = -1; return `${T}: Increment(isplata) → ${st.isplata}`;
+  },
+  kljuc: st => `stanje ${st.stanje < 0 ? '−' + (-st.stanje) : st.stanje}, isplata ${st.isplata}`
+};
+const RACUN_KOD = {
+  pp: ['if (Interlocked.Read(ref stanje) >= 1)', '    Interlocked.Decrement(ref stanje);', '    Interlocked.Increment(ref isplata);'],
+  lock: ['lock (brava) {', '    if (stanje >= 1)', '    { stanje--; isplata++; }', '}'],
+  cas: ['staro = Interlocked.Read(ref stanje);   // ako < 1: kraj', 'zatekao = CompareExchange(ref stanje, staro - 1, staro);', 'if (zatekao == staro) Increment(ref isplata);   // inače ponovi']
+};
+
+// ---------- stog (slajdovi 18–19) ----------
+const STOG = {
+  // čvorovi: c2 → c1 je početni stog; A stavlja c4, B c5. pc: 0 korak (1), 1 korak (2); −1 gotov.
+  novo: nacin => ({ nacin, sljedeci: { c1: null, c2: 'c1', c4: null, c5: null }, vrh: 'c2', pc: [0, 0], pokusaja: [0, 0] }),
+  gotov: (st, t) => st.pc[t] < 0,
+  moze(st, t) { return !this.gotov(st, t); },
+  korak(st, t) {
+    const T = 'AB'[t], novi = t === 0 ? 'c4' : 'c5', v = novi.slice(1);
+    if (st.pc[t] === 0) { st.sljedeci[novi] = st.vrh; st.pc[t] = 1; st.pokusaja[t]++; return `${T}: ${v}.Sljedeci = vrh (${st.vrh.slice(1)})`; }
+    if (st.nacin === 'bez' || st.vrh === st.sljedeci[novi]) { st.vrh = novi; st.pc[t] = -1; return `${T}: vrh = ${v}`; }
+    st.pc[t] = 0; return `${T}: CompareExchange: vrh je ${st.vrh.slice(1)}, a ne ${st.sljedeci[novi].slice(1)} → ponovi`;
+  },
+  lanac(st) { const r = []; for (let c = st.vrh; c; c = st.sljedeci[c]) r.push(c); return r; },
+  izgubljeni(st) { const l = this.lanac(st); return ['c4', 'c5'].filter(c => !l.includes(c)); },
+  kljuc(st) { const iz = this.izgubljeni(st); return iz.length ? 'izgubljen ' + iz.map(c => c.slice(1)).join(', ') : 'ništa izgubljeno'; }
+};
+const STOG_KOD = {
+  bez: ['novi.Sljedeci = vrh;   // (1)', 'vrh = novi;            // (2)'],
+  cas: ['novi.Sljedeci = vrh;   // (1)', 'CompareExchange(ref vrh, novi, novi.Sljedeci);   // (2), inače ponovi (1)']
+};
+
+// ---------- prikaz ----------
+function prog(kod, pc, ceka) {
+  return kod.map((l, j) => j === pc ? `<span class="${ceka ? 'ceka' : 'on'}">${l.replace(/</g, '&lt;')}${ceka ? '   ← čeka bravu' : ''}</span>` : l.replace(/</g, '&lt;')).join('\n');
+}
+function histogram(h, dobar) {
+  const uk = Object.values(h).reduce((a, b) => a + b, 0), kriv = Object.keys(h).filter(k => k !== dobar).reduce((s, k) => s + h[k], 0);
+  return `<div class="muted" style="font-size:13px;margin-bottom:6px">${hr(uk)} mogućih redoslijeda</div><div class="hist" style="grid-template-columns:180px 1fr 56px">` +
+    Object.keys(h).sort().map(k => `<span>${k}</span><div class="bar ${k === dobar ? 'ok' : 'bad'}" style="width:${Math.max(2, 100 * h[k] / uk)}%"></div><span>${hr(h[k])}</span>`).join('') +
+    `</div><div style="margin-top:8px">${kriv ? `<span class="pill bad">${hr(kriv)} od ${hr(uk)} redoslijeda daje krivi rezultat</span>` : '<span class="pill ok">svaki redoslijed daje točan rezultat</span>'}</div>`;
+}
+
+let rs = RACUN.novo('pp'), rlog = [];
+function crtajR() {
+  const kod = RACUN_KOD[rs.nacin];
+  // redak koda koji task izvodi idući
+  const red = t => {
+    const pc = rs.pc[t]; if (pc < 0) return -1;
+    if (rs.nacin === 'lock') return pc === 0 ? 0 : pc === 1 ? 1 : pc === 2 ? 2 : 3;
+    return pc;
+  };
+  [0, 1].forEach(t => {
+    $('r_prog' + 'AB'[t]).innerHTML = prog(kod, red(t), RACUN.ceka(rs, t));
+    $('r_loc' + 'AB'[t]).textContent = RACUN.gotov(rs, t) ? 'gotov' : (rs.nacin === 'cas' && rs.staro[t] !== null ? `staro = ${rs.staro[t]}` : '');
+    $('r_' + 'AB'[t]).disabled = RACUN.gotov(rs, t);
+  });
+  $('r_stanje').textContent = rs.stanje < 0 ? '−' + (-rs.stanje) : String(rs.stanje);
+  $('r_isplata').textContent = String(rs.isplata);
+  $('r_log').innerHTML = rlog.slice().reverse().join('<br>');
+  const kraj = RACUN.gotov(rs, 0) && RACUN.gotov(rs, 1);
+  $('r_rez').innerHTML = !kraj ? '' : rs.stanje >= 0 ? `<span class="pill ok">točno</span> isplaćen ${rs.isplata} €, stanje ${rs.stanje}`
+    : `<span class="pill bad">krivo</span> isplaćeno ${rs.isplata} €, a bio je samo 1 €: stanje ${'−' + (-rs.stanje)}`;
+}
+function rKlik(t) {
+  if (RACUN.gotov(rs, t)) return;
+  if (RACUN.ceka(rs, t)) rlog.push(`${'AB'[t]}: čeka, bravu drži ${'AB'[rs.brava]}`);
+  else rlog.push(`${rlog.length + 1}. ` + RACUN.korak(rs, t));
+  crtajR();
+}
+function rReset() { rs = RACUN.novo($('r_nacin').value); rlog = []; $('r_svih').innerHTML = ''; crtajR(); }
+$('r_A').onclick = () => rKlik(0); $('r_B').onclick = () => rKlik(1);
+$('r_reset').onclick = rReset; $('r_nacin').onchange = rReset;
+$('r_svi').onclick = () => { $('r_svih').innerHTML = histogram(sviRedoslijedi(RACUN, $('r_nacin').value), 'stanje 0, isplata 1'); };
+
+let ss = STOG.novo('bez'), slog = [];
+function crtajS() {
+  [0, 1].forEach(t => {
+    $('s_prog' + 'AB'[t]).innerHTML = prog(STOG_KOD[ss.nacin], ss.pc[t], false) + (STOG.gotov(ss, t) ? '\n// gotov' : '');
+    $('s_' + 'AB'[t]).disabled = STOG.gotov(ss, t);
+  });
+  const l = STOG.lanac(ss), iz = STOG.gotov(ss, 0) && STOG.gotov(ss, 1) ? STOG.izgubljeni(ss) : [];
+  $('s_lista').innerHTML = '<div class="cvor vrh">vrh</div><span class="strel">→</span>' +
+    l.map((c, k) => `<div class="cvor">${c.slice(1)}</div>` + (k < l.length - 1 ? '<span class="strel">→</span>' : '')).join('') +
+    iz.map(c => `<span style="margin-left:18px" class="muted">izgubljen:</span><div class="cvor izgubljen">${c.slice(1)}</div><span class="strel">→ ${ss.sljedeci[c] ? ss.sljedeci[c].slice(1) : '–'}</span>`).join('');
+  $('s_log').innerHTML = slog.slice().reverse().join('<br>');
+  const kraj = STOG.gotov(ss, 0) && STOG.gotov(ss, 1);
+  $('s_rez').innerHTML = !kraj ? '' : iz.length ? `<span class="pill bad">krivo</span> čvor ${iz.map(c => c.slice(1)).join(', ')} pokazuje na stog, ali na njega ne pokazuje nitko`
+    : `<span class="pill ok">točno</span> na stogu su oba nova čvora` + (ss.pokusaja.some(p => p > 1) ? ` (jedan task je pokušao ${Math.max(...ss.pokusaja)} puta)` : '');
+}
+function sKlik(t) { if (STOG.gotov(ss, t)) return; slog.push(`${slog.length + 1}. ` + STOG.korak(ss, t)); crtajS(); }
+function sReset() { ss = STOG.novo($('s_nacin').value); slog = []; $('s_svih').innerHTML = ''; crtajS(); }
+$('s_A').onclick = () => sKlik(0); $('s_B').onclick = () => sKlik(1);
+$('s_reset').onclick = sReset; $('s_nacin').onchange = sReset;
+$('s_svi').onclick = () => { $('s_svih').innerHTML = histogram(sviRedoslijedi(STOG, $('s_nacin').value), 'ništa izgubljeno'); };
+
+rReset(); sReset();
+</script>
+</body>
+</html>

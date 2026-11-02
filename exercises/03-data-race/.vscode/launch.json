@@ -1,0 +1,71 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Vježba 3: zadatak 1 (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-debug",
+      "program": "${workspaceFolder}/Zadatak1_Brojac/bin/Debug/net10.0/Zadatak1_Brojac.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak1_Brojac",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 3: zadatak 1 (Release)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-release",
+      "program": "${workspaceFolder}/Zadatak1_Brojac/bin/Release/net10.0/Zadatak1_Brojac.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak1_Brojac",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 3: zadatak 2 (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-debug",
+      "program": "${workspaceFolder}/Zadatak2_Racun/bin/Debug/net10.0/Zadatak2_Racun.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak2_Racun",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 3: zadatak 2 (Release)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-release",
+      "program": "${workspaceFolder}/Zadatak2_Racun/bin/Release/net10.0/Zadatak2_Racun.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak2_Racun",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 3: zadatak 3 (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-debug",
+      "program": "${workspaceFolder}/Zadatak3_Stog/bin/Debug/net10.0/Zadatak3_Stog.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak3_Stog",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 3: zadatak 3 (Release)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-release",
+      "program": "${workspaceFolder}/Zadatak3_Stog/bin/Release/net10.0/Zadatak3_Stog.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak3_Stog",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    }
+  ]
+}

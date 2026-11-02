@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vježba 3: data race, lock i Interlocked</title>
+<link rel="stylesheet" href="stil.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Vježba 3: data race, lock i Interlocked</h1>
+  <p class="lead">Paralelno programiranje, tjedan 4. Nakon vježbe znate prepoznati data race i race condition te ih popraviti lockom, Interlockedom i CompareExchangeom.</p>
+
+  <h2>Priprema</h2>
+  <div class="card">
+    <ul class="tight">
+      <li>Otvorite <code>Vjezba3.sln</code>; svaki zadatak je zaseban projekt (<code>ZadatakN_*/ZadatakN_*.cs</code>). Vremena mjerite u <b>Release</b> konfiguraciji (<code>dotnet run -c Release</code>).</li>
+      <li>Prije vježbe pogledajte prezentaciju i <a href="Vizualizacije/index.html">Vizualizacije</a> (brojač, račun i stog).</li>
+    </ul>
+  </div>
+
+  <h2>Zadaci</h2>
+  <div class="card">
+    <h3>Zadatak 1: brojač <span class="pill">Zadatak1_Brojac.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: 12 taskova povećava isti brojač 1 000 000 puta, bez zaštite.</p>
+    <b>Što trebate napraviti:</b>
+    <ol class="tight">
+      <li>Pokrenite zadano nekoliko puta. Koliko se povećanja izgubi i zašto je rezultat svaki put drukčiji? (<a href="Vizualizacije/brojac.html">brojac.html</a>)</li>
+      <li>Popravite lockom s jednom zajedničkom bravom, pa pokažite zamku »svaki task svoja brava«.</li>
+      <li>Popravite s <code>Interlocked.Increment</code>.</li>
+      <li>Popravite lokalnim brojačem u tasku i jednim <code>Interlocked.Add</code>. Usporedite vremena svih načina.</li>
+    </ol>
+  </div>
+  <div class="card">
+    <h3>Zadatak 2: račun <span class="pill">Zadatak2_Racun.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: isplata s računa u kojoj je svaki korak atomaran, a stanje ode ispod nule.</p>
+    <b>Što trebate napraviti:</b>
+    <ol class="tight">
+      <li>Objasnite zašto je ovo race condition, a nije data race. (<a href="Vizualizacije/racun_stog.html">racun_stog.html</a>)</li>
+      <li>Popravite lockom oko oba koraka.</li>
+      <li>Popravite s <code>Interlocked.CompareExchange</code> u petlji.</li>
+    </ol>
+  </div>
+  <div class="card">
+    <h3>Zadatak 3: stog <span class="pill">Zadatak3_Stog.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: stog kao povezana lista, <code>Push</code> bez zaštite.</p>
+    <b>Što trebate napraviti:</b>
+    <ol class="tight">
+      <li>Pokrenite zadano. Koliko čvorova se izgubi?</li>
+      <li>Napišite <code>Push</code> s lockom.</li>
+      <li>Napišite <code>Push</code> s <code>CompareExchange</code> bez locka.</li>
+    </ol>
+  </div>
+</div>
+</body>
+</html>

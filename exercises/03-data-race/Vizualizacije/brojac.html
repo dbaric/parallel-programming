@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Brojač: lock i Interlocked</title>
+<link rel="stylesheet" href="stil.css">
+<style>
+.prog{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;white-space:pre;overflow-x:auto;line-height:1.6}
+.prog .on{background:var(--soft);color:var(--acc);font-weight:700}
+.prog .ceka{background:var(--badbg);color:var(--bad);font-weight:700}
+.task h3{margin-bottom:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Brojač: lock, svaka svoja brava i Interlocked</h1>
+  <p class="lead">Nastavak odjeljka 6 tjedna 2, uz predavanje 4 (slajdovi 4 i 7–12). Dva taska, svaki dvaput <code>brojac++</code>; očekujemo 4. Vi birate koji task izvodi idući korak, a raspoređivač u stvarnom programu bira sam.</p>
+
+  <h2>1. Korak po korak</h2>
+  <div class="expl">
+    <b class="t">Što vidite</b>
+    <p>Program svakog taska, s istaknutim retkom koji task izvodi idući. <code>brojac++</code> su tri koraka: čitaj brojač u svoj registar, povećaj registar, upiši registar u brojač (slajd 4). Brojač je zajednički, a registar svaki task ima svoj.</p>
+    <ul>
+      <li><b>bez zaštite:</b> koraci taskova miješaju se slobodno;</li>
+      <li><b>jedna zajednička brava:</b> <code>lock (brava)</code> oko <code>brojac++</code>; dok jedan task drži bravu, drugi na ulazu čeka (slajdovi 7–9);</li>
+      <li><b>svaki task svoja brava:</b> lock postoji, ali svaki task zaključava svoj objekt (slajd 11);</li>
+      <li><b>Interlocked.Increment:</b> povećanje je jedan nedjeljiv korak (slajd 12).</li>
+    </ul>
+    <b class="t">Što učiniti</b>
+    <p>U načinu »bez zaštite« složite redoslijed u kojem se izgubi povećanje: neka oba taska pročitaju isti broj prije nego što itko upiše. Zatim isto pokušajte u ostalim načinima. Kad task čeka na bravu, pogledajte što se dogodi ako kliknete njegov korak.</p>
+  </div>
+  <div class="card">
+    <div class="row">
+      <label>Način: <select id="b_nacin"><option value="bez" selected>bez zaštite</option><option value="jedna">jedna zajednička brava</option><option value="svoja">svaki task svoja brava</option><option value="inter">Interlocked.Increment</option></select></label>
+      <button id="b_A" class="primary">korak A</button>
+      <button id="b_B" class="primary">korak B</button>
+      <button id="b_kraj">Do kraja (slučajno)</button>
+      <button id="b_reset">Ispočetka</button>
+    </div>
+    <div class="grid2" style="margin-top:12px">
+      <div class="task"><h3>task A</h3><div id="b_progA" class="prog"></div><div id="b_regA" class="muted" style="font-size:13px;margin-top:4px"></div></div>
+      <div class="task"><h3>task B</h3><div id="b_progB" class="prog"></div><div id="b_regB" class="muted" style="font-size:13px;margin-top:4px"></div></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div class="kpi"><small>brojac (zajednički)</small><span class="big" id="b_K"></span></div>
+      <div class="kpi"><small>brava drži</small><span class="big" id="b_brava"></span></div>
+      <div class="kpi"><small>koraka</small><span class="big" id="b_br"></span></div>
+    </div>
+    <div id="b_rez" style="margin-top:8px"></div>
+    <div id="b_log" class="log"></div>
+  </div>
+
+  <h2>2. Svi mogući redoslijedi</h2>
+  <div class="expl">
+    <b class="t">Što vidite</b>
+    <p>Program prođe svaki mogući redoslijed koraka dvaju taskova (pri čemu task koji čeka na bravu ne može napraviti korak) i prebroji koliko redoslijeda završi kojim brojem. To je broj mogućih redoslijeda, a ne vjerojatnost: raspoređivač ih ne bira jednako često, pa se iz omjera ne može izračunati koliko će povećanja nestati u stvarnom programu.</p>
+    <b class="t">Što učiniti</b>
+    <p>Pokrenite za sva četiri načina. U kojima je svaki redoslijed točan? Koliko je najmanje što brojač može biti bez zaštite?</p>
+  </div>
+  <div class="card">
+    <div class="row">
+      <label>Način: <select id="s_nacin"><option value="bez" selected>bez zaštite</option><option value="jedna">jedna zajednička brava</option><option value="svoja">svaki task svoja brava</option><option value="inter">Interlocked.Increment</option></select></label>
+      <button id="s_go" class="primary">Prebroji sve redoslijede</button>
+    </div>
+    <div id="s_rez" style="margin-top:12px"></div>
+  </div>
+  <div class="prob"><b>Problem:</b> bez zaštite povećanje se gubi kad oba taska pročitaju istu vrijednost (data race). Lock pomaže samo ako je brava ista za sve: sa svojom bravom svaki task odmah uđe, pa nitko nikoga ne čeka i rezultat je kriv kao bez zaštite. Na predavanju (12 taskova po 1.000.000): bez zaštite 1,8–2,6 milijuna umjesto 12, svaki task svoja brava 1.981.047.</div>
+  <div class="sol"><b>Rješenje:</b> jedna brava, stvorena prije taskova, ili <code>Interlocked.Increment</code>. Oba daju 12.000.000 svaki put. Cijena: lock 456 ms, Interlocked 203 ms, a slijedno u jednom tasku 5 ms (slajd 13). Najbrže je ne dijeliti brojač: lokalno brojanje pa jedan <code>Interlocked.Add</code>, 1 ms (slajd 14).</div>
+
+  <h2>Pitanja za razmišljanje</h2>
+  <ul class="tight">
+    <li>Zašto s jednom bravom više nema izgubljenih povećanja, iako su koraci čitaj, povećaj, upiši i dalje odvojeni?</li>
+    <li>U načinu »svaki task svoja brava« lock postoji. Zašto rezultat nije bolji nego bez zaštite?</li>
+    <li>Koliko je najmanje i najviše što brojač može biti s tri povećanja po tasku (kao u odjeljku 6 tjedna 2)?</li>
+    <li>Interlocked je oko dva puta brži od locka, a slijedno brojanje oko 40 puta brže od Interlocked (slajd 13). Zašto je onda »lokalno, pa jedan Add« najbrži?</li>
+  </ul>
+  <footer>Izvori: predavanje 4, slajdovi 4 i 7–14 (Microsoft Learn: lock statement, Interlocked class); mjerenja DataRaceDemo (Tjedan 04 - Data race/Predavanje/DataRaceDemo, ispis_2026-10-25.txt; i7-9750H, .NET 10, Release). Animacija bez zaštite s tri povećanja po tasku: <a href="../../Tjedan%2002%20-%20Taskovi%20i%20zamke/Vizualizacije/tjedan2.html">tjedan 2, odjeljak 6</a>.</footer>
+</div>
+<script src="zajednicko.js"></script>
+<script>
+// ---------- logika (bez DOM-a) ----------
+const PO_TASKU = 2;   // svaki task dvaput brojac++
+// Koraci jednog povećanja za svaki način.
+const KORACI = {
+  bez: ['citaj', 'povecaj', 'upisi'],
+  jedna: ['lock', 'citaj', 'povecaj', 'upisi', 'unlock'],
+  svoja: ['lock', 'citaj', 'povecaj', 'upisi', 'unlock'],
+  inter: ['inc']
+};
+function novo(nacin) {
+  return { nacin, K: 0, reg: [null, null], pc: [0, 0], gotovo: [0, 0], brava: null, svoja: [false, false] };
+}
+const kraj = (st, t) => st.gotovo[t] >= PO_TASKU;
+const korakIme = (st, t) => KORACI[st.nacin][st.pc[t]];
+// Task čeka ako treba uzeti zajedničku bravu, a drži je drugi task.
+const ceka = (st, t) => !kraj(st, t) && st.nacin === 'jedna' && korakIme(st, t) === 'lock' && st.brava !== null && st.brava !== t;
+const moze = (st, t) => !kraj(st, t) && !ceka(st, t);
+function korak(st, t) {
+  const ime = korakIme(st, t), T = 'AB'[t];
+  let opis;
+  if (ime === 'citaj') { st.reg[t] = st.K; opis = `${T}: reg = brojac (${st.K})`; }
+  else if (ime === 'povecaj') { st.reg[t]++; opis = `${T}: reg = reg + 1 (${st.reg[t]})`; }
+  else if (ime === 'upisi') { st.K = st.reg[t]; opis = `${T}: brojac = reg (${st.K})`; }
+  else if (ime === 'inc') { st.K++; opis = `${T}: Interlocked.Increment → brojac = ${st.K}`; }
+  else if (ime === 'lock') {
+    if (st.nacin === 'jedna') { st.brava = t; opis = `${T}: uzima bravu`; }
+    else { st.svoja[t] = true; opis = `${T}: uzima svoju bravu (nitko drugi je ne treba)`; }
+  } else { if (st.nacin === 'jedna') st.brava = null; else st.svoja[t] = false; opis = `${T}: otpušta bravu`; }
+  st.pc[t]++;
+  if (st.pc[t] === KORACI[st.nacin].length) { st.pc[t] = 0; st.gotovo[t]++; }
+  return opis;
+}
+const kopija = st => JSON.parse(JSON.stringify(st));
+// Svi redoslijedi: rezultat = { konačni brojač: broj redoslijeda }.
+function sviRedoslijedi(nacin) {
+  const h = {};
+  (function dfs(st) {
+    const r = [0, 1].filter(t => moze(st, t));
+    if (!r.length) { h[st.K] = (h[st.K] || 0) + 1; return; }
+    for (const t of r) { const s2 = kopija(st); korak(s2, t); dfs(s2); }
+  })(novo(nacin));
+  return h;
+}
+
+// ---------- prikaz ----------
+const LINIJE = {
+  bez: [['citaj', 'reg = brojac;'], ['povecaj', 'reg = reg + 1;'], ['upisi', 'brojac = reg;']],
+  jedna: [['lock', 'lock (brava)       // zajednička'], ['citaj', '    reg = brojac;'], ['povecaj', '    reg = reg + 1;'], ['upisi', '    brojac = reg;'], ['unlock', '// kraj lock']],
+  svoja: [['lock', 'lock (mojaBrava)   // svaki task svoju'], ['citaj', '    reg = brojac;'], ['povecaj', '    reg = reg + 1;'], ['upisi', '    brojac = reg;'], ['unlock', '// kraj lock']],
+  inter: [['inc', 'Interlocked.Increment(ref brojac);']]
+};
+let st = novo('bez'), log = [];
+let rs = 1;
+const rnd = () => (rs = (rs * 1103515245 + 12345) % 2147483648) / 2147483648;
+function crtajProg(t) {
+  const n = st.nacin;
+  const linije = [`for (int i = 0; i < ${PO_TASKU}; i++)   // povećanje ${Math.min(st.gotovo[t] + 1, PO_TASKU)} od ${PO_TASKU}`].concat(
+    LINIJE[n].map(([ime, txt], j) => {
+      const aktivan = !kraj(st, t) && st.pc[t] === j;
+      const cls = aktivan ? (ceka(st, t) ? 'ceka' : 'on') : '';
+      return (cls ? `<span class="${cls}">` : '') + '    ' + txt + (cls === 'ceka' ? '   ← čeka bravu' : '') + (cls ? '</span>' : '');
+    }));
+  $('b_prog' + 'AB'[t]).innerHTML = linije.join('\n');
+  $('b_reg' + 'AB'[t]).textContent = kraj(st, t) ? 'gotov' : (n === 'inter' ? '' : `registar: ${st.reg[t] === null ? '–' : st.reg[t]}`);
+}
+function crtaj() {
+  crtajProg(0); crtajProg(1);
+  $('b_K').textContent = String(st.K);
+  $('b_brava').textContent = st.nacin === 'jedna' ? (st.brava === null ? 'nitko' : 'AB'[st.brava]) : (st.nacin === 'svoja' ? 'svaki svoju' : '–');
+  $('b_br').textContent = String(log.length);
+  $('b_A').disabled = kraj(st, 0); $('b_B').disabled = kraj(st, 1);
+  $('b_log').innerHTML = log.slice().reverse().join('<br>');
+  if (kraj(st, 0) && kraj(st, 1)) {
+    $('b_rez').innerHTML = st.K === 2 * PO_TASKU ? `<span class="pill ok">točno</span> brojac = ${st.K}`
+      : `<span class="pill bad">krivo</span> brojac = ${st.K}, očekivano ${2 * PO_TASKU}: izgubljeno ${2 * PO_TASKU - st.K}`;
+  } else $('b_rez').innerHTML = '';
+}
+function klik(t) {
+  if (kraj(st, t)) return;
+  if (ceka(st, t)) { log.push(`${'AB'[t]}: čeka, bravu drži ${'AB'[st.brava]}`); crtaj(); return; }
+  log.push(`${log.length + 1}. ` + korak(st, t)); crtaj();
+}
+function resetiraj() { st = novo($('b_nacin').value); log = []; crtaj(); }
+$('b_A').onclick = () => klik(0);
+$('b_B').onclick = () => klik(1);
+$('b_kraj').onclick = () => { while (!(kraj(st, 0) && kraj(st, 1))) { const r = [0, 1].filter(t => moze(st, t)); klik(r[Math.floor(rnd() * r.length)]); } };
+$('b_reset').onclick = resetiraj;
+$('b_nacin').onchange = resetiraj;
+
+const NAZIV = { bez: 'bez zaštite', jedna: 'jedna zajednička brava', svoja: 'svaki task svoja brava', inter: 'Interlocked.Increment' };
+function crtajSve() {
+  const n = $('s_nacin').value, h = sviRedoslijedi(n);
+  const uk = Object.values(h).reduce((a, b) => a + b, 0), kljucevi = Object.keys(h).map(Number).sort((a, b) => a - b);
+  const krivih = uk - (h[2 * PO_TASKU] || 0);
+  $('s_rez').innerHTML = `<div class="muted" style="font-size:13px;margin-bottom:6px">${NAZIV[n]}: ${hr(uk)} mogućih redoslijeda</div><div class="hist" style="grid-template-columns:110px 1fr 70px">` +
+    kljucevi.map(k => `<span>brojac = ${k}</span><div class="bar ${k === 2 * PO_TASKU ? 'ok' : 'bad'}" style="width:${Math.max(2, 100 * h[k] / uk)}%"></div><span>${hr(h[k])}</span>`).join('') +
+    `</div><div style="margin-top:8px">${krivih ? `<span class="pill bad">${hr(krivih)} od ${hr(uk)} redoslijeda daje krivi rezultat</span>` : '<span class="pill ok">svaki redoslijed daje 4</span>'}</div>`;
+}
+$('s_go').onclick = crtajSve;
+$('s_nacin').onchange = () => { $('s_rez').innerHTML = ''; };
+resetiraj();
+</script>
+</body>
+</html>
