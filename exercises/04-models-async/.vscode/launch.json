@@ -1,0 +1,71 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Vježba 4: zadatak 1 (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-debug",
+      "program": "${workspaceFolder}/Zadatak1_GlavaListe/bin/Debug/net10.0/Zadatak1_GlavaListe.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak1_GlavaListe",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 4: zadatak 1 (Release)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-release",
+      "program": "${workspaceFolder}/Zadatak1_GlavaListe/bin/Release/net10.0/Zadatak1_GlavaListe.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak1_GlavaListe",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 4: zadatak 2 (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-debug",
+      "program": "${workspaceFolder}/Zadatak2_Async/bin/Debug/net10.0/Zadatak2_Async.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak2_Async",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 4: zadatak 2 (Release)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-release",
+      "program": "${workspaceFolder}/Zadatak2_Async/bin/Release/net10.0/Zadatak2_Async.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak2_Async",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 4: zadatak 3 (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-debug",
+      "program": "${workspaceFolder}/Zadatak3_Blokiranje/bin/Debug/net10.0/Zadatak3_Blokiranje.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak3_Blokiranje",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 4: zadatak 3 (Release)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-release",
+      "program": "${workspaceFolder}/Zadatak3_Blokiranje/bin/Release/net10.0/Zadatak3_Blokiranje.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak3_Blokiranje",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    }
+  ]
+}

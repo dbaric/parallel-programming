@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Glava liste i ograda</title>
+<link rel="stylesheet" href="stil.css">
+<style>
+.lista{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:10px 0}
+.cvor{width:40px;height:40px;border-radius:50%;border:2px solid var(--acc);display:flex;align-items:center;justify-content:center;font-weight:700;background:var(--card)}
+.cvor.glava{border-color:var(--ok);background:var(--okbg)}
+.strel{color:var(--muted);font-size:18px}
+.cellbox.glava{border-color:var(--ok);background:var(--okbg)}
+.cellbox.kriva{border-color:var(--bad);background:var(--badbg)}
+.lane{display:grid;grid-template-columns:40px 1fr;gap:6px 10px;align-items:center;font-size:13px;margin:3px 0}
+.track{position:relative;height:22px;background:var(--bg);border:1px solid var(--line);border-radius:5px}
+.track span{position:absolute;top:2px;bottom:2px;font-size:11px;display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;color:#fff}
+.leg{display:inline-block;width:14px;height:12px;border-radius:3px;vertical-align:middle;margin:0 4px 0 12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Glava vezane liste: PRAM, redoslijed i ograda</h1>
+  <p class="lead">Primjer s predavanja 5 (slajdovi 12–14). Za svaki čvor liste znamo sljedbenika, ali ne znamo gdje lista počinje. Na PRAM-u algoritam od tri koraka nađe glavu u O(1). Na stvarnom računalu isti kod bez ograde daje pogrešan rezultat.</p>
+
+  <h2>1. Algoritam na PRAM-u: korak po korak</h2>
+  <div class="expl">
+    <b class="t">Što vidite</b>
+    <p>Listu (strelica pokazuje sljedbenika) i polje M, po jedna ćelija za svaki čvor. Procesor i radi za čvor i, a svi procesori izvode isti korak istodobno (lock step):</p>
+    <ul>
+      <li><b>korak 1:</b> M[i] := 0</li>
+      <li><b>korak 2:</b> M[next[i]] := 1, ako čvor i ima sljedbenika</li>
+      <li><b>korak 3:</b> ako je M[i] = 0, onda je i glava</li>
+    </ul>
+    <b class="t">Što učiniti</b>
+    <p>Krenite s listom sa slajda 12 (3 → 0 → 4 → 1 → 2) i idite korak po korak. Pratite koji M ostane 0 nakon koraka 2. Zatim odaberite nasumičnu listu s više čvorova.</p>
+  </div>
+  <div class="card">
+    <div class="row">
+      <label>Lista: <select id="g_lista"><option value="slajd" selected>sa slajda 12 (5 čvorova)</option><option value="rnd">nasumična</option></select></label>
+      <label>Čvorova n: <b id="g_nv"></b><br><input type="range" id="g_n" min="4" max="12" value="8"></label>
+      <button id="g_nova">Nova nasumična lista</button>
+      <button id="g_korak" class="primary">Sljedeći korak</button>
+      <button id="g_reset">Ispočetka</button>
+    </div>
+    <div id="g_crtez" class="lista"></div>
+    <div class="muted" style="font-size:13px">polje M (indeks je broj čvora)</div>
+    <div id="g_M" class="cells" style="margin-top:4px"></div>
+    <div class="row" style="margin-top:10px">
+      <div class="kpi"><small>PRAM korak</small><span class="big" id="g_kor"></span></div>
+      <div class="kpi"><small>Glava</small><span class="big" id="g_gl"></span></div>
+    </div>
+    <div id="g_opis" style="margin-top:8px"></div>
+  </div>
+  <div class="note">Tri koraka, svaki traje jednu jedinicu, bez obzira na broj čvorova: O(1). Nitko ne piše u istu ćeliju (svaki čvor ima najviše jednog prethodnika) i nitko ne čita isto, pa je to EREW algoritam.</div>
+
+  <h2>2. Zamka i popravak: isti kod bez lock stepa</h2>
+  <div class="expl">
+    <b class="t">Što vidite</b>
+    <p>Iste operacije, ali svaki procesor (task) izvodi svoja tri koraka zaredom, bez čekanja na druge. Svaka operacija je jedan redak u zapisniku. Odaberite redoslijed:</p>
+    <ul>
+      <li><b>for petlja:</b> i = 0 izvede sva tri koraka, zatim i = 1, i tako dalje (kao obična petlja u primjeru 1);</li>
+      <li><b>taskovi bez ograde:</b> operacije različitih taskova miješaju se slučajnim redom;</li>
+      <li><b>taskovi s ogradom:</b> isto slučajno miješanje, ali nitko ne počinje korak k + 1 dok svi ne završe korak k (Barrier, primjer 3).</li>
+    </ul>
+    <b class="t">Što učiniti</b>
+    <p>Za listu sa slajda idite operaciju po operaciju u načinu »for petlja« i pratite čvor 0: tko upisuje M[0] i kojim redom. Zatim pokrenite svaki način 1000 puta i usporedite koliko glava se nađe.</p>
+  </div>
+  <div class="card">
+    <div class="row">
+      <label>Redoslijed: <select id="z_nacin"><option value="for" selected>for petlja: sva tri koraka za svaki i</option><option value="bez">taskovi bez ograde: slučajan redoslijed</option><option value="ograda">taskovi s ogradom između koraka</option></select></label>
+      <button id="z_op" class="primary">Sljedeća operacija</button>
+      <button id="z_kraj">Do kraja</button>
+      <button id="z_reset">Ispočetka</button>
+      <button id="z_1000">Pokreni 1000 puta</button>
+    </div>
+    <div class="muted" style="font-size:13px;margin-top:10px">polje M (zeleno: prava glava; crveno: čvor koji je proglašen glavom, a nije)</div>
+    <div id="z_M" class="cells" style="margin-top:4px"></div>
+    <div class="row" style="margin-top:10px">
+      <div class="kpi"><small>Operacija</small><span class="big" id="z_br"></span></div>
+      <div class="kpi"><small>Pronađenih glava</small><span class="big" id="z_gl"></span></div>
+    </div>
+    <div id="z_rez" style="margin-top:8px"></div>
+    <div id="z_log" class="log"></div>
+    <div id="z_hist" style="margin-top:12px"></div>
+  </div>
+  <div class="prob"><b>Problem:</b> u PRAM-u »paralelno« znači: korak 1 za sve, pa korak 2 za sve. Kad svaki i izvede sva tri koraka odjednom, sam sebi prepiše jedinicu koju je upisao prethodnik (prethodnik je bio prije), ili pročita M[i] prije nego što prethodnik upiše jedinicu (prethodnik je tek poslije). U for petlji to se dogodi svakom čvoru, pa je svaki »glava«. Na predavanju: 1000 glava od 1000 čvorova, i u Parallel.For i u običnoj for petlji.</div>
+  <div class="sol"><b>Rješenje:</b> ograda (barijera) između koraka vraća lock step ondje gdje treba: svaki korak počinje tek kad su svi završili prethodni. U C#-u: tri uzastopna Parallel.For (kraj petlje čeka sve iteracije) ili <code>Barrier.SignalAndWait</code>. Na predavanju: 1 glava (654) u svakom pokušaju.</div>
+
+  <h2>3. Praćenje na aPRAM-u: tko kada čeka</h2>
+  <div class="expl">
+    <b class="t">Što vidite</b>
+    <p>Isti algoritam kao vremenska crta: svaki procesor je jedan redak, a vrijeme teče udesno (predavanje 5, slajd 19). Pravila aPRAM-a: lokalna operacija traje 1, pristup globalnoj memoriji d, a faza završi kad završi najsporiji procesor i zatim slijedi ograda B; zadnja naredba je ograda. Jedan procesor prije koraka 2 kasni zadani broj jedinica. Lista je ona iz odjeljka 1.</p>
+    <b class="t">Što učiniti</b>
+    <p>Krenite od zadanih brojeva (d = 4, B = 16, P3 kasni 10). S ogradama pratite tko čeka koga. Zatim isključite ograde: algoritam je brži, ali je li točan? Smanjujte kašnjenje i nađite granicu ispod koje je bez ograda slučajno točan.</p>
+  </div>
+  <div class="card">
+    <div class="row">
+      <label>Globalni pristup d: <b id="a_dv"></b><br><input type="range" id="a_d" min="1" max="20" value="4"></label>
+      <label>Ograda B: <b id="a_bv"></b><br><input type="range" id="a_b" min="1" max="40" value="16"></label>
+      <label>Kasni: <select id="a_spori"></select></label>
+      <label>za: <b id="a_kv"></b><br><input type="range" id="a_k" min="0" max="40" value="10"></label>
+      <label><input type="checkbox" id="a_og" checked> ograde između koraka</label>
+    </div>
+    <div style="margin-top:12px" id="a_crta"></div>
+    <div class="muted" style="font-size:12.5px;margin-top:6px"><span class="leg" style="background:var(--acc2);margin-left:0"></span>globalni pristup d<span class="leg" style="background:var(--acc)"></span>lokalno 1<span class="leg" style="background:var(--bad)"></span>kasni<span class="leg" style="background:var(--line)"></span>čeka najsporijeg<span class="leg" style="background:var(--muted)"></span>ograda B</div>
+    <div class="row" style="margin-top:10px">
+      <div class="kpi"><small>Ukupno vrijeme</small><span class="big" id="a_T"></span></div>
+      <div class="kpi"><small>Pronađene glave</small><span class="big" id="a_gl"></span></div>
+    </div>
+    <div id="a_rez" style="margin-top:8px"></div>
+  </div>
+  <div class="note">Pravilo prikaza bez ograda: čitanje vidi upise koji su završili do kraja čitanja; ako upis i čitanje završe u istom trenutku, upis je prvi. next[i] procesor ima u lokalnoj memoriji. Brojevi d i B su izmišljeni, kao na slajdovima; izmjerena cijena ograde je na slajdu 20 i u <a href="modeli.html">modeli.html</a>, odjeljak 4.</div>
+
+  <h2>Pitanja za razmišljanje</h2>
+  <ul class="tight">
+    <li>Zašto for petlja daje točno n glava za svaku listu, a taskovi bez ograde različit broj od pokretanja do pokretanja?</li>
+    <li>Treba li ograda i između koraka 1 i 2, ili je dovoljna samo ona između koraka 2 i 3? Isprobajte u mislima redoslijed u kojem prethodnik upiše 1 prije nego što i upiše 0.</li>
+    <li>Pravilo faze aPRAM-a (slajd 16): unutar faze nitko ne smije čitati ono što drugi piše. Koji koraci ovog algoritma krše to pravilo ako su u istoj fazi?</li>
+    <li>Ograda nije besplatna (slajd 20). Koliko ograda treba algoritam od t PRAM koraka?</li>
+    <li>U odjeljku 3, bez ograda: koliko najviše smije kasniti P3 da rezultat i dalje bude točan, i zašto baš toliko? Može li program koji je točan samo uz takvu pretpostavku biti ispravan aPRAM program?</li>
+  </ul>
+  <footer>Izvori: predavanje 5, slajdovi 12–16, 19 i 20; arhivsko predavanje »Modeli paralelnih računala« (T. Dadić), slajdovi 10–11. Brojke iz ModeliDemo (Tjedan 05/Predavanje/ModeliDemo, ispis_2026-10-31.txt).</footer>
+</div>
+<script src="zajednicko.js"></script>
+<script>
+// ---------- logika (bez DOM-a) ----------
+// Lista od n čvorova: red[k] je k-ti čvor liste, next[i] sljedbenik čvora i (−1 za zadnji).
+function napraviListu(n, sjeme) {
+  let s = sjeme >>> 0;
+  const rnd = () => (s = (s * 1103515245 + 12345) % 2147483648) / 2147483648;
+  const red = [...Array(n).keys()];
+  for (let k = n - 1; k > 0; k--) { const j = Math.floor(rnd() * (k + 1)); [red[k], red[j]] = [red[j], red[k]]; }
+  return listaIzReda(red);
+}
+function listaIzReda(red) {
+  const next = Array(red.length).fill(-1);
+  for (let k = 0; k < red.length - 1; k++) next[red[k]] = red[k + 1];
+  return { red, next, glava: red[0] };
+}
+const SLAJD = listaIzReda([3, 0, 4, 1, 2]);
+
+// Operacija: { i, korak } (korak 1, 2 ili 3 procesora i).
+function izvediOperaciju(st, op, next) {
+  const { i, korak } = op;
+  if (korak === 1) { st.M[i] = 0; return `P${i}: M[${i}] := 0`; }
+  if (korak === 2) {
+    if (next[i] < 0) return `P${i}: čvor ${i} nema sljedbenika`;
+    st.M[next[i]] = 1; return `P${i}: M[${next[i]}] := 1`;
+  }
+  const g = st.M[i] === 0;
+  if (g) st.glave.push(i);
+  return `P${i}: čita M[${i}] = ${st.M[i]}` + (g ? ` → čvor ${i} je glava` : '');
+}
+function novoStanje(n) { return { M: Array(n).fill(null), glave: [] }; }
+
+// Redoslijedi operacija.
+function redLockStep(n) { const r = []; for (const k of [1, 2, 3]) for (let i = 0; i < n; i++) r.push({ i, korak: k }); return r; }
+function redFor(n) { const r = []; for (let i = 0; i < n; i++) for (const k of [1, 2, 3]) r.push({ i, korak: k }); return r; }
+// Slučajno miješanje: svaki procesor ima svoja tri koraka po redu; s ogradom nitko ne prelazi u idući korak dok svi ne završe trenutni.
+function redSlucajan(n, rnd, ograda) {
+  const sljedeci = Array(n).fill(1), r = [];
+  for (let ostalo = 3 * n; ostalo > 0; ostalo--) {
+    const najmanji = Math.min(...sljedeci);
+    const moze = [...Array(n).keys()].filter(i => sljedeci[i] <= 3 && (!ograda || sljedeci[i] === najmanji));
+    const i = moze[Math.floor(rnd() * moze.length)];
+    r.push({ i, korak: sljedeci[i]++ });
+  }
+  return r;
+}
+function izvediSve(next, red) {
+  const st = novoStanje(next.length);
+  for (const op of red) izvediOperaciju(st, op, next);
+  return st;
+}
+// Raspodjela broja glava u `puta` slučajnih pokretanja.
+function raspodjela(next, nacin, puta, rnd) {
+  const h = {};
+  for (let k = 0; k < puta; k++) {
+    const red = nacin === 'for' ? redFor(next.length) : redSlucajan(next.length, rnd, nacin === 'ograda');
+    const g = izvediSve(next, red).glave.length;
+    h[g] = (h[g] || 0) + 1;
+  }
+  return h;
+}
+
+// 1 glava, 2–4 glave, 5 glava; 21 glava, 22 glave …
+const glavaR = k => (k % 10 >= 2 && k % 10 <= 4 && (k % 100 < 12 || k % 100 > 14)) ? 'glave' : 'glava';
+
+// ---------- prikaz ----------
+let sjeme = 7, lista = SLAJD;
+let gKorak = 0, gSt = novoStanje(5);
+let zRed = [], zPoz = 0, zSt = novoStanje(5), zLog = [];
+let rndSt = 12345;
+const rnd = () => (rndSt = (rndSt * 1103515245 + 12345) % 2147483648) / 2147483648;
+
+function celije(M, glave, prava) {
+  return M.map((v, i) => {
+    const cls = glave.includes(i) ? (i === prava ? 'glava' : 'kriva') : '';
+    return `<div class="cellbox ${cls}"><small>M[${i}]</small><b>${v === null ? '?' : v}</b></div>`;
+  }).join('');
+}
+function crtajListu() {
+  $('g_crtez').innerHTML = lista.red.map((v, k) =>
+    `<div class="cvor${gKorak === 3 && v === lista.glava ? ' glava' : ''}">${v}</div>` + (k < lista.red.length - 1 ? '<span class="strel">→</span>' : '')).join('');
+}
+function crtajG() {
+  crtajListu();
+  $('g_M').innerHTML = celije(gSt.M, gSt.glave, lista.glava);
+  $('g_kor').textContent = gKorak + ' / 3';
+  $('g_gl').textContent = gKorak === 3 ? gSt.glave.join(', ') : '–';
+  const opis = ['Početak: sadržaj M nije poznat (?).',
+    'Korak 1: svi istodobno upišu 0 u svoju ćeliju.',
+    'Korak 2: svi istodobno upišu 1 sljedbeniku. Jedinicu dobije svaki čvor koji ima prethodnika.',
+    `Korak 3: svi istodobno pročitaju svoju ćeliju. Nula je ostala samo kod čvora ${lista.glava}, koji nema prethodnika: to je glava.`];
+  $('g_opis').innerHTML = opis[gKorak];
+  $('g_korak').disabled = gKorak === 3;
+}
+function gResetiraj() { gKorak = 0; gSt = novoStanje(lista.red.length); crtajG(); zResetiraj(); if (window.crtajA) { postaviSporog(); crtajA(); } }
+function gSljedeci() {
+  if (gKorak >= 3) return;
+  gKorak++;
+  for (let i = 0; i < lista.red.length; i++) izvediOperaciju(gSt, { i, korak: gKorak }, lista.next);
+  crtajG();
+}
+function postaviListu() {
+  lista = $('g_lista').value === 'slajd' ? SLAJD : napraviListu(+$('g_n').value, sjeme);
+  $('g_nv').textContent = $('g_lista').value === 'slajd' ? '5' : $('g_n').value;
+  $('g_n').disabled = $('g_lista').value === 'slajd';
+  gResetiraj();
+}
+
+function zResetiraj() {
+  const n = lista.red.length, nacin = $('z_nacin').value;
+  zRed = nacin === 'for' ? redFor(n) : redSlucajan(n, rnd, nacin === 'ograda');
+  zPoz = 0; zSt = novoStanje(n); zLog = []; $('z_hist').innerHTML = '';
+  crtajZ();
+}
+function zKorak() {
+  if (zPoz >= zRed.length) return;
+  const op = zRed[zPoz++];
+  zLog.push(`${zPoz}. (korak ${op.korak}) ` + izvediOperaciju(zSt, op, lista.next));
+  crtajZ();
+}
+function crtajZ() {
+  $('z_M').innerHTML = celije(zSt.M, zSt.glave, lista.glava);
+  $('z_br').textContent = zPoz + ' / ' + zRed.length;
+  $('z_gl').textContent = String(zSt.glave.length);
+  $('z_log').innerHTML = zLog.slice().reverse().join('<br>');
+  const gotovo = zPoz === zRed.length;
+  $('z_op').disabled = $('z_kraj').disabled = gotovo;
+  if (!gotovo) { $('z_rez').innerHTML = ''; return; }
+  const tocno = zSt.glave.length === 1 && zSt.glave[0] === lista.glava;
+  $('z_rez').innerHTML = tocno
+    ? `<span class="pill ok">točno</span> jedna glava: ${lista.glava}`
+    : `<span class="pill bad">krivo</span> ${zSt.glave.length} glava (${zSt.glave.join(', ')}), a prava je samo ${lista.glava}`;
+}
+function z1000() {
+  const h = raspodjela(lista.next, $('z_nacin').value, 1000, rnd);
+  const kljucevi = Object.keys(h).map(Number).sort((a, b) => a - b);
+  $('z_hist').innerHTML = '<div class="muted" style="font-size:13px;margin-bottom:4px">broj pronađenih glava u 1000 pokretanja</div><div class="hist">' +
+    kljucevi.map(k => `<span>${k} ${glavaR(k)}</span><div class="bar ${k === 1 ? 'ok' : 'bad'}" style="width:${Math.max(2, h[k] / 10)}%"></div><span>${h[k]}</span>`).join('') + '</div>';
+}
+
+// ---------- odjeljak 3: aPRAM vremenska crta ----------
+// Procesor i za čvor i. Segment: [od, do, vrsta]; vrste: g globalni pristup, l lokalno, k kasni, c čeka, o ograda.
+function apramGlava(next, d, B, spori, kasni, ograde) {
+  const n = next.length, seg = [...Array(n)].map(() => []), dog = [];
+  const faze = [...Array(n).keys()].map(i => [
+    [['w', i, 0, d]],
+    (i === spori && kasni ? [['k', kasni]] : []).concat(next[i] >= 0 ? [['w', next[i], 1, d]] : []),
+    [['r', i, d], ['l', 1]]
+  ]);
+  function izvedi(i, ops, t) {
+    for (const op of ops) {
+      if (op[0] === 'w') { seg[i].push([t, t + op[3], 'g', `M[${op[1]}] := ${op[2]}`]); t += op[3]; dog.push([t, 0, i, op[1], op[2]]); }
+      else if (op[0] === 'r') { seg[i].push([t, t + op[2], 'g', `čita M[${op[1]}]`]); t += op[2]; dog.push([t, 1, i, op[1]]); }
+      else if (op[0] === 'l') { seg[i].push([t, t + op[1], 'l', 'usporedi']); t += op[1]; }
+      else { seg[i].push([t, t + op[1], 'k', 'kasni']); t += op[1]; }
+    }
+    return t;
+  }
+  let ukupno;
+  if (ograde) {
+    let t = 0;
+    for (let k = 0; k < 3; k++) {
+      const kraj = [...Array(n).keys()].map(i => izvedi(i, faze[i][k], t)), T = Math.max(...kraj);
+      for (let i = 0; i < n; i++) { if (kraj[i] < T) seg[i].push([kraj[i], T, 'c', 'čeka']); seg[i].push([T, T + B, 'o', 'ograda']); }
+      t = T + B;
+    }
+    ukupno = t;
+  } else ukupno = Math.max(...[...Array(n).keys()].map(i => izvedi(i, faze[i][0].concat(faze[i][1], faze[i][2]), 0)));
+  const M = Array(n).fill(null), glave = [];
+  dog.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  for (const [, vrsta, i, c, v] of dog) { if (vrsta === 0) M[c] = v; else if (M[c] === 0) glave.push(i); }
+  return { seg, ukupno, glave: glave.sort((a, b) => a - b) };
+}
+const BOJA = { g: 'var(--acc2)', l: 'var(--acc)', k: 'var(--bad)', c: 'var(--line)', o: 'var(--muted)' };
+function crtajA() {
+  const n = lista.red.length, d = +$('a_d').value, B = +$('a_b').value, kas = +$('a_k').value, og = $('a_og').checked;
+  $('a_dv').textContent = d; $('a_bv').textContent = B; $('a_kv').textContent = kas + ' jed.';
+  const sp = +$('a_spori').value;
+  const r = apramGlava(lista.next, d, B, sp, kas, og);
+  $('a_crta').innerHTML = r.seg.map((red, i) => `<div class="lane"><b>P${i}</b><div class="track">` +
+    red.filter(([od, doo]) => doo > od).map(([od, doo, v, opis]) => `<span title="${opis}: ${od}–${doo}" style="left:${100 * od / r.ukupno}%;width:${100 * (doo - od) / r.ukupno}%;background:${BOJA[v]};${v === 'c' ? 'color:var(--muted)' : ''}">${100 * (doo - od) / r.ukupno > 7 ? ({ g: 'd', l: '1', k: 'kasni', c: '', o: 'B' })[v] : ''}</span>`).join('') +
+    '</div></div>').join('') + `<div class="lane"><span></span><div class="muted" style="display:flex;justify-content:space-between;font-size:12px"><span>0</span><span>${r.ukupno}</span></div></div>`;
+  $('a_T').textContent = String(r.ukupno);
+  $('a_gl').textContent = r.glave.join(', ');
+  const tocno = r.glave.length === 1 && r.glave[0] === lista.glava;
+  const formula = og && !kas ? ` Bez kašnjenja: 3d + 3B + 1 = ${3 * d + 3 * B + 1}.` : '';
+  $('a_rez').innerHTML = (tocno ? `<span class="pill ok">točno</span> glava ${lista.glava}.` : `<span class="pill bad">krivo</span> glave ${r.glave.join(', ')}, a prava je samo ${lista.glava}.`) + formula +
+    (og ? ' Svi čekaju najsporijeg na ogradi.' : ' Bez ograda nitko nikoga ne čeka.');
+}
+function postaviSporog() {
+  const n = lista.red.length, prije = +$('a_spori').value;
+  $('a_spori').innerHTML = [...Array(n).keys()].map(i => `<option value="${i}">P${i}</option>`).join('');
+  $('a_spori').value = String(lista === SLAJD ? 3 : (prije < n ? prije : 0));
+}
+['a_d', 'a_b', 'a_k'].forEach(id => $(id).oninput = crtajA);
+$('a_og').onchange = crtajA; $('a_spori').onchange = crtajA;
+
+$('g_lista').onchange = postaviListu;
+$('g_n').oninput = () => { if ($('g_lista').value === 'rnd') postaviListu(); else $('g_nv').textContent = '5'; };
+$('g_nova').onclick = () => { sjeme++; $('g_lista').value = 'rnd'; postaviListu(); };
+$('g_korak').onclick = gSljedeci;
+$('g_reset').onclick = gResetiraj;
+$('z_nacin').onchange = zResetiraj;
+$('z_op').onclick = zKorak;
+$('z_kraj').onclick = () => { while (zPoz < zRed.length) zKorak(); };
+$('z_reset').onclick = zResetiraj;
+$('z_1000').onclick = z1000;
+postaviListu();
+</script>
+</body>
+</html>

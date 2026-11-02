@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Paralelno programiranje: tjedan 5</title>
+<link rel="stylesheet" href="stil.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Tjedan 5: modeli računala i kanceliranje</h1>
+  <p class="lead">Predavanje pita kako ocijeniti paralelni algoritam bez stvarnog računala (RAM, PRAM, aPRAM) i zašto algoritam koji je točan na PRAM-u može biti kriv na računalu. Na kraju: async/await nije paralelizam. Vježba prekida taskove tokenom (CancellationToken).</p>
+
+  <h2>Prikazi za ovaj tjedan</h2>
+  <div class="card">
+    <h3><a href="glava.html">Glava vezane liste: PRAM, redoslijed i ograda</a> <span class="pill">predavanje 5</span></h3>
+    <p style="margin:0 0 6px">Algoritam od tri PRAM koraka korak po korak, zatim isti algoritam operaciju po operaciju: kao for petlja, kao taskovi bez ograde i s ogradom; 1000 pokretanja i raspodjela broja pronađenih glava; praćenje na aPRAM-u kao vremenska crta (tko kada čeka, ukupno vrijeme s d i B).</p>
+    <p class="muted" style="margin:0;font-size:14px">Zamke: algoritam točan samo u lock stepu; čitanje onoga što drugi piše u istoj fazi.</p>
+  </div>
+  <div class="card">
+    <h3><a href="modeli.html">RAM, PRAM, EREW/CREW/CRCW i aPRAM</a> <span class="pill">predavanje 5</span></h3>
+    <p style="margin:0 0 6px">Jedan PRAM korak s četiri procesora: što dopušta koja inačica i što ostane u memoriji; »ima li nule« u jednom koraku (CRCW) ili log n koraka (EREW); cijena PRAM koraka na aPRAM-u (2B + 2d + 1 i 5B + 2d − 2); izmjerena cijena ograde.</p>
+    <p class="muted" style="margin:0;font-size:14px">Zamke: model kaže da sve košta 1; ograda za previše procesora.</p>
+  </div>
+  <div class="card">
+    <h3><a href="async.html">async/await: konkurentnost, ne paralelizam</a> <span class="pill">predavanje 5, vježba 5</span></h3>
+    <p style="margin:0 0 6px">Čekanja s await jedno po jedno i sva odjednom; async metoda bez await korak po korak, bez Task.Run i s njim; Thread.Sleep naspram Task.Delay. Sve brojke izmjerene.</p>
+    <p class="muted" style="margin:0;font-size:14px">Zamke: async metoda koja računa; blokiranje usred async koda.</p>
+  </div>
+
+  <h2>Koji slajd predavanja 5 koristi koji prikaz</h2>
+  <table>
+    <tr><th>Slajd</th><th>Tema</th><th>Prikaz</th></tr>
+    <tr><td>4–10</td><td>RAM, PRAM, pseudokod, EREW/CREW/CRCW, tri pravila za CRCW, kako se modeli povezuju</td><td><a href="modeli.html">Modeli, odjeljak 1</a></td></tr>
+    <tr><td>11</td><td>CRCW: 1 korak, EREW: log n</td><td><a href="modeli.html">Modeli, odjeljak 2</a></td></tr>
+    <tr><td>12–14</td><td>Glava liste, zamka bez lock stepa, popravak ogradom</td><td><a href="glava.html">Glava liste</a></td></tr>
+    <tr><td>15–16</td><td>aPRAM, pravilo faze</td><td><a href="glava.html">Glava liste, odjeljak 2</a> (ograda); <a href="modeli.html">modeli, odjeljak 1</a></td></tr>
+    <tr><td>17–18</td><td>Cijena d i B, PRAM na aPRAM-u</td><td><a href="modeli.html">Modeli, odjeljak 3</a></td></tr>
+    <tr><td>19</td><td>Praćenje izvršavanja na aPRAM-u (glava liste)</td><td><a href="glava.html">Glava liste, odjeljak 3</a></td></tr>
+    <tr><td>20–21</td><td>Ograda poskupljuje, p / B procesora</td><td><a href="modeli.html">Modeli, odjeljci 3 i 4</a></td></tr>
+    <tr><td>26–28</td><td>async/await, async bez paralelizma, blokiranje</td><td><a href="async.html">async/await</a></td></tr>
+  </table>
+
+  <h2>Koja vježba koristi koji prikaz</h2>
+  <table>
+    <tr><th>Zadatak vježbe 5</th><th>Prikaz</th></tr>
+    <tr><td>1 Ime svake sekunde</td><td><a href="async.html">async/await, odjeljak 3</a> (Sleep drži nit)</td></tr>
+    <tr><td>5 Ograda i task koji zastane (neobavezno)</td><td><a href="glava.html">Glava liste, odjeljak 2</a> (taskovi s ogradom); <a href="modeli.html">modeli, odjeljak 4</a></td></tr>
+  </table>
+
+  <h2>Što biste nakon tjedna 5 trebali znati</h2>
+  <ul class="tight">
+    <li>Objasniti RAM i PRAM i razliku između EREW, CREW i CRCW (COMMON, ARBITRARY, PRIORITY).</li>
+    <li>Prepoznati algoritam koji je točan samo u lock stepu i popraviti ga ogradom.</li>
+    <li>Objasniti što aPRAM dodaje PRAM-u (d i B) i zašto je bolje imati manje procesora s više posla.</li>
+    <li>Razlikovati async/await (čekanje bez zauzete niti) od paralelizma (Task.Run, Parallel.For).</li>
+    <li>Prekinuti task tokenom i provjeriti njegovo stanje (vježba 5).</li>
+  </ul>
+  <footer>Prethodni tjedan: <a href="../../Tjedan%2004%20-%20Data%20race/Vizualizacije/index.html">tjedan 4</a>.</footer>
+</div>
+<script src="zajednicko.js"></script>
+</body>
+</html>

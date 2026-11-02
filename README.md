@@ -49,6 +49,8 @@ docker compose down        # stop
 
 - http://localhost:8080/01-delegates/Vjezba1_upute.html
 - http://localhost:8080/01-delegates/Vizualizacije/delegati.html
+- http://localhost:8080/04-models-async/Vjezba4_upute.html
+- http://localhost:8080/04-models-async/Vizualizacije/index.html
 
 ### Notes
 

@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Postavke (TargetFramework i ostalo) su u ../Directory.Build.props. -->
+
+</Project>

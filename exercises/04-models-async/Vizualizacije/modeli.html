@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Modeli i cijena ograde</title>
+<link rel="stylesheet" href="stil.css">
+<style>
+.proc{display:grid;grid-template-columns:44px 1fr 1fr 1fr;gap:6px 10px;align-items:center;max-width:520px}
+.proc b{font-size:14px}
+.da{color:var(--ok);font-weight:600}.ne{color:var(--bad);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>RAM, PRAM, EREW/CREW/CRCW i aPRAM</h1>
+  <p class="lead">Gradivo predavanja 5 (slajdovi 4–11, 15–18 i 20–21): što PRAM dopušta kad više procesora u istom koraku dira istu ćeliju, zašto jači model daje brži algoritam i koliko stoji jedan PRAM korak kad se uračunaju memorija i ograda.</p>
+
+  <h2>1. Jedan PRAM korak: tko smije što</h2>
+  <div class="expl">
+    <b class="t">Što vidite</b>
+    <p>Četiri procesora u istom koraku. Svaki može čitati ili pisati jednu ćeliju M[0]–M[3]. Korak PRAM-a ima tri faze: sva čitanja, zatim lokalni račun, zatim sva pisanja; svi procesori ih izvode istodobno (Moreno Maza, slajd 7). Ispod je, za svaku inačicu PRAM-a, je li takav korak dopušten i što ostane u memoriji.</p>
+    <ul>
+      <li><b>EREW:</b> nikoja dva procesora ne smiju istodobno čitati ili pisati istu ćeliju;</li>
+      <li><b>CREW:</b> istodobna čitanja iste ćelije smiju, istodobna pisanja ne;</li>
+      <li><b>CRCW</b> (čitanja smiju) s pravilom za istodobno pisanje: <b>COMMON</b> samo ako svi pišu istu vrijednost (inače je stanje nedefinirano), <b>ARBITRARY</b> uspije jedan, ne zna se koji, <b>PRIORITY</b> uspije onaj s najvećim prioritetom, ovdje s najmanjim indeksom.</li>
+    </ul>
+    <b class="t">Što učiniti</b>
+    <p>Isprobajte gotove primjere, zatim složite svoj. Kad jedan procesor čita, a drugi piše istu ćeliju, pogledajte što čitatelj dobije.</p>
+  </div>
+  <div class="card">
+    <div class="row">
+      <span class="muted" style="font-size:13px">gotovi primjeri:</span>
+      <button id="m_p1">svaki svoju ćeliju</button>
+      <button id="m_p2">svi čitaju M[0]</button>
+      <button id="m_p3">dvojica pišu istu vrijednost</button>
+      <button id="m_p4">dvojica pišu različito</button>
+      <button id="m_p5">jedan čita, drugi piše</button>
+    </div>
+    <div id="m_proc" class="proc" style="margin-top:12px"></div>
+    <div id="m_tab" style="margin-top:12px"></div>
+  </div>
+  <div class="note">Jači model dopušta više, pa algoritam napisan za slabiji model radi na jačem bez promjene i u istom vremenu: PRIORITY ≥ ARBITRARY ≥ COMMON ≥ CREW ≥ EREW (Moreno Maza, slajd 49). Obrnuto treba simulacija: jedan korak PRIORITY CRCW-a na EREW-u traje O(log p) koraka (slajd 51; Prins, slajd 7).</div>
+
+  <h2>2. Ima li u polju nula? CRCW u jednom koraku, EREW u log n</h2>
+  <div class="expl">
+    <b class="t">Što vidite</b>
+    <p>Polje od n brojeva. Na COMMON CRCW-u svaki procesor koji vidi nulu upiše 1 u istu varijablu: svi pišu istu vrijednost, pa je to jedan korak. Na EREW-u dva procesora ne smiju pisati u istu ćeliju, pa se rezultati spajaju u parovima, razinu po razinu, kao stablo (isti obrazac je reduciranje u tjednu 6).</p>
+    <b class="t">Što učiniti</b>
+    <p>Zadani niz je onaj sa slajda 11 (3 1 7 0 4 1 6 3). Mijenjajte n i pratite broj koraka. Udvostručite n: koliko koraka dobije svaki model?</p>
+  </div>
+  <div class="card">
+    <div class="row">
+      <label>Elemenata n: <b id="n_nv"></b><br><input type="range" id="n_n" min="2" max="64" value="8"></label>
+      <button id="n_novo">Novo polje</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div class="kpi"><small>COMMON CRCW: koraka</small><span class="big" id="n_crcw"></span></div>
+      <div class="kpi"><small>EREW: razina stabla</small><span class="big" id="n_erew"></span></div>
+      <div class="kpi"><small>Ima nulu?</small><span class="big" id="n_ima"></span></div>
+    </div>
+    <div id="n_stablo" style="margin-top:10px"></div>
+  </div>
+
+  <h2>3. Koliko stoji jedan PRAM korak na aPRAM-u</h2>
+  <div class="expl">
+    <b class="t">Što vidite</b>
+    <p>aPRAM nema zajednički sat: lokalna operacija stoji 1, globalni pristup d, ograda za p procesora B (slajd 17). Jedan PRAM korak izvede se kao čitanje, ograda, račun, pisanje, ograda: 2B + 2d + 1 (slajd 18). Ako svaki aPRAM procesor radi za B PRAM procesora, korak stoji 5B + 2d − 2, ali procesora je B puta manje (slajd 21).</p>
+    <b class="t">Što učiniti</b>
+    <p>Krenite od brojeva sa slajdova (p = 1024, d = 4, B = 16). Povećajte B: kako raste udio ograde u koraku? Usporedite rad (procesori × vrijeme) u oba stupca.</p>
+  </div>
+  <div class="card">
+    <div class="row">
+      <label>Procesora p: <b id="a_pv"></b><br><input type="range" id="a_p" min="4" max="12" value="10"></label>
+      <label>Globalni pristup d: <b id="a_dv"></b><br><input type="range" id="a_d" min="2" max="64" value="4"></label>
+      <label>Ograda B: <b id="a_bv"></b><br><input type="range" id="a_b" min="2" max="256" value="16"></label>
+    </div>
+    <div id="a_upoz" class="muted" style="font-size:13px;margin-top:6px"></div>
+    <div class="grid2" style="margin-top:12px">
+      <div><b>p procesora, ograda nakon svakog čitanja i pisanja</b><div id="a_seg1" class="seg" style="margin-top:6px"></div><div id="a_t1" class="muted" style="font-size:13px;margin-top:4px"></div></div>
+      <div><b>p / B procesora, svaki radi za B</b><div id="a_seg2" class="seg" style="margin-top:6px"></div><div id="a_t2" class="muted" style="font-size:13px;margin-top:4px"></div></div>
+    </div>
+    <div id="a_tab" style="margin-top:12px"></div>
+  </div>
+  <div class="note">Brojke d i B ovdje su izmišljene, kao na slajdovima. Formule su iz arhivskog predavanja, koje globalno čitanje i pisanje računa s d. Gibbons (1989.) čitanje računa s 2d, a pisanje s d: tada je korak 2B + 3d + 1 i 5B + 3d − 2. Red veličine se ne mijenja.</div>
+
+  <h2>4. Izmjereno: ograda poskupljuje s brojem taskova</h2>
+  <div class="expl">
+    <b class="t">Što vidite</b>
+    <p>Cijena jedne ograde (<code>Barrier.SignalAndWait</code>) za p taskova koji ne rade ništa drugo: ModeliDemo, primjer 6, 20.000 ograda, najkraće od 5 mjerenja; i7-9750H (6 jezgri, 12 logičkih), .NET 10, Release, 31. 10. 2026. To je B iz odjeljka 3, izmjeren na stvarnom računalu (slajd 20).</p>
+  </div>
+  <div class="card">
+    <div id="b_graf"></div>
+  </div>
+  <div class="prob"><b>Problem:</b> algoritam s procesorom po elementu i ogradom nakon svakog koraka gotovo sve vrijeme čeka na ogradi, a ograda je skuplja što je procesora više. Ista zamka kao premali taskovi (predavanje 2) i tara koja raste s N (predavanje 3).</div>
+  <div class="sol"><b>Rješenje:</b> manje procesora, više posla po procesoru: svaki radi za B elemenata (p / B procesora). Vrijeme ostane O(B · t), a ukupni rad je (p / B) · O(B · t) = O(p · t), kao na PRAM-u (Gibbons, Lema 1); u primjeru sa slajda oko 7,6 puta manji. U C#-u to radi Parallel.For: jedan task obradi raspon iteracija.</div>
+
+  <h2>Pitanja za razmišljanje</h2>
+  <ul class="tight">
+    <li>U odjeljku 1: koji je najslabiji model u kojem je dopušten primjer »svi čitaju M[0]«? A »dvojica pišu istu vrijednost«?</li>
+    <li>Zašto algoritam za »ima li nule« na EREW-u ne može u jednom koraku upisati rezultat u istu varijablu?</li>
+    <li>Kad u odjeljku 3 povećate B, zašto se vrijeme koraka s p / B procesora ne smanji, iako je procesora manje?</li>
+    <li>U odjeljku 4 ograda s 24 taska stoji šest puta više nego s 12. Što se promijenilo kad je taskova više nego logičkih jezgri?</li>
+  </ul>
+  <footer>Izvori: M. Moreno Maza, Parallel Random-Access Machines, CS3101, UWO (slajdovi 7, 23–24, 49, 51); J. F. Prins, PRAM (4), COMP 633, UNC (slajd 7); P. B. Gibbons, A More Practical PRAM Model, SPAA 1989.; arhivsko predavanje »Modeli paralelnih računala« (T. Dadić), slajdovi 14–18; ModeliDemo (ispis_2026-10-31.txt).</footer>
+</div>
+<script src="zajednicko.js"></script>
+<script>
+// ---------- logika (bez DOM-a) ----------
+// Jedan PRAM korak: ops[k] = { op: '' | 'r' | 'w', c: ćelija, v: vrijednost }. Pisanja dolaze nakon čitanja (3 faze).
+function procijeni(ops, model, M0) {
+  const M = M0.slice(), procitano = {};
+  const citaju = {}, pisu = {};
+  ops.forEach((o, k) => { if (o.op === 'r') (citaju[o.c] = citaju[o.c] || []).push(k); if (o.op === 'w') (pisu[o.c] = pisu[o.c] || []).push(k); });
+  const celije = new Set([...Object.keys(citaju), ...Object.keys(pisu)].map(Number));
+  for (const c of celije) {
+    const r = (citaju[c] || []).length, w = (pisu[c] || []).length;
+    if (model === 'EREW' && r + w > 1) return { dopusteno: false, razlog: `dva procesora pristupaju M[${c}]` };
+    if (model === 'CREW' && w > 1) return { dopusteno: false, razlog: `dva procesora pišu M[${c}]` };
+    if (model === 'COMMON' && w > 1 && new Set(pisu[c].map(k => ops[k].v)).size > 1)
+      return { dopusteno: false, razlog: `različite vrijednosti u M[${c}]: stanje nedefinirano` };
+  }
+  ops.forEach((o, k) => { if (o.op === 'r') procitano[k] = M[o.c]; });   // faza čitanja: stara vrijednost
+  let neodredeno = [];
+  for (const c of Object.keys(pisu).map(Number)) {
+    const pis = pisu[c];
+    if (pis.length > 1 && model === 'ARBITRARY' && new Set(pis.map(k => ops[k].v)).size > 1) { neodredeno.push(c); M[c] = null; continue; }
+    const pobjednik = Math.min(...pis);   // COMMON: svi isti; PRIORITY: najmanji indeks
+    M[c] = ops[pobjednik].v;
+  }
+  return { dopusteno: true, M, procitano, neodredeno };
+}
+const MODELI = ['EREW', 'CREW', 'COMMON', 'ARBITRARY', 'PRIORITY'];
+// Ima li nule: koraci i razine stabla.
+function razineIli(A) {
+  const r = [A.map(x => x === 0 ? 1 : 0)];
+  while (r[r.length - 1].length > 1) {
+    const z = r[r.length - 1], n = [];
+    for (let i = 0; i < z.length; i += 2) n.push(i + 1 < z.length ? (z[i] | z[i + 1]) : z[i]);
+    r.push(n);
+  }
+  return r;
+}
+const korakaErew = n => Math.ceil(Math.log2(n));
+// aPRAM (arhivsko predavanje, slajdovi 15–18): cijena jednog PRAM koraka.
+const korakP = (d, B) => 2 * B + 2 * d + 1;
+const korakPB = (d, B) => 5 * B + 2 * d - 2;
+// Izmjereno (ModeliDemo, primjer 6, ispis_2026-10-31.txt): p, ns po ogradi.
+const OGRADA = [[1, 52], [2, 242], [4, 499], [8, 1236], [12, 3113], [24, 19037]];
+
+// ---------- prikaz ----------
+const M0 = [5, 6, 7, 8];
+let ops = [{ op: 'r', c: 0, v: 1 }, { op: 'r', c: 1, v: 1 }, { op: 'w', c: 2, v: 1 }, { op: 'w', c: 3, v: 1 }];
+function crtajProc() {
+  const sel = (id, opc, v) => `<select id="${id}">` + opc.map(([a, b]) => `<option value="${a}"${String(a) === String(v) ? ' selected' : ''}>${b}</option>`).join('') + '</select>';
+  $('m_proc').innerHTML = '<b></b><b>operacija</b><b>ćelija</b><b>vrijednost</b>' + ops.map((o, k) =>
+    `<b>P${k}</b>` + sel(`m_op${k}`, [['', '—'], ['r', 'čita'], ['w', 'piše']], o.op) + sel(`m_c${k}`, [0, 1, 2, 3].map(c => [c, `M[${c}]`]), o.c) +
+    sel(`m_v${k}`, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(v => [v, v]), o.v)).join('');
+  ops.forEach((o, k) => ['op', 'c', 'v'].forEach(f => {
+    const el = $(`m_${f}${k}`);
+    el.onchange = () => { ops[k][f] = f === 'op' ? el.value : +el.value; crtajTab(); };
+  }));
+  crtajTab();
+}
+function crtajTab() {
+  const red = MODELI.map(m => {
+    const r = procijeni(ops, m, M0);
+    if (!r.dopusteno) return `<tr><td>${m}</td><td class="ne">ne</td><td>${r.razlog}</td></tr>`;
+    const mem = r.M.map((v, c) => `M[${c}] = ${v === null ? '?' : v}`).join(', ');
+    const cit = Object.keys(r.procitano).map(k => `P${k} pročita ${r.procitano[k]}`).join(', ');
+    const nep = r.neodredeno.length ? ` (M[${r.neodredeno.join('], M[')}]: uspije jedan, ne zna se koji)` : '';
+    const rw = ops.some(a => a.op === 'r' && ops.some(b => b.op === 'w' && b.c === a.c));
+    return `<tr><td>${m}</td><td class="da">da</td><td>${mem}${nep}${cit ? '<br><span class="muted">' + cit + (rw ? ' (staru vrijednost: čitanje je u fazi prije pisanja)' : '') + '</span>' : ''}</td></tr>`;
+  }).join('');
+  $('m_tab').innerHTML = `<div class="muted" style="font-size:13px">memorija prije koraka: ${M0.map((v, c) => `M[${c}] = ${v}`).join(', ')}</div>` +
+    '<table><tr><th>model</th><th>dopušteno?</th><th>nakon koraka</th></tr>' + red + '</table>';
+}
+const PRIMJERI = {
+  m_p1: [{ op: 'r', c: 0, v: 1 }, { op: 'r', c: 1, v: 1 }, { op: 'w', c: 2, v: 1 }, { op: 'w', c: 3, v: 1 }],
+  m_p2: [{ op: 'r', c: 0, v: 1 }, { op: 'r', c: 0, v: 1 }, { op: 'r', c: 0, v: 1 }, { op: 'r', c: 0, v: 1 }],
+  m_p3: [{ op: 'w', c: 1, v: 1 }, { op: 'w', c: 1, v: 1 }, { op: '', c: 0, v: 1 }, { op: '', c: 0, v: 1 }],
+  m_p4: [{ op: 'w', c: 1, v: 3 }, { op: 'w', c: 1, v: 9 }, { op: '', c: 0, v: 1 }, { op: '', c: 0, v: 1 }],
+  m_p5: [{ op: 'r', c: 2, v: 1 }, { op: 'w', c: 2, v: 9 }, { op: '', c: 0, v: 1 }, { op: '', c: 0, v: 1 }]
+};
+Object.keys(PRIMJERI).forEach(id => { $(id).onclick = () => { ops = PRIMJERI[id].map(o => ({ ...o })); crtajProc(); }; });
+
+// Zadano: niz sa slajda 11 (i iz arhivskog predavanja o sumi prefiksa); »Novo polje« daje nasumične brojeve 0–5.
+const SLAJD10 = [3, 1, 7, 0, 4, 1, 6, 3];
+let sjeme = 0;
+function novoPolje(n) {
+  if (sjeme === 0 && n === 8) return SLAJD10.slice();
+  let s = sjeme;
+  const rnd = () => (s = (s * 1103515245 + 12345) % 2147483648) / 2147483648;
+  return [...Array(n)].map(() => Math.floor(rnd() * 6));
+}
+function crtajNule() {
+  const n = +$('n_n').value; $('n_nv').textContent = n;
+  const A = novoPolje(n), r = razineIli(A);
+  $('n_crcw').textContent = '1';
+  $('n_erew').textContent = String(korakaErew(n));
+  $('n_ima').textContent = r[r.length - 1][0] ? 'da' : 'ne';
+  const prikaz = n <= 16 ? r.map((z, lv) => `<div class="cells" style="margin:4px 0">${lv === 0
+      ? A.map((a, i) => `<div class="cellbox${a === 0 ? ' src' : ''}"><small>A[${i}] = ${a}</small><b>${z[i]}</b></div>`).join('')
+      : z.map(v => `<div class="cellbox${v ? ' src' : ''}"><small>razina ${lv}</small><b>${v}</b></div>`).join('')}</div>`).join('')
+    : '<div class="muted" style="font-size:13px">Stablo se crta do n = 16.</div>';
+  $('n_stablo').innerHTML = '<div class="muted" style="font-size:13px">1 znači »ovdje ima nule«; svaka razina je jedan EREW korak (ILI dvaju susjeda)</div>' + prikaz;
+}
+$('n_n').oninput = crtajNule;
+$('n_novo').onclick = () => { sjeme++; crtajNule(); };
+
+function segment(dijelovi) {
+  const uk = dijelovi.reduce((s, [w]) => s + w, 0);
+  return dijelovi.map(([w, t, boja]) => `<span style="width:${100 * w / uk}%;background:${boja}" title="${t}">${100 * w / uk > 8 ? t : ''}</span>`).join('');
+}
+function crtajA() {
+  const p = 2 ** +$('a_p').value;
+  let d = +$('a_d').value, B = +$('a_b').value, upoz = [];
+  if (B > p) { B = p; upoz.push('B smanjen na p'); }
+  if (d > B) { d = B; upoz.push('d smanjen na B'); }
+  $('a_pv').textContent = hr(p); $('a_dv').textContent = d; $('a_bv').textContent = B;
+  $('a_upoz').textContent = 'Pretpostavka sa slajda 17: 2 ≤ d ≤ B ≤ p.' + (upoz.length ? ' (' + upoz.join(', ') + '.)' : '');
+  const G = 'var(--acc2)', O = 'var(--muted)', R = 'var(--acc)';
+  $('a_seg1').innerHTML = segment([[d, 'čitanje d', G], [B, 'ograda B', O], [1, 'račun', R], [d, 'pisanje d', G], [B, 'ograda B', O]]);
+  $('a_seg2').innerHTML = segment([[d + B - 1, 'čitanje d+B−1', G], [B, 'ograda B', O], [B, 'račun B', R], [d + B - 1, 'pisanje d+B−1', G], [B, 'ograda B', O]]);
+  const t1 = korakP(d, B), t2 = korakPB(d, B), p2 = Math.max(1, Math.floor(p / B));
+  $('a_t1').textContent = `2B + 2d + 1 = ${hr(t1)} po koraku; od toga račun 1`;
+  $('a_t2').textContent = `5B + 2d − 2 = ${hr(t2)} po koraku; račun B = ${B}`;
+  $('a_tab').innerHTML = '<table><tr><th></th><th>procesora</th><th>vrijeme po koraku</th><th>rad (procesori × vrijeme)</th></tr>' +
+    `<tr><td>PRAM (sve košta 1)</td><td>${hr(p)}</td><td>1</td><td>${hr(p)}</td></tr>` +
+    `<tr><td>aPRAM, p procesora</td><td>${hr(p)}</td><td>${hr(t1)}</td><td>${hr(p * t1)}</td></tr>` +
+    `<tr><td>aPRAM, p / B procesora</td><td>${hr(p2)}</td><td>${hr(t2)}</td><td>${hr(p2 * t2)}</td></tr></table>`;
+}
+['a_p', 'a_d', 'a_b'].forEach(id => $(id).oninput = crtajA);
+
+function crtajOgradu() {
+  const max = Math.log10(OGRADA[OGRADA.length - 1][1]);
+  $('b_graf').innerHTML = '<div class="muted" style="font-size:13px;margin-bottom:6px">ns po ogradi (duljina trake je logaritamska)</div><div class="hist">' +
+    OGRADA.map(([p, ns]) => `<span>p = ${p}</span><div class="bar${p > 12 ? ' bad' : ''}" style="width:${Math.max(3, 100 * Math.log10(ns) / max)}%"></div><span>${hr(ns)}</span>`).join('') +
+    '</div><div class="muted" style="font-size:13px;margin-top:6px">p = 24: više taskova nego logičkih jezgri. Od p = 1 do p = 12 ograda poskupi oko 60 puta.</div>';
+}
+
+crtajProc(); crtajNule(); crtajA(); crtajOgradu();
+</script>
+</body>
+</html>

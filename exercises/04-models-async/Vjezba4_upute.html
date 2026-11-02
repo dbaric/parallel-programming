@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vježba 4: modeli računala i async/await</title>
+<link rel="stylesheet" href="stil.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Vježba 4: modeli računala i async/await</h1>
+  <p class="lead">Paralelno programiranje, tjedan 5. Nakon vježbe znate popraviti algoritam koji je točan samo u lock stepu, razlikovati konkurentnost od paralelizma i prepoznati blokiranje usred async koda.</p>
+
+  <h2>Priprema</h2>
+  <div class="card">
+    <ul class="tight">
+      <li>Otvorite <code>Vjezba4.sln</code>; svaki zadatak je zaseban projekt (<code>ZadatakN_*/ZadatakN_*.cs</code>). Vremena mjerite u <b>Release</b> konfiguraciji (<code>dotnet run -c Release</code>).</li>
+      <li>Prije vježbe pogledajte prezentaciju i <a href="Vizualizacije/index.html">Vizualizacije</a> (glava liste, modeli, async/await).</li>
+    </ul>
+  </div>
+
+  <h2>Zadaci</h2>
+  <div class="card">
+    <h3>Zadatak 1: glava vezane liste <span class="pill">Zadatak1_GlavaListe.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: nasumična lista od 1000 čvorova i izvedba bez ograde, koja pronađe krivi broj glava.</p>
+    <b>Što trebate napraviti:</b>
+    <ol class="tight">
+      <li>Pokrenite zadanu izvedbu. Koliko glava pronađe i zašto? (<a href="Vizualizacije/glava.html">glava.html</a>)</li>
+      <li>Napišite izvedbu s tri uzastopna <code>Parallel.For</code>. Koliko glava pronađe?</li>
+      <li>Napišite izvedbu s <code>p</code> taskova i <code>Barrier</code>: task <code>id</code> obrađuje čvorove <code>id, id + p, …</code>, a ograda je između koraka.</li>
+    </ol>
+  </div>
+  <div class="card">
+    <h3>Zadatak 2: async/await <span class="pill">Zadatak2_Async.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: <code>Dohvati</code> (čeka 1 s) pozvan tri puta jedan po jedan te metoda <code>Racunaj</code>.</p>
+    <b>Što trebate napraviti:</b>
+    <ol class="tight">
+      <li>Pozovite <code>Dohvati</code> uz <code>Task.WhenAll</code> za 3 i za 100 poziva. Zašto je 100 jednako brzo kao 3?</li>
+      <li>Pozovite <code>Racunaj</code> tri puta uz <code>Task.WhenAll</code> bez <code>Task.Run</code>, pa s <code>Task.Run</code>. Objasnite razliku. (<a href="Vizualizacije/async.html">async.html</a>)</li>
+    </ol>
+  </div>
+  <div class="card">
+    <h3>Zadatak 3: blokiranje usred async koda <span class="pill">Zadatak3_Blokiranje.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: 100 čekanja od 1 s s <code>await Task.Delay</code>.</p>
+    <b>Što trebate napraviti:</b>
+    <ol class="tight">
+      <li>Isto čekanje sa <code>Thread.Sleep(1000)</code> u <code>Task.Run</code>. Koliko traje i zašto?</li>
+      <li>Isto čekanje uz prekid: <code>CancellationTokenSource</code>, prekid nakon 300 ms. U kojem stanju završe taskovi?</li>
+    </ol>
+  </div>
+</div>
+</body>
+</html>

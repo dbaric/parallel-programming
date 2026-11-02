@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>async/await</title>
+<link rel="stylesheet" href="stil.css">
+<style>
+.lane{display:grid;grid-template-columns:110px 1fr;gap:6px 10px;align-items:center;font-size:13px;margin:3px 0}
+.track{position:relative;height:22px;background:var(--bg);border:1px solid var(--line);border-radius:5px}
+.track span{position:absolute;top:2px;bottom:2px;border-radius:4px;font-size:11px;color:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap}
+.kod{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;white-space:pre;overflow-x:auto}
+.kod .on{background:var(--soft);color:var(--acc);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>async/await: konkurentnost, ne paralelizam</h1>
+  <p class="lead">Kraj predavanja 5 (slajdovi 26–28). <code>await</code> čeka, a da ne drži nit. To ubrzava čekanje na nešto izvan programa, ali ne ubrzava računanje. Sve brojke na ovoj stranici izmjerene su programima ModeliDemo (primjeri 4 i 5), 31. 10. 2026.</p>
+
+  <h2>1. Čekanje bez zauzete niti</h2>
+  <div class="expl">
+    <b class="t">Što vidite</b>
+    <p>Metoda <code>Dohvati</code> glumi čekanje na mrežu: <code>await Task.Delay(1000)</code>. Pozovemo je N puta, jedno po jedno (svaki <code>await</code> čeka prethodni) ili sve odjednom pa <code>await Task.WhenAll(…)</code>. Svaka traka je jedno čekanje od 1 s.</p>
+    <b class="t">Što učiniti</b>
+    <p>Mijenjajte N i način. Usporedite ukupno vrijeme s izmjerenim u tablici. Koliko jezgri treba za 100 istodobnih čekanja?</p>
+  </div>
+  <div class="card">
+    <div class="row">
+      <label>Čekanja N: <b id="c_nv"></b><br><input type="range" id="c_n" min="1" max="100" value="3"></label>
+      <label>Način: <select id="c_nacin"><option value="seq" selected>jedno po jedno (await svaki)</option><option value="all">sve odjednom, await Task.WhenAll</option></select></label>
+    </div>
+    <div id="c_crtez" style="margin-top:12px"></div>
+    <div class="row" style="margin-top:10px">
+      <div class="kpi"><small>Ukupno (Task.Delay)</small><span class="big" id="c_t"></span></div>
+      <div class="kpi"><small>Niti zauzetih čekanjem</small><span class="big" id="c_niti"></span></div>
+    </div>
+    <table style="margin-top:12px">
+      <tr><th>Izmjereno (ModeliDemo, primjer 4)</th><th>vrijeme</th></tr>
+      <tr><td>jedno po jedno, 3 × Delay</td><td>3003 ms</td></tr>
+      <tr><td>Task.WhenAll, 3 × Delay</td><td>1001 ms</td></tr>
+      <tr><td>Task.WhenAll, 100 × Delay</td><td>1004 ms</td></tr>
+    </table>
+  </div>
+  <div class="note">To je konkurentnost (predavanje 1): čekanja se preklapaju u vremenu, a ne dodaje se nijedna jezgra. Dok <code>await</code> čeka, nit se vraća u fond niti i radi nešto drugo.</div>
+
+  <h2>2. Zamka: async metoda koja računa</h2>
+  <div class="expl">
+    <b class="t">Što vidite</b>
+    <p>Metoda <code>Racunaj</code> označena je s <code>async</code>, ali u njoj nema <code>await</code>: samo računa. Prevoditelj upozorava (CS1998) da će se takva metoda izvesti sinkrono. Idite korak po korak i pratite koja nit radi koji izračun.</p>
+    <b class="t">Što učiniti</b>
+    <p>Prođite oba načina do kraja i usporedite trake s izmjerenim vremenima. Trake su shematske (»nit 1–3« su niti iz fonda), a vremena u tablici su izmjerena.</p>
+  </div>
+  <div class="card">
+    <div class="row">
+      <label>Način: <select id="r_nacin"><option value="bez" selected>Task.WhenAll(Racunaj(N), …) bez Task.Run</option><option value="run">Task.WhenAll(Task.Run(() =&gt; Racunaj(N)), …)</option></select></label>
+      <button id="r_korak" class="primary">Sljedeći korak</button>
+      <button id="r_reset">Ispočetka</button>
+    </div>
+    <div id="r_kod" class="kod" style="margin-top:12px"></div>
+    <div id="r_opis" style="margin-top:8px"></div>
+    <div id="r_crtez" style="margin-top:10px"></div>
+    <table style="margin-top:12px">
+      <tr><th>Izmjereno (ModeliDemo, primjer 5)</th><th>vrijeme</th></tr>
+      <tr><td>3 poziva, jedan po jedan</td><td>1915 ms</td></tr>
+      <tr><td>Task.WhenAll, async bez Task.Run</td><td>1686 ms</td></tr>
+      <tr><td>Task.WhenAll, s Task.Run</td><td>513 ms</td></tr>
+    </table>
+  </div>
+  <div class="prob"><b>Problem:</b> <code>async</code> ne znači »u drugoj niti« ni »paralelno«. Metoda bez <code>await</code> izvede se do kraja u niti pozivatelja, pa tri poziva rade jedan iza drugog, prije nego što se uopće dođe do <code>WhenAll</code>.</div>
+  <div class="sol"><b>Rješenje:</b> posao koji računa pokrenite s <code>Task.Run</code> (ili <code>Parallel.For</code>): tada tri izračuna rade istodobno (izmjereno 513 umjesto 1686 ms). <code>async</code>/<code>await</code> ostavite za čekanje.</div>
+
+  <h2>3. Zamka: blokiranje usred async koda</h2>
+  <div class="expl">
+    <b class="t">Što vidite</b>
+    <p>Isto čekanje od 1 s, sto puta istodobno: jednom s <code>await Task.Delay</code>, a jednom s <code>Thread.Sleep</code> u <code>Task.Run</code>. <code>Thread.Sleep</code> zaustavi nit na kojoj radi, pa svako od sto čekanja drži svoju nit; računalo ima 12 logičkih jezgri.</p>
+  </div>
+  <div class="card">
+    <div id="s_graf"></div>
+    <table style="margin-top:12px">
+      <tr><th>blokira nit</th><th>ne blokira</th></tr>
+      <tr><td><code>Thread.Sleep(1000)</code></td><td><code>await Task.Delay(1000)</code></td></tr>
+      <tr><td><code>t.Wait()</code>, <code>t.Result</code></td><td><code>await t</code></td></tr>
+      <tr><td><code>Task.WaitAll(ts)</code></td><td><code>await Task.WhenAll(ts)</code></td></tr>
+    </table>
+  </div>
+  <div class="prob"><b>Problem:</b> blokirajuće čekanje drži nit, iako ona ništa ne radi. Sto takvih čekanja trajalo je 7 s, a ne 1 s.</div>
+  <div class="sol"><b>Rješenje:</b> u async kodu čekajte s <code>await</code>. Na vježbi 5 isto čekanje ide uz prekid (CancellationToken).</div>
+
+  <h2>Pitanja za razmišljanje</h2>
+  <ul class="tight">
+    <li>Zašto je <code>Task.WhenAll</code> sa 100 čekanja jednako brz kao s 3, iako računalo ima samo 12 logičkih jezgri?</li>
+    <li>U odjeljku 2: zašto <code>WhenAll</code> bez <code>Task.Run</code> traje gotovo jednako kao tri poziva jedan po jedan?</li>
+    <li>S <code>Task.Run</code> tri izračuna traju oko trećinu vremena. Bi li sa 30 izračuna bilo deset puta brže od tri? Što ograničava?</li>
+    <li>Zašto se u <code>lock</code> ne smije pisati <code>await</code> (predavanje 4, slajd 28 predavanja 5)?</li>
+  </ul>
+  <footer>Izvori: ModeliDemo, primjeri 4 i 5 (Tjedan 05/Predavanje/ModeliDemo, ispis_2026-10-31.txt; i7-9750H, .NET 10, Release); Microsoft Learn: Asynchronous programming with async and await; Resolve errors and warnings in async methods (CS1998).</footer>
+</div>
+<script src="zajednicko.js"></script>
+<script>
+// ---------- logika (bez DOM-a) ----------
+// Idealno trajanje N čekanja od 1 s (Task.Delay(1000)): jedno po jedno N s, sve odjednom 1 s.
+const trajanjeCekanja = (n, nacin) => nacin === 'seq' ? n : 1;
+// Izmjereno (ispis_2026-10-31.txt).
+const IZM4 = { seq3: 3003, all3: 1001, all100: 1004, sleep100: 7006 };
+const IZM5 = { jedanPoJedan: 1915, bez: 1686, run: 513 };
+// Koraci za odjeljak 2: [redak koda, opis, stanje traka { nit: [[od, do, oznaka]] }].
+const KOD = {
+  bez: ['static async Task<long> Racunaj(long n)', '{', '    long s = 0;', '    for (long i = 0; i < n; i++) s += i % 7;', '    return s;', '}', '',
+        'var a = Racunaj(N);', 'var b = Racunaj(N);', 'var c = Racunaj(N);', 'await Task.WhenAll(a, b, c);'],
+  run: ['static async Task<long> Racunaj(long n)', '{', '    long s = 0;', '    for (long i = 0; i < n; i++) s += i % 7;', '    return s;', '}', '',
+        'var a = Task.Run(() => Racunaj(N));', 'var b = Task.Run(() => Racunaj(N));', 'var c = Task.Run(() => Racunaj(N));', 'await Task.WhenAll(a, b, c);']
+};
+const KORACI = {
+  bez: [
+    [7, 'Glavna nit poziva Racunaj. U metodi nema await, pa glavna nit sama izvede cijelu petlju. Tek tada dobije task, i to već završen.', { 'glavna nit': [[0, 1, 'Racunaj a']] }],
+    [8, 'Drugi poziv: opet glavna nit, opet cijela petlja.', { 'glavna nit': [[0, 1, 'Racunaj a'], [1, 2, 'Racunaj b']] }],
+    [9, 'Treći poziv: isto.', { 'glavna nit': [[0, 1, 'Racunaj a'], [1, 2, 'Racunaj b'], [2, 3, 'Racunaj c']] }],
+    [10, 'WhenAll dobije tri gotova taska i odmah završi. Sve je radila jedna nit, jedno iza drugog.', { 'glavna nit': [[0, 1, 'Racunaj a'], [1, 2, 'Racunaj b'], [2, 3, 'Racunaj c']] }]
+  ],
+  run: [
+    [7, 'Task.Run preda izračun fondu niti, a glavna nit odmah ide dalje.', { 'glavna nit': [], 'nit 1': [[0, 1, 'Racunaj a']] }],
+    [8, 'I drugi izračun ide u fond niti; slobodna nit ga preuzme.', { 'glavna nit': [], 'nit 1': [[0, 1, 'Racunaj a']], 'nit 2': [[0, 1, 'Racunaj b']] }],
+    [9, 'Isto i treći.', { 'glavna nit': [], 'nit 1': [[0, 1, 'Racunaj a']], 'nit 2': [[0, 1, 'Racunaj b']], 'nit 3': [[0, 1, 'Racunaj c']] }],
+    [10, 'WhenAll čeka sva tri. Izračuni teku istodobno na nitima iz fonda: izmjereno oko tri puta brže.', { 'glavna nit': [[0, 1, 'await (čeka)']], 'nit 1': [[0, 1, 'Racunaj a']], 'nit 2': [[0, 1, 'Racunaj b']], 'nit 3': [[0, 1, 'Racunaj c']] }]
+  ]
+};
+
+// ---------- prikaz ----------
+function trake(niti, ukupno, boje) {
+  return Object.keys(niti).map(ime => `<div class="lane"><span>${ime}</span><div class="track">` +
+    niti[ime].map(([od, d, t]) => `<span style="left:${100 * od / ukupno}%;width:${100 * (d - od) / ukupno}%;background:${boje(t)}">${t}</span>`).join('') +
+    '</div></div>').join('');
+}
+function crtajCekanje() {
+  const n = +$('c_n').value, nacin = $('c_nacin').value;
+  $('c_nv').textContent = n;
+  const t = trajanjeCekanja(n, nacin), prikaz = Math.min(n, 10), niti = {};
+  for (let k = 0; k < prikaz; k++) niti[`čekanje ${k + 1}`] = [[nacin === 'seq' ? k : 0, (nacin === 'seq' ? k : 0) + 1, '1 s']];
+  $('c_crtez').innerHTML = trake(niti, nacin === 'seq' ? prikaz : 1, () => 'var(--ok)') +
+    (n > prikaz ? `<div class="muted" style="font-size:13px">… i još ${n - prikaz} čekanja</div>` : '');
+  $('c_t').textContent = t + ' s';
+  $('c_niti').textContent = '0';
+}
+$('c_n').oninput = crtajCekanje; $('c_nacin').onchange = crtajCekanje;
+
+let rKor = -1;
+function crtajR() {
+  const nacin = $('r_nacin').value, kor = KORACI[nacin], s = rKor >= 0 ? kor[rKor] : null;
+  $('r_kod').innerHTML = KOD[nacin].map((l, i) => s && s[0] === i ? `<span class="on">${l.replace(/</g, '&lt;')}</span>` : l.replace(/</g, '&lt;')).join('\n');
+  $('r_opis').innerHTML = s ? s[1] : 'Kliknite »Sljedeći korak«.';
+  const ukupno = nacin === 'bez' ? 3 : 1;
+  $('r_crtez').innerHTML = s ? trake(s[2], 3, t => t.startsWith('await') ? 'var(--muted)' : 'var(--acc)') +
+    (rKor === kor.length - 1 ? `<div class="muted" style="font-size:13px;margin-top:4px">ukupno: ${ukupno === 3 ? 'tri izračuna zaredom' : 'jedan izračun (tri istodobno)'}; izmjereno ${nacin === 'bez' ? IZM5.bez : IZM5.run} ms</div>` : '') : '';
+  $('r_korak').disabled = rKor >= kor.length - 1;
+}
+$('r_korak').onclick = () => { rKor++; crtajR(); };
+$('r_reset').onclick = () => { rKor = -1; crtajR(); };
+$('r_nacin').onchange = () => { rKor = -1; crtajR(); };
+
+function crtajSleep() {
+  const max = IZM4.sleep100;
+  $('s_graf').innerHTML = '<div class="muted" style="font-size:13px;margin-bottom:6px">100 istodobnih čekanja od 1 s (ModeliDemo, primjer 4)</div><div class="hist">' +
+    `<span>Delay</span><div class="bar ok" style="width:${100 * IZM4.all100 / max}%"></div><span>${IZM4.all100} ms</span>` +
+    `<span>Sleep</span><div class="bar bad" style="width:100%"></div><span>${IZM4.sleep100} ms</span></div>`;
+}
+
+crtajCekanje(); crtajR(); crtajSleep();
+</script>
+</body>
+</html>
