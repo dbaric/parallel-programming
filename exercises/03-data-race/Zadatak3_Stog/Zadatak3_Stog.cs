@@ -25,8 +25,28 @@ static class Zadatak3_Stog
         vrh = novi;            // (2)
     }
 
-    // TODO a): PushLock, lock oko oba koraka
-    // TODO b): PushCas, CompareExchange u petlji: korak (2) uspije samo ako je vrh još onaj iz koraka (1)
+    static readonly object brava = new();
+
+    // lock oko oba koraka
+    static void PushLock(int v)
+    {
+        var novi = new Cvor(v);
+        lock (brava)
+        {
+            novi.Sljedeci = vrh;
+            vrh = novi;
+        }
+    }
+
+    // Bez locka: korak (2) uspije samo ako je vrh još onaj iz koraka (1), inače ponovi
+    static void PushCas(int v)
+    {
+        var novi = new Cvor(v);
+        do
+        {
+            novi.Sljedeci = vrh;
+        } while (Interlocked.CompareExchange(ref vrh, novi, novi.Sljedeci) != novi.Sljedeci);
+    }
 
     static int Prebroji()
     {
@@ -48,6 +68,8 @@ static class Zadatak3_Stog
 
     public static void Pokreni()
     {
-        Izvedi("Bez zaštite", PushBezZastite);
+        Izvedi("Bez zaštite", PushBezZastite);   // npr. 188.117 čvorova, izgubljeno ≈ 1.000.000
+        Izvedi("lock", PushLock);   // 1.200.000 čvorova, izgubljeno 0
+        Izvedi("CompareExchange", PushCas);   // 1.200.000 čvorova, izgubljeno 0
     }
 }

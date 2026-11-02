@@ -30,11 +30,24 @@ static class Zadatak1_Brojac
 
     public static void Pokreni()
     {
-        Ispisi("Bez zaštite", Izvedi(_ => { for (int i = 0; i < Povecanja; i++) brojac++; }));
+        Ispisi("Bez zaštite", Izvedi(_ => { for (int i = 0; i < Povecanja; i++) brojac++; }));   // manje od 12.000.000 i svaki put drukčije: brojac++ su tri koraka (učitaj, povećaj, upiši)
 
-        // TODO a): popravak lockom (jedna zajednička brava)
-        // TODO b): zamka: svaki task svoja brava. Koliko je brojač sada?
-        // TODO c): Interlocked.Increment
-        // TODO d): lokalni brojač u tasku, pa jedan Interlocked.Add na kraju
+        var brava = new object();   // jedna, stvorena prije taskova
+        Ispisi("lock, zajednička brava", Izvedi(_ => { for (int i = 0; i < Povecanja; i++) lock (brava) { brojac++; } }));   // 12.000.000, točno ali sporo: ≈ 155 ms naspram ≈ 5 ms slijedno
+
+        Ispisi("lock, svaki task svoja", Izvedi(_ =>
+        {
+            var svoja = new object();   // svoja brava: nitko nikoga ne čeka
+            for (int i = 0; i < Povecanja; i++) lock (svoja) { brojac++; }
+        }));   // npr. 3.195.136, manje od 12.000.000: lock postoji, ali ne štiti
+
+        Ispisi("Interlocked.Increment", Izvedi(_ => { for (int i = 0; i < Povecanja; i++) Interlocked.Increment(ref brojac); }));   // 12.000.000, ≈ 246 ms (na ovom računalu nije brže od locka: mjerite na svom)
+
+        Ispisi("lokalno + Interlocked.Add", Izvedi(_ =>
+        {
+            long lokalno = 0;
+            for (int i = 0; i < Povecanja; i++) lokalno++;   // bez dijeljenja
+            Interlocked.Add(ref brojac, lokalno);   // jedna sinkronizacija po tasku
+        }));   // 12.000.000, najbrže (≈ 6 ms)
     }
 }

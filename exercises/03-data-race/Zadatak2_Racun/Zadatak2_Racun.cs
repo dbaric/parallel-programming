@@ -35,9 +35,31 @@ static class Zadatak2_Racun
                 Interlocked.Increment(ref isplata);
             }
         });
-        Ispisi("Provjeri, pa promijeni");
+        Ispisi("Provjeri, pa promijeni");   // najčešće stanje ispod nule (npr. −2), isplata > 10.000 (ponekad se ne vidi, pokrenite više puta): race condition, svaki korak je zaštićen, a cjelina nije
 
-        // TODO a): lock oko oba koraka
-        // TODO b): CompareExchange u petlji (ponovi ako je netko bio brži)
+        var brava = new object();
+        Izvedi(() =>
+        {
+            lock (brava)   // provjera i promjena zajedno
+            {
+                if (stanje >= 1) { stanje--; isplata++; }
+            }
+        });
+        Ispisi("lock oko oba koraka");   // stanje 0, isplata 10.000
+
+        Izvedi(() =>
+        {
+            while (true)
+            {
+                long staro = Interlocked.Read(ref stanje);
+                if (staro < 1) break;   // nema novca
+                if (Interlocked.CompareExchange(ref stanje, staro - 1, staro) == staro)   // upiše samo ako se stanje nije promijenilo
+                {
+                    Interlocked.Increment(ref isplata);
+                    break;
+                }
+            }   // inače je netko bio brži: ponovi
+        });
+        Ispisi("CompareExchange");   // stanje 0, isplata 10.000
     }
 }
