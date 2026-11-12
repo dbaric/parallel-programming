@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vježba 5: kanceliranje taskova</title>
+<link rel="stylesheet" href="stil.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Vježba 5: kanceliranje taskova</h1>
+  <p class="lead">Paralelno programiranje, tjedan 5. Nakon vježbe znate prekinuti task na zahtjev (CancellationToken), izmjeriti koliko prekid kasni, pisati periodičan posao koji ne kasni sve više i vratiti rezultat prekinutog posla bez dijeljenja podataka.</p>
+
+  <h2>Priprema</h2>
+  <div class="card">
+    <ul class="tight">
+      <li>Visual Studio 2026 ili JetBrains Rider: otvorite <code>Vjezba5/Vjezba5.sln</code>. Visual Studio Code (uz proširenje C# Dev Kit): File &gt; Open Folder, mapa <code>Vjezba5</code>, konfiguracija »Vježba 5: zadatak N«. Naredbeni redak: u mapi zadatka pokrenite <code>dotnet run</code> (npr. <code>cd Zadatak1_ImeSvakeSekunde</code> pa <code>dotnet run</code>).</li>
+      <li>Projekt cilja <b>.NET 10</b> (LTS). Ako imate samo Visual Studio 2022, u datoteci <code>.csproj</code> svakog zadatka (i u <code>.vscode/launch.json</code>) promijenite <code>net10.0</code> u <code>net8.0</code>; zadaci rade jednako.</li>
+      <li>Svaki zadatak je zaseban projekt (mapa <code>ZadatakN_*</code> s datotekom <code>ZadatakN_*.cs</code>) i pokreće se samostalno: u Visual Studiju desni klik na projekt &gt; Set as Startup Project, u Rideru odaberite projekt u popisu konfiguracija.</li>
+      <li>Zadaci mjere vrijeme, pa ih pokrećite u <b>Release</b> konfiguraciji (<code>dotnet run -c Release</code>, u VS Codeu konfiguracija »(Release)«). Zadatak 1 čeka Enter: pokrenite ga u terminalu.</li>
+      <li>Prije vježbe pogledajte prezentaciju za vježbu 5 i kraj predavanja 5 (async/await, blokiranje niti).</li>
+    </ul>
+  </div>
+
+  <h2>Prekid taska: CancellationToken</h2>
+  <div class="card">
+    <p>Task se ne može zaustaviti izvana. Glavna nit samo <b>zatraži</b> prekid, a task ga mora sam provjeriti i završiti.</p>
+    <div class="out"><pre>var izvor = new CancellationTokenSource();
+CancellationToken token = izvor.Token;
+
+Task t = Task.Run(() =&gt;
+{
+    while (!token.IsCancellationRequested)
+    {
+        // posao
+    }
+}, token);
+
+Console.ReadLine();
+izvor.Cancel();      // postavi zahtjev za prekid
+t.Wait();</pre></div>
+    <ul class="tight">
+      <li><code>CancellationTokenSource</code> šalje zahtjev (<code>Cancel()</code>, ili <code>CancelAfter(ms)</code> nakon zadanog vremena); <code>CancellationToken</code> se predaje tasku, koji ga provjerava.</li>
+      <li>Token predan metodi <code>Task.Run</code>: ako je prekid zatražen prije nego što task počne, task se ne pokrene.</li>
+      <li>Stanje taska (<code>t.Status</code>) nakon prekida: <code>RanToCompletion</code> ako delegat samo izađe iz petlje, a <code>Canceled</code> ako baci <code>OperationCanceledException</code>. Token predajte i metodi koja stvara task (<code>Task.Run</code>, <code>Task.Factory.StartNew</code>, <code>new Task</code>): bez predanog tokena stanje je u tom slučaju <code>Faulted</code>. <code>Wait()</code> na prekinutom tasku baca <code>AggregateException</code>.</li>
+    </ul>
+    <p><b>Čekanje koje se može prekinuti.</b> Što poziv napravi kad glavna nit zatraži prekid (<code>token</code> je <code>CancellationToken</code> taska):</p>
+    <div style="overflow-x:auto">
+    <table>
+      <tr><th>poziv</th><th>kad se zatraži prekid</th><th>bez prekida</th></tr>
+      <tr><td><code>Thread.Sleep(ms)</code></td><td>ništa: spava do kraja</td><td>vrati se nakon ms</td></tr>
+      <tr><td><code>token.WaitHandle.WaitOne(ms)</code></td><td>vrati se odmah, vrati <code>true</code></td><td>nakon ms vrati <code>false</code></td></tr>
+      <tr><td><code>token.ThrowIfCancellationRequested()</code></td><td>baci <code>OperationCanceledException</code></td><td>ne radi ništa</td></tr>
+      <tr><td><code>await Task.Delay(ms, token)</code></td><td>odmah baci <code>TaskCanceledException</code> (vrsta <code>OperationCanceledException</code>)</td><td>vrati se nakon ms</td></tr>
+      <tr><td><code>ograda.SignalAndWait(token)</code></td><td>prestane čekati, baci <code>OperationCanceledException</code></td><td>čeka ostale</td></tr>
+    </table>
+    </div>
+    <p class="muted">Izmjereno (čekanje 2000 ms, prekid nakon 300 ms): <code>Thread.Sleep</code> 2000 ms, ostali 300–336 ms. Kod koji ne pogleda token prekid ne primijeti.</p>
+  </div>
+
+  <h2>Zadaci</h2>
+  <div class="card">
+    <h3>Zadatak 1: ime svake sekunde <span class="pill">Zadatak1_ImeSvakeSekunde.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: task ispisuje ime svake sekunde (<code>Thread.Sleep(1000)</code>) dok glavna nit ne zatraži prekid (Enter). Program mjeri koliko prođe od <code>Cancel()</code> do kraja taska.</p>
+    <b>Što trebate napraviti:</b>
+    <ol class="tight">
+      <li>Upišite svoje ime u konstantu <code>Ime</code>. Pokrenite program pet puta i Enter pritisnite u različitim trenucima. Zapišite izmjerena vremena. Od čega ovise?</li>
+      <li>Izmijenite task tako da od <code>Cancel()</code> do kraja taska prođe manje od 50 ms, a ime se i dalje ispisuje svake sekunde.</li>
+    </ol>
+    <div class="out"><b>Primjer ispisa zadanog koda (Enter nakon 3,5 s)</b><pre>Za prekid pritisnite Enter.
+Ana
+Ana
+Ana
+Ana
+Task završio 592 ms nakon Cancel().</pre></div>
+  </div>
+
+  <div class="card">
+    <h3>Zadatak 2: Periodicno(akcija, ms) <span class="pill">Zadatak2_Periodicno.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: test u <code>Main</code>. Akcija ispisuje redni broj poziva i vrijeme od početka, a traje 300 ms. Glavna nit čeka 9,5 s pa završi.</p>
+    <b>Što trebate napraviti:</b>
+    <ol class="tight">
+      <li>Napišite metodu <code>static void Periodicno(Action akcija, int ms)</code> koja u novom tasku poziva akciju svakih <code>ms</code> milisekundi, beskonačno.</li>
+      <li>Pokrenite test (ms = 1000). Koliko poziva očekujete u 9,5 s i u kojim trenucima? Koliko ih je bilo?</li>
+      <li>Ako se razlikuje: izmijenite metodu tako da 10. poziv bude u 9. sekundi (± 50 ms), iako akcija traje 300 ms.</li>
+    </ol>
+    <div class="out"><b>Ispis nakon koraka 3</b><pre>poziv  1:     10 ms
+poziv  2:   1006 ms
+poziv  3:   2007 ms
+…
+poziv 10:   9007 ms
+Kraj nakon 9509 ms, poziva: 10</pre></div>
+  </div>
+
+  <div class="card">
+    <h3>Zadatak 3: Periodicno s prekidom <span class="pill">Zadatak3_PeriodicnoPrekid.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: test u <code>Main</code>. Test 1 zatraži prekid nakon 3,5 s i mjeri koliko task kasni; test 2 zatraži prekid prije poziva metode. Oba ispisuju stanje taska. <code>Main</code> smijete mijenjati.</p>
+    <b>Što trebate napraviti:</b>
+    <ol class="tight">
+      <li>Napišite metodu <code>static Task Periodicno(Action akcija, int ms, CancellationToken token)</code>: poziva akciju svakih <code>ms</code> milisekundi dok se ne zatraži prekid, a vraća task da glavna nit može čekati njegov kraj. Pozivi neka budu u istom rasporedu kao nakon koraka 3 zadatka 2 (k-ti poziv u (k − 1) · ms).</li>
+      <li>Task mora završiti najkasnije 100 ms nakon <code>Cancel()</code>. Vrijeme mjerite u Releaseu bez debuggera: <code>dotnet run -c Release</code> ili Ctrl+F5 (F5 pokreće program s debuggerom, i u Release konfiguraciji).</li>
+      <li>U oba testa stanje taska mora biti <code>Canceled</code>, a program ne smije završiti iznimkom.</li>
+      <li>Što se u testu 2 dogodilo s akcijom? Zašto?</li>
+    </ol>
+    <div class="out"><b>Očekivani ispis</b><pre>Test 1: prekid nakon 3,5 s
+poziv 1:    25 ms
+poziv 2:  1024 ms
+poziv 3:  2025 ms
+poziv 4:  3024 ms
+Task završio 53 ms nakon Cancel().
+Status: Canceled
+Test 2: prekid zatražen prije poziva
+Status: Canceled</pre></div>
+  </div>
+
+  <div class="card">
+    <h3>Zadatak 4: Periodicno2&lt;U&gt; <span class="pill">Zadatak4_Periodicno2.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: testovi u <code>Main</code> i metoda <code>PeriodicnoUZajednickuListu</code>, koja dodaje vrijednosti u listu dobivenu kao argument, dok je glavna nit tu istu listu čita (test 2).</p>
+    <b>Što trebate napraviti:</b>
+    <ol class="tight">
+      <li>Napišite metodu <code>static Task&lt;List&lt;U&gt;&gt; Periodicno2&lt;U&gt;(Func&lt;U&gt; f, int ms, CancellationToken token)</code>: poziva <code>f</code> svakih <code>ms</code> milisekundi, pamti svaku povratnu vrijednost, a nakon prekida lista svih vrijednosti je rezultat taska (<code>Result</code>).</li>
+      <li>Pokrenite test 1 (prekid nakon 3,5 s, <code>CancelAfter</code>).</li>
+      <li>Test 2 koristi zadanu metodu. Što se dogodi? Zašto se to ne može dogoditi s vašom metodom <code>Periodicno2</code>?</li>
+      <li>Popravite test 2 tako da ostane zajednička lista, ali program radi bez greške. Smijete mijenjati test 2 i zadanu metodu <code>PeriodicnoUZajednickuListu</code>.</li>
+    </ol>
+    <div class="out"><b>Primjer ispisa (test 1)</b><pre>Test 1: Periodicno2, prekid nakon 3,5 s
+Elemenata: 4: 6, 1006, 2006, 3006</pre><small>Ispis testa 2 namjerno nije dan: pokrenite ga i opišite što se dogodilo.</small></div>
+  </div>
+
+  <div class="card">
+    <h3>Zadatak 5 (neobavezno): ograda i task koji zastane <span class="pill">Zadatak5_OgradaZastoj.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: glava vezane liste s predavanja 5 (8 taskova, <code>Barrier</code> između koraka). Jedan nasumično odabran task prije druge ograde zastane 10 s.</p>
+    <b>Što trebate napraviti:</b>
+    <ol class="tight">
+      <li>Pokrenite program. Koliko dugo ostali taskovi čekaju? Je li rezultat ispravan?</li>
+      <li>Izmijenite program tako da 2 s nakon početka programa taskovi odustanu, a glavna nit ispiše da rezultat nije dobiven (umjesto da čeka 10 s ili ispiše krivu glavu).</li>
+    </ol>
+    <div class="out"><b>Primjer ispisa zadanog koda</b><pre>Prava glava: 654; 8 taskova, task 2 zastane 10 s
+Glava: 654 (10016 ms)</pre></div>
+    <div class="note">Model aPRAM s predavanja 5: program mora biti točan uz bilo kakvo kašnjenje bilo kojeg procesora. Točan ne znači brz: ograda čeka najsporijeg.</div>
+  </div>
+
+  <h2>Predaja</h2>
+  <p>Vježba se evidentira prisustvom (najmanje 70 % termina vježbi). Ocjenjuju se dvije domaće zadaće, o kojima će biti riječi kasnije.</p>
+  <footer>Primjeri ispisa: Release, procesor sa 6 jezgri i 12 logičkih (macOS). Vremena se mijenjaju od pokretanja do pokretanja. Interaktivni prikazi uz predavanje i vježbu 5 (mapa »Vizualizacije« tjedna 5): <a href="../Vizualizacije/glava.html">glava.html</a> (ograda, uz zadatak 5), <a href="../Vizualizacije/modeli.html">modeli.html</a>, <a href="../Vizualizacije/async.html">async.html</a> (pogledajte nakon zadatka 1).</footer>
+
+  </div>
+</body>
+</html>

@@ -53,6 +53,7 @@ docker compose down        # stop
 - http://localhost:8080/03-data-race/Vizualizacije/index.html
 - http://localhost:8080/04-models-async/Vjezba4_upute.html
 - http://localhost:8080/04-models-async/Vizualizacije/index.html
+- http://localhost:8080/05-periodic-tasks/Vjezba5_upute.html
 
 ### Notes
 

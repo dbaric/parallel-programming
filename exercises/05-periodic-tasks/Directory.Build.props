@@ -1,0 +1,10 @@
+<Project>
+  <!-- Zajedničke postavke za sve projekte zadataka u ovoj mapi. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- Ako imate samo Visual Studio 2022, promijenite u net8.0 -->
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,115 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Vježba 5: zadatak 1 (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-debug",
+      "program": "${workspaceFolder}/Zadatak1_ImeSvakeSekunde/bin/Debug/net10.0/Zadatak1_ImeSvakeSekunde.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak1_ImeSvakeSekunde",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 5: zadatak 1 (Release)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-release",
+      "program": "${workspaceFolder}/Zadatak1_ImeSvakeSekunde/bin/Release/net10.0/Zadatak1_ImeSvakeSekunde.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak1_ImeSvakeSekunde",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 5: zadatak 2 (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-debug",
+      "program": "${workspaceFolder}/Zadatak2_Periodicno/bin/Debug/net10.0/Zadatak2_Periodicno.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak2_Periodicno",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 5: zadatak 2 (Release)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-release",
+      "program": "${workspaceFolder}/Zadatak2_Periodicno/bin/Release/net10.0/Zadatak2_Periodicno.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak2_Periodicno",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 5: zadatak 3 (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-debug",
+      "program": "${workspaceFolder}/Zadatak3_PeriodicnoPrekid/bin/Debug/net10.0/Zadatak3_PeriodicnoPrekid.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak3_PeriodicnoPrekid",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 5: zadatak 3 (Release)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-release",
+      "program": "${workspaceFolder}/Zadatak3_PeriodicnoPrekid/bin/Release/net10.0/Zadatak3_PeriodicnoPrekid.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak3_PeriodicnoPrekid",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 5: zadatak 4 (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-debug",
+      "program": "${workspaceFolder}/Zadatak4_Periodicno2/bin/Debug/net10.0/Zadatak4_Periodicno2.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak4_Periodicno2",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 5: zadatak 4 (Release)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-release",
+      "program": "${workspaceFolder}/Zadatak4_Periodicno2/bin/Release/net10.0/Zadatak4_Periodicno2.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak4_Periodicno2",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 5: zadatak 5 (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-debug",
+      "program": "${workspaceFolder}/Zadatak5_OgradaZastoj/bin/Debug/net10.0/Zadatak5_OgradaZastoj.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak5_OgradaZastoj",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Vježba 5: zadatak 5 (Release)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-release",
+      "program": "${workspaceFolder}/Zadatak5_OgradaZastoj/bin/Release/net10.0/Zadatak5_OgradaZastoj.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Zadatak5_OgradaZastoj",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    }
+  ]
+}
