@@ -26,9 +26,11 @@ static class Zadatak5_OgradaZastoj
         int[] next = NapraviListu(out int pravaGlava);
         int p = 8;
         int sporiTask = new Random().Next(p);
-        Console.WriteLine($"Prava glava: {pravaGlava}; {p} taskova, task {sporiTask} zastane 10 s");
+        Console.WriteLine($"Prava glava: {pravaGlava}; {p} taskova, task {sporiTask} zastane 10 s");   // Prava glava: 654; 8 taskova, task 6 zastane 10 s
 
         var sat = Stopwatch.StartNew();
+        var izvor = new CancellationTokenSource(2000);   // taskovi odustaju 2 s nakon početka
+        var token = izvor.Token;
         int[] M = new int[N];
         int glava = -1;
         using var ograda = new Barrier(p);
@@ -41,12 +43,19 @@ static class Zadatak5_OgradaZastoj
                 for (int i = moj; i < N; i += p) M[i] = 0;
                 ograda.SignalAndWait();
                 for (int i = moj; i < N; i += p) if (next[i] >= 0) M[next[i]] = 1;
-                if (moj == sporiTask) Thread.Sleep(10_000);
-                ograda.SignalAndWait();
+                if (moj == sporiTask) token.WaitHandle.WaitOne(10_000);
+                ograda.SignalAndWait(token);
                 for (int i = moj; i < N; i += p) if (M[i] == 0) glava = i;
             }, TaskCreationOptions.LongRunning);
         }
-        Task.WaitAll(taskovi);
-        Console.WriteLine($"Glava: {glava} ({sat.ElapsedMilliseconds} ms)");
+        try
+        {
+            Task.WaitAll(taskovi);
+            Console.WriteLine($"Glava: {glava} ({sat.ElapsedMilliseconds} ms)");
+        }
+        catch (AggregateException)
+        {
+            Console.WriteLine($"Rezultat nije dobiven ({sat.ElapsedMilliseconds} ms)");   // Rezultat nije dobiven (2010 ms)
+        }
     }
 }

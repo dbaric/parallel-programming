@@ -21,7 +21,7 @@ static class Zadatak1_ImeSvakeSekunde
             while (!token.IsCancellationRequested)
             {
                 Console.WriteLine(Ime);
-                Thread.Sleep(1000);
+                token.WaitHandle.WaitOne(1000);   // budi se čim se zatraži prekid
             }
         });
 
@@ -30,6 +30,6 @@ static class Zadatak1_ImeSvakeSekunde
         var sat = Stopwatch.StartNew();
         izvor.Cancel();
         t.Wait();
-        Console.WriteLine($"Task završio {sat.ElapsedMilliseconds} ms nakon Cancel().");
+        Console.WriteLine($"Task završio {sat.ElapsedMilliseconds} ms nakon Cancel().");   // npr. 1 ms (bilo do ≈ 1000 ms sa Thread.Sleep)
     }
 }

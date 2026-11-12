@@ -9,6 +9,15 @@ static class Zadatak2_Periodicno
 {
     static void Periodicno(Action akcija, int ms)
     {
+        Task.Run(() =>
+        {
+            var sat = Stopwatch.StartNew();
+            for (int k = 1; ; k++)
+            {
+                akcija();
+                Thread.Sleep((int)Math.Max(0, k * ms - sat.ElapsedMilliseconds));   // k-ti poziv u (k − 1) · ms, bez nakupljanja kašnjenja
+            }
+        });
     }
 
     static void Main()
@@ -20,12 +29,12 @@ static class Zadatak2_Periodicno
         Action akcija = () =>
         {
             poziv++;
-            Console.WriteLine($"poziv {poziv,2}: {sat.ElapsedMilliseconds,6} ms");
+            Console.WriteLine($"poziv {poziv,2}: {sat.ElapsedMilliseconds,6} ms");   // poziv  1:      2 ms … poziv 10:   9007 ms
             Thread.Sleep(300);   // posao akcije
         };
 
         Periodicno(akcija, 1000);
         Thread.Sleep(9_500);
-        Console.WriteLine($"Kraj nakon {sat.ElapsedMilliseconds} ms, poziva: {poziv}");
+        Console.WriteLine($"Kraj nakon {sat.ElapsedMilliseconds} ms, poziva: {poziv}");   // Kraj nakon 9507 ms, poziva: 10 (pozivi u 2, 1004, 2003, …, 9007 ms)
     }
 }

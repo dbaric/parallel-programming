@@ -9,7 +9,17 @@ static class Zadatak4_Periodicno2
 {
     static Task<List<U>> Periodicno2<U>(Func<U> f, int ms, CancellationToken token)
     {
-        return Task.FromResult(new List<U>());
+        return Task.Run(() =>
+        {
+            var lista = new List<U>();   // lokalna lista, nitko drugi je ne vidi dok task ne završi
+            var sat = Stopwatch.StartNew();
+            for (int k = 1; !token.IsCancellationRequested; k++)
+            {
+                lista.Add(f());
+                token.WaitHandle.WaitOne((int)Math.Max(0, k * ms - sat.ElapsedMilliseconds));
+            }
+            return lista;
+        });
     }
 
     // Zadano: dodaje f() u zajedničku listu svakih ms milisekundi, dok se ne zatraži prekid.
@@ -19,7 +29,7 @@ static class Zadatak4_Periodicno2
         {
             while (!token.IsCancellationRequested)
             {
-                lista.Add(f());
+                lock (lista) lista.Add(f());
                 Thread.Sleep(ms);
             }
         });
@@ -34,7 +44,7 @@ static class Zadatak4_Periodicno2
         var izvor = new CancellationTokenSource();
         izvor.CancelAfter(3500);
         List<long> vremena = Periodicno2(() => sat.ElapsedMilliseconds, 1000, izvor.Token).Result;
-        Console.WriteLine($"Elemenata: {vremena.Count}: {string.Join(", ", vremena)}");
+        Console.WriteLine($"Elemenata: {vremena.Count}: {string.Join(", ", vremena)}");   // Elemenata: 4: 2, 1005, 2007, 3005
 
         Console.WriteLine("Test 2: zajednička lista, glavna nit je čita dok se puni");
         var lista = new List<long>();
@@ -45,11 +55,11 @@ static class Zadatak4_Periodicno2
         while (dok.ElapsedMilliseconds < 2000)
         {
             long zbroj = 0;
-            foreach (long x in lista) zbroj += x;
+            lock (lista) foreach (long x in lista) zbroj += x;
             citanja++;
         }
         izvor2.Cancel();
         t.Wait();
-        Console.WriteLine($"Pročitano {citanja} puta, elemenata na kraju: {lista.Count}");
+        Console.WriteLine($"Pročitano {citanja} puta, elemenata na kraju: {lista.Count}");   // npr. Pročitano 471719 puta, elemenata na kraju: 13523; bez lock-a: InvalidOperationException (lista se promijenila tijekom foreach)
     }
 }
