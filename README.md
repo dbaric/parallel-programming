@@ -54,9 +54,11 @@ docker compose down        # stop
 - http://localhost:8080/04-models-async/Vjezba4_upute.html
 - http://localhost:8080/04-models-async/Vizualizacije/index.html
 - http://localhost:8080/05-periodic-tasks/Vjezba5_upute.html
+- http://localhost:8080/06-prefix-sum/Vjezba6_upute.html
 
 ### Notes
 
 - Each exercise is a folder `exercises/NN-slug/`; its own `README.md` (if any) describes the tasks.
 - Console programs print to the terminal, they have no web output.
 - Some links in `01-delegates/Vizualizacije/` point to pages of later weeks that are not in the repo yet.
+- Links to `Vizualizacije/blelloch.html` and `suma_prefiksa.html` in `06-prefix-sum/Vjezba6_upute.html` point to week 6 visualizations that are not in the repo yet.

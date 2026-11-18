@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vježba 6: algoritam sume prefiksa</title>
+<link rel="stylesheet" href="stil.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Vježba 6: algoritam sume prefiksa</h1>
+  <p class="lead">Paralelno programiranje, tjedan 6. Nakon vježbe znate odrediti indekse stabla, napisati Blellochov algoritam (reduciranje i spuštanje) za proizvoljnu asocijativnu operaciju, primijeniti ga na NZD i binarne brojeve i izmjeriti kada se paralelna suma prefiksa isplati.</p>
+
+  <h2>Priprema</h2>
+  <div class="card">
+    <ul class="tight">
+      <li>Visual Studio 2026 ili JetBrains Rider: otvorite <code>Vjezba6/Vjezba6.sln</code>. Visual Studio Code (uz proširenje C# Dev Kit): File &gt; Open Folder, mapa <code>Vjezba6</code>, konfiguracija »Vježba 6: zadatak N«. Naredbeni redak: u mapi zadatka pokrenite <code>dotnet run</code> (npr. <code>cd Zadatak1_Reduciranje</code> pa <code>dotnet run</code>).</li>
+      <li>Projekt cilja <b>.NET 10</b> (LTS). Ako imate samo Visual Studio 2022, u datoteci <code>.csproj</code> svakog zadatka (i u <code>.vscode/launch.json</code>) promijenite <code>net10.0</code> u <code>net8.0</code>; zadaci rade jednako.</li>
+      <li>Svaki zadatak je zaseban projekt (mapa <code>ZadatakN_*</code> s datotekom <code>ZadatakN_*.cs</code>) i pokreće se samostalno: u Visual Studiju desni klik na projekt &gt; Set as Startup Project, u Rideru odaberite projekt u popisu konfiguracija.</li>
+      <li>Zadaci mjere vrijeme, pa ih pokrećite u <b>Release</b> konfiguraciji (<code>dotnet run -c Release</code>, u VS Codeu konfiguracija »(Release)«).</li>
+      <li>U početnim projektima neke su metode prazne: njih pišete vi. <code>Main</code> ih već poziva, uspoređuje rezultat sa slijednim i ispisuje »isto: da/ne«.</li>
+      <li>Prije vježbe pogledajte predavanje 6 (scan, prescan, reduciranje, spuštanje, blokovi, Brentovo pravilo).</li>
+    </ul>
+  </div>
+
+  <h2>Podsjetnik</h2>
+  <div class="card">
+    <ul class="tight">
+      <li><b>Scan</b> niza a<sub>0</sub>, a<sub>1</sub>, …: a<sub>0</sub>, a<sub>0</sub> ⊕ a<sub>1</sub>, …, a<sub>0</sub> ⊕ … ⊕ a<sub>n−1</sub>. <b>Prescan</b>: neutralni element, a<sub>0</sub>, …, a<sub>0</sub> ⊕ … ⊕ a<sub>n−2</sub>. <b>Reduciranje</b>: samo a<sub>0</sub> ⊕ … ⊕ a<sub>n−1</sub>.</li>
+      <li>Za 3 1 7 0 4 1 6 3 i zbrajanje: scan 3 4 11 11 15 16 22 25, prescan 0 3 4 11 11 15 16 22, reduciranje 25.</li>
+      <li>Stablo (reduciranje pa spuštanje) radi u istom polju, razinu po razinu. Razina stabla je <b>r</b>: na razini r par elemenata udaljen je 2<sup>r</sup>.</li>
+      <li>Operacija ⊕ mora biti asocijativna: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z).</li>
+    </ul>
+  </div>
+
+  <h2>Zadaci</h2>
+  <div class="card">
+    <h3>Zadatak 0: indeksi stabla <span class="pill">Zadatak0_Indeksi.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: <code>Main</code> koji ispisuje nizove za n = 32, parove za n = 8 i n = 16, a zatim zbraja niz 1, 2, …, n za n = 16 i n = 20 i uspoređuje a[n − 1] sa stvarnim zbrojem.</p>
+    <b>Što trebate napraviti:</b>
+    <ol class="tight">
+      <li>Bez računala nastavite nizove do 31: <code>1 3 5 7 …</code>; <code>3 7 11 15 …</code>; <code>7 15 23 31 …</code>; <code>15 31 …</code>. Koliko ih ima?</li>
+      <li>Napišite metodu <code>IspisiNizove(int n)</code>: te nizove (samo brojevi manji od n) ispisuje petljom, svaki niz u svom retku.</li>
+      <li>Napišite metodu <code>IspisiParove(int n)</code>: za svaku razinu reduciranja u jednom retku ispišite sve parove <code>a[i] := a[j] ⊕ a[i]</code> te razine. Za n = 8 usporedite s tablicom indeksa s predavanja (slajd 14).</li>
+      <li>Napišite metodu <code>ReducirajSlijedno(long[] a)</code>: zbrajanje stablom (istim parovima), razinu po razinu, ali slijedno; na mjestu; vraća <code>a[n − 1]</code>.</li>
+      <li>Pokrenite. Za n = 16 rezultat je točan. Objasnite ishod za n = 20.</li>
+    </ol>
+    <div class="out"><b>Primjer ispisa zadanog koda</b><pre>Nizovi za n = 32:
+Parovi za n = 8:
+Parovi za n = 16:
+n = 16: a[15] = 0, zbroj 1 … 16 = 136, isto: ne
+n = 20: a[19] = 0, zbroj 1 … 20 = 210, isto: ne</pre></div>
+  </div>
+
+  <div class="card">
+    <h3>Zadatak 1: reduciranje stablom <span class="pill">Zadatak1_Reduciranje.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: metoda <code>Slijedno(a, op)</code> (slijeva nadesno) i <code>Main</code> s četiri testa: 3 1 7 0 4 1 6 3 uz zbrajanje (ispisuje i niz nakon reduciranja), 2<sup>22</sup> slučajnih brojeva uz zbrajanje (i vrijeme), isti brojevi uz najveći element (<code>Math.Max</code>) i 3 1 7 0 4 1 6 3 uz oduzimanje.</p>
+    <b>Što trebate napraviti:</b>
+    <ol class="tight">
+      <li>Napišite metodu <code>Reduciraj(long[] a, Func&lt;long, long, long&gt; op)</code>: reduciranje stablom, paralelno unutar razine, na mjestu (mijenja niz <code>a</code>), za n koji je potencija broja 2; vraća <code>a[n − 1]</code>.</li>
+      <li>Usporedite niz nakon reduciranja (test 1) s tablicom s predavanja.</li>
+      <li>Usporedite vrijeme sa slijednim (test 2). Zašto stablo nije brže?</li>
+      <li>Test 4 (oduzimanje): rezultat je različit od slijednog. Zašto?</li>
+    </ol>
+    <div class="out"><b>Primjer ispisa zadanog koda</b><pre>Test 1: 3 1 7 0 4 1 6 3, zbrajanje
+  niz nakon Reduciraj: 3 1 7 0 4 1 6 3
+  Reduciraj: 0, slijedno: 25, isto: ne
+Test 2: n = 2^22, zbrajanje
+  Reduciraj: 0, slijedno: −22.532.375, isto: ne
+  vrijeme: slijedno 55,2 ms, Reduciraj 61,2 ms (s kopiranjem niza), najkraće od 3
+Test 3: n = 2^22, najveći element
+  Reduciraj: 0, slijedno: 1.000.000, isto: ne
+Test 4: 3 1 7 0 4 1 6 3, oduzimanje
+  Reduciraj: 0, slijedno: −19, isto: ne</pre></div>
+  </div>
+
+  <div class="card">
+    <h3>Zadatak 2: prescan i scan <span class="pill">Zadatak2_Prescan.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: slijedni <code>ScanSlijedno</code> i <code>Main</code> s pet testova; svaki uspoređuje vaše metode sa slijednim. Metode su generičke (<code>T</code>), pa rade i za brojeve i za nizove znakova.</p>
+    <b>Što trebate napraviti:</b>
+    <ol class="tight">
+      <li>Napišite metodu <code>Prescan(T[] a, Func&lt;T, T, T&gt; op, T neutralni)</code>: Blellochov algoritam (reduciranje, pa spuštanje), paralelno unutar razine. Niz <code>a</code> postaje prescan, a metoda vraća a<sub>0</sub> ⊕ … ⊕ a<sub>n−1</sub>. Duljina niza ne mora biti potencija broja 2. Operacija je asocijativna, ali ne mora biti komutativna.</li>
+      <li>Napišite metodu <code>Scan(T[] a, Func&lt;T, T, T&gt; op, T neutralni)</code> pomoću metode <code>Prescan</code>: vraća novi niz (scan), a niz <code>a</code> ostaje nepromijenjen.</li>
+      <li>Svih pet testova mora ispisati »da«. Ako neki ne ispisuje, otkrijte zašto baš taj.</li>
+    </ol>
+    <div class="out"><b>Primjer ispisa zadanog koda</b><pre>Test 1: 3 1 7 0 4 1 6 3, zbrajanje
+  Prescan: [3] [1] [7] [0] [4] [1] [6] [3]
+  Scan:    [0] [0] [0] [0] [0] [0] [0] [0]
+  Prescan isto kao slijedno: ne, Scan isto kao slijedno: ne
+Test 2: n = 2^22, zbrajanje
+  Prescan isto kao slijedno: ne, Scan isto kao slijedno: ne
+Test 3: n = 1000, zbrajanje
+  Prescan isto kao slijedno: ne, Scan isto kao slijedno: ne
+Test 4: n = 1000, brojevi od −100 do −1, najveći dosad (max)
+  Prescan isto kao slijedno: ne, Scan isto kao slijedno: ne
+Test 5: a b c d e f, spajanje nizova znakova
+  Prescan: [a] [b] [c] [d] [e] [f]
+  Scan:    [] [] [] [] [] []
+  Prescan isto kao slijedno: ne, Scan isto kao slijedno: ne</pre></div>
+  </div>
+
+  <div class="card">
+    <h3>Zadatak 3: tri izvedbe i mjerenje <span class="pill">Zadatak3_Granularnost.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: <code>PrescanSlijedno</code>, operacija <code>SkupoZbroji</code> (zbraja, ali uz to računa desetak do pedesetak µs, ovisno o računalu; program ispisuje izmjereno) i <code>Main</code> koji provjerava rezultate i mjeri vrijeme (najkraće od 3; kriv rezultat ispisuje kao »krivo«). Sve metode računaju prescan na mjestu uz neutralni 0 i vraćaju ukupni zbroj.</p>
+    <b>Što trebate napraviti:</b>
+    <ol class="tight">
+      <li>Prepišite svoj Prescan iz zadatka 2 u metodu <code>PrescanPoRazini</code> (ovdje je n uvijek potencija broja 2).</li>
+      <li>Napišite metodu <code>PrescanTaskPoParu</code>: isti algoritam, ali za svaki par na svakoj razini jedan <code>Task.Run</code> (kao PRAM s n/2 procesora).</li>
+      <li>Napišite metodu <code>PrescanBlokovi(a, p, op)</code>: p blokova, kao na predavanju (slajdovi 25–26); n ne mora biti djeljiv s p.</li>
+      <li>Pokrenite (korak 1 u ispisu). Koja je izvedba najsporija i zašto? Koja je jedina brža od slijedne?</li>
+      <li>Korak 2 u ispisu mjeri blokove za razne p. Zašto je p = 1 sporiji od slijednog? Zašto ni p = 4.194.304 nije dobro?</li>
+      <li>Korak 3 ponavlja mjerenje uz <code>SkupoZbroji</code>. Što se promijenilo? Objasnite Brentovim pravilom i granularnošću.</li>
+      <li>Na vježbi 2020/21 predloženo je da svaki task radi sa 4 elementa umjesto 2. Koja vaša metoda to već radi, i s koliko elemenata po tasku?</li>
+    </ol>
+    <div class="out"><b>Primjer ispisa zadanog koda (početak)</b><pre>Korak 1: zbrajanje, p = 12 (logičkih jezgri); ms, najkraće od 3
+n        slijedno    po razini   task po paru    blokovi
+2^10         0,01        krivo          krivo      krivo
+2^14         0,13        krivo          krivo      krivo
+2^18         2,13        krivo          krivo      krivo
+…</pre></div>
+  </div>
+
+  <div class="card">
+    <h3>Zadatak 4: NZD redaka i cijele matrice <span class="pill">Zadatak4_Nzd.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: metoda <code>Nzd(a, b)</code>, generator matrice (sjeme 2026), slijedni <code>NzdRedakaSlijedno</code> i <code>Main</code> s dva testa (matrica 3 × 6 i matrica 1000 × 1000 u kojoj su svi elementi djeljivi s 3) i mjerenjem za tri oblika matrice: 1000 × 1000, 12 × 1.000.000 i 100.000 × 10 (kriv rezultat ispisuje kao »krivo«). Duljina retka nije potencija broja 2.</p>
+    <b>Što trebate napraviti:</b>
+    <ol class="tight">
+      <li>Napišite metodu <code>NzdRetka(long[] redak)</code>: najveći zajednički djelitelj retka, reduciranjem stablom iz zadatka 1 (smijete ga prepisati), paralelno unutar razine.</li>
+      <li>Napišite metodu <code>NzdRedaka(long[][] m)</code>: NZD svakog retka; retci se obrađuju paralelno, za svaki redak <code>NzdRetka</code>. Napišite metodu <code>NzdMatrice(long[][] m)</code>: NZD svih elemenata, pomoću <code>NzdRedaka</code>.</li>
+      <li>Napišite metodu <code>NzdRedakaSlijednoURetku(long[][] m)</code>: retci paralelno, unutar retka slijedna petlja.</li>
+      <li>Oba testa moraju ispisati »da«. Zatim usporedite vremena <code>NzdRedaka</code> i <code>NzdRedakaSlijednoURetku</code> za sva tri oblika matrice. Koja je inačica brža, i zašto?</li>
+    </ol>
+    <div class="out"><b>Primjer ispisa zadanog koda</b><pre>Test 1: 3 × 6
+  NzdRedaka: 0 0 0, slijedno: 6 7 4, isto: ne
+  NzdMatrice: 0, slijedno: 1, isto: ne
+Test 2: 1000 × 1000, svi elementi djeljivi s 3
+  NzdRedaka isto: ne, NzdRedakaSlijednoURetku isto: ne
+  NzdMatrice: 0, slijedno: 3, isto: ne
+
+Mjerenje: ms, najkraće od 3, 12 logičkih jezgri (kriv rezultat: »krivo«)
+matrica             slijedno     NzdRedaka    SlijednoURetku
+1.000 × 1.000           20,5         krivo             krivo
+12 × 1.000.000         248,4         krivo             krivo
+100.000 × 10            29,3         krivo             krivo</pre></div>
+  </div>
+
+  <div class="card">
+    <h3>Zadatak 5 (neobavezan): binarni brojevi u dekadske <span class="pill">Zadatak5_Binarni.cs</span></h3>
+    <p class="muted" style="margin:6px 0">Zadano: binarni broj je niz bitova <code>int[]</code> duljine N (N je potencija broja 2), a <code>bitovi[0]</code> je bit najveće težine. <code>Main</code> ima šest testova (N = 8, 16, 32 i 64; za N = 16, 32 i 64 prvi broj su same jedinice) i uspoređuje s <code>Convert.ToUInt64(s, 2)</code>. Primjer s ispita: 10100100 → 164, 10100101 → 165.</p>
+    <b>Što trebate napraviti:</b>
+    <ol class="tight">
+      <li>Napišite metodu <code>UDekadski(int[] bitovi)</code>: vrijednost broja kao <code>ulong</code>, paralelno (reduciranjem ili Prescanom iz zadatka 2; smijete ga prepisati).</li>
+      <li>Napišite metodu <code>SviUDekadske(int[][] brojevi)</code>: vrijednosti svih brojeva, paralelno; rezultat istim redoslijedom kao ulaz.</li>
+      <li>Napišite metodu <code>Prefiksi(int[] bitovi)</code>: element k je vrijednost prvih k + 1 bitova kao binarnog broja (za 10100100: 1 2 5 10 20 41 82 164), pomoću <code>Scan</code> iz zadatka 2 (smijete ga prepisati).</li>
+      <li>Svih šest testova mora ispisati »da«. Koju operaciju ste predali metodi <code>Scan</code>? Je li asocijativna? Je li komutativna?</li>
+    </ol>
+    <div class="out"><b>Primjer ispisa zadanog koda (dio)</b><pre>Test 1: N = 8
+  10100100 → 0, Convert: 164, isto: ne
+  10100101 → 0, Convert: 165, isto: ne
+…
+Test 4: N = 64, 8 brojeva (prvi: 64 jedinice), isto: ne
+Test 5: SviUDekadske, 32 broja (N = 8, 16, 32, 64), isto i istim redoslijedom: ne
+Test 6: Prefiksi
+  10100100: 0 0 0 0 0 0 0 0, isto: ne
+…</pre></div>
+  </div>
+
+  <h2>Za vježbu kod kuće: na papiru</h2>
+  <div class="card">
+    <p class="muted" style="margin:6px 0">Bez računala. Takav zadatak dolazi i na ispitu.</p>
+    <ol class="tight">
+      <li>Provedite prescan (operacija +) na nizu <code>4 7 1 0 5 2 6 4 8 1 9 7 3 0 1 5 2 7 4 3</code> (n = 20) uz p = 8 procesora.</li>
+      <li>Označite koji procesor dobiva koje elemente (n nije djeljiv s p).</li>
+      <li>Tablično napišite svaki korak: zbrojevi blokova, reduciranje i spuštanje nad zbrojevima blokova, prescan unutar blokova.</li>
+      <li>Provjerite rezultat slijednim zbrajanjem, a zatim u prikazu <a href="../Vizualizacije/suma_prefiksa.html">suma_prefiksa.html</a> (odjeljak 2, gotov primjer).</li>
+    </ol>
+  </div>
+
+  <h2>Predaja</h2>
+  <p>Vježba se evidentira prisustvom (najmanje 70 % termina vježbi). Ocjenjuju se dvije domaće zadaće, o kojima će biti riječi kasnije.</p>
+  <footer>Primjeri ispisa: Release, procesor sa 6 jezgri i 12 logičkih (macOS). Brojke i vremena mijenjaju se od pokretanja do pokretanja. Interaktivni prikazi uz predavanje 6 (mapa »Vizualizacije« tjedna 6): <a href="../Vizualizacije/blelloch.html">blelloch.html</a> (faza 1, faza 2 i cijeli algoritam na stablu i u nizu; uz zadatke 0, 1, 2 i 5) i <a href="../Vizualizacije/suma_prefiksa.html">suma_prefiksa.html</a> (ograničen broj procesora, pogledajte nakon zadatka na papiru; broj operacija, uz zadatak 3).</footer>
+
+  </div>
+</body>
+</html>
