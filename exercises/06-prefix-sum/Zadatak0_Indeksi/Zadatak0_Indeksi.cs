@@ -8,20 +8,32 @@ using System.Globalization;
 
 static class Zadatak0_Indeksi
 {
-    // Napišite.
     static void IspisiNizove(int n)
     {
+        for (int d = 2; d <= n; d *= 2)
+        {
+            Console.WriteLine(string.Join(" ", Enumerable.Range(1, n / d).Select(k => k * d - 1)));   // n = 32: 5 nizova: 1 3 5 … 31; 3 7 … 31; 7 15 23 31; 15 31; 31
+        }
     }
 
-    // Napišite.
     static void IspisiParove(int n)
     {
+        for (int d = 2; d <= n; d *= 2)
+        {
+            Console.WriteLine(string.Join("  ", Enumerable.Range(1, n / d).Select(k => $"a[{k * d - 1}] := a[{k * d - 1 - d / 2}] ⊕ a[{k * d - 1}]")));   // n = 8: a[1] := a[0] ⊕ a[1] … a[7] := a[3] ⊕ a[7], 3 retka
+        }
     }
 
-    // Napišite: zbrajanje stablom, slijedno, na mjestu (mijenja a). Vraća a[n − 1].
     static long ReducirajSlijedno(long[] a)
     {
-        return 0;
+        for (int d = 2; d <= a.Length; d *= 2)
+        {
+            for (int i = d - 1; i < a.Length; i += d)
+            {
+                a[i] += a[i - d / 2];
+            }
+        }
+        return a[^1];
     }
 
     static void Main()
@@ -45,7 +57,7 @@ static class Zadatak0_Indeksi
             }
             long stablo = ReducirajSlijedno(a);
             long zbroj = (long)n * (n + 1) / 2;
-            Console.WriteLine($"n = {n}: a[{n - 1}] = {stablo}, zbroj 1 … {n} = {zbroj}, isto: {(stablo == zbroj ? "da" : "ne")}");
+            Console.WriteLine($"n = {n}: a[{n - 1}] = {stablo}, zbroj 1 … {n} = {zbroj}, isto: {(stablo == zbroj ? "da" : "ne")}");   // n = 16: 136, 136, da; n = 20: 74, 210, ne (n nije potencija broja 2)
         }
     }
 }

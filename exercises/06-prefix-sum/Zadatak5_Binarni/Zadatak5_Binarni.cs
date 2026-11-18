@@ -6,26 +6,60 @@
 // Main uspoređuje s Convert.ToUInt64(s, 2).
 
 using System.Globalization;
+using Dio = (ulong v, int l);
 
 static class Zadatak5_Binarni
 {
-    // Napišite.
-    static ulong UDekadski(int[] bitovi)
+    static Dio Spoji(Dio x, Dio y) => ((x.v << y.l) | y.v, x.l + y.l);
+
+    static Dio[] Dijelovi(int[] bitovi) => bitovi.Select(b => ((ulong)b, 1)).ToArray();
+
+    static T Prescan<T>(T[] a, Func<T, T, T> op, T neutralni)
     {
-        return 0;
+        int m = 1;
+        while (m < a.Length)
+        {
+            m *= 2;
+        }
+        var b = new T[m];
+        Array.Fill(b, neutralni);
+        a.CopyTo(b, 0);
+        for (int d = 2; d <= m; d *= 2)
+        {
+            Parallel.For(1, m / d + 1, k => b[k * d - 1] = op(b[k * d - 1 - d / 2], b[k * d - 1]));
+        }
+        T ukupno = b[m - 1];
+        b[m - 1] = neutralni;
+        for (int d = m; d >= 2; d /= 2)
+        {
+            Parallel.For(1, m / d + 1, k =>
+            {
+                T lijevo = b[k * d - 1 - d / 2];
+                b[k * d - 1 - d / 2] = b[k * d - 1];
+                b[k * d - 1] = op(b[k * d - 1], lijevo);
+            });
+        }
+        Array.Copy(b, a, a.Length);
+        return ukupno;
     }
 
-    // Napišite.
+    static T[] Scan<T>(T[] a, Func<T, T, T> op, T neutralni)
+    {
+        var b = (T[])a.Clone();
+        T ukupno = Prescan(b, op, neutralni);
+        return b.Skip(1).Append(ukupno).ToArray();
+    }
+
+    static ulong UDekadski(int[] bitovi) => Prescan<Dio>(Dijelovi(bitovi), Spoji, (0UL, 0)).v;
+
     static ulong[] SviUDekadske(int[][] brojevi)
     {
-        return new ulong[brojevi.Length];
+        var rezultat = new ulong[brojevi.Length];
+        Parallel.For(0, brojevi.Length, i => rezultat[i] = UDekadski(brojevi[i]));
+        return rezultat;
     }
 
-    // Napišite.
-    static ulong[] Prefiksi(int[] bitovi)
-    {
-        return new ulong[bitovi.Length];
-    }
+    static ulong[] Prefiksi(int[] bitovi) => Scan<Dio>(Dijelovi(bitovi), Spoji, (0UL, 0)).Select(x => x.v).ToArray();
 
     static int[] Bitovi(string s) => s.Select(c => c - '0').ToArray();
 
@@ -54,7 +88,7 @@ static class Zadatak5_Binarni
         {
             ulong v = UDekadski(Bitovi(s));
             ulong c = Convert.ToUInt64(s, 2);
-            Console.WriteLine($"  {s} → {v}, Convert: {c}, isto: {Da(v == c)}");
+            Console.WriteLine($"  {s} → {v}, Convert: {c}, isto: {Da(v == c)}");   // 10100100 → 164, 10100101 → 165, 00000001 → 1, 10000000 → 128, … sve da
         }
 
         var slucajni = new Random(2026);
@@ -77,7 +111,7 @@ static class Zadatak5_Binarni
         {
             ulong[] p = Prefiksi(Bitovi(s));
             var ocekivano = Enumerable.Range(1, s.Length).Select(k => Convert.ToUInt64(s[..k], 2));
-            Console.WriteLine($"  {s}: {string.Join(" ", p)}, isto: {Da(p.SequenceEqual(ocekivano))}");
+            Console.WriteLine($"  {s}: {string.Join(" ", p)}, isto: {Da(p.SequenceEqual(ocekivano))}");   // 10100100: 1 2 5 10 20 41 82 164, da
         }
         bool prefiksiIsti = svi.Skip(8).All(s => Prefiksi(Bitovi(s)).SequenceEqual(Enumerable.Range(1, s.Length).Select(k => Convert.ToUInt64(s[..k], 2))));
         Console.WriteLine($"  N = 16, 32, 64 (24 broja): isto: {Da(prefiksiIsti)}");

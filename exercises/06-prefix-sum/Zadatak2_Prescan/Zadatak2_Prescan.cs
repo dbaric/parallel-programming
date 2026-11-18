@@ -8,16 +8,40 @@ using System.Globalization;
 
 static class Zadatak2_Prescan
 {
-    // Napišite.
     static T Prescan<T>(T[] a, Func<T, T, T> op, T neutralni)
     {
-        return neutralni;
+        int m = 1;
+        while (m < a.Length)
+        {
+            m *= 2;
+        }
+        var b = new T[m];
+        Array.Fill(b, neutralni);
+        a.CopyTo(b, 0);
+        for (int d = 2; d <= m; d *= 2)
+        {
+            Parallel.For(1, m / d + 1, k => b[k * d - 1] = op(b[k * d - 1 - d / 2], b[k * d - 1]));
+        }
+        T ukupno = b[m - 1];
+        b[m - 1] = neutralni;
+        for (int d = m; d >= 2; d /= 2)
+        {
+            Parallel.For(1, m / d + 1, k =>
+            {
+                T lijevo = b[k * d - 1 - d / 2];
+                b[k * d - 1 - d / 2] = b[k * d - 1];
+                b[k * d - 1] = op(b[k * d - 1], lijevo);
+            });
+        }
+        Array.Copy(b, a, a.Length);
+        return ukupno;
     }
 
-    // Napišite pomoću Prescan.
     static T[] Scan<T>(T[] a, Func<T, T, T> op, T neutralni)
     {
-        return new T[a.Length];
+        var b = (T[])a.Clone();
+        T ukupno = Prescan(b, op, neutralni);
+        return b.Skip(1).Append(ukupno).ToArray();
     }
 
     // Zadano: slijedni scan.
@@ -46,10 +70,10 @@ static class Zadatak2_Prescan
         Console.WriteLine(naziv);
         if (ispisi)
         {
-            Console.WriteLine($"  Prescan: {string.Join(" ", kopija.Select(x => $"[{x}]"))}");
-            Console.WriteLine($"  Scan:    {string.Join(" ", scan.Select(x => $"[{x}]"))}");
+            Console.WriteLine($"  Prescan: {string.Join(" ", kopija.Select(x => $"[{x}]"))}");   // test 1: [0] [3] [4] [11] [11] [15] [16] [22]; test 5: [] [a] [ab] [abc] [abcd] [abcde]
+            Console.WriteLine($"  Scan:    {string.Join(" ", scan.Select(x => $"[{x}]"))}");   // test 1: [3] [4] [11] [11] [15] [16] [22] [25]; test 5: [a] [ab] [abc] [abcd] [abcde] [abcdef]
         }
-        Console.WriteLine($"  Prescan isto kao slijedno: {(prescanIsti && ukupnoIsto ? "da" : "ne")}, Scan isto kao slijedno: {(scan.SequenceEqual(ocekivano) ? "da" : "ne")}");
+        Console.WriteLine($"  Prescan isto kao slijedno: {(prescanIsti && ukupnoIsto ? "da" : "ne")}, Scan isto kao slijedno: {(scan.SequenceEqual(ocekivano) ? "da" : "ne")}");   // da, da u svih pet testova
     }
 
     static void Main()
