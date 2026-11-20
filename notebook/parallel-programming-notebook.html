@@ -1,0 +1,1335 @@
+<title>Bilježnica paralelnog programiranja</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: jedna obitelj fonta (Inter), osnovna jedinica razmaka 8px, jedan stupac teksta od 680px, uvlačivo kazalo lijevo, izvori kao tihe bilješke. */
+:root{
+  --u:8px;
+  --bg:#ffffff; --fg:#1f2328; --muted:#5b6470; --faint:#8b94a1; --line:#e5e8ec; --soft:#f5f7f9;
+  --accent:#1457d2; --accent-soft:#eaf1fd; --nbc:#1a6b45; --warn:#8a5a00; --warn-soft:#fdf3dc;
+  --sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  --rail:288px; --top:52px;
+  /* skala: xs 12 / s 14 / base 17 / lede 20 / h3 22 / h2 32 / h1 44, nista izvan nje */
+  --xs:12px; --s:14px; --base:17px; --lede:20px; --h3:22px; --h2:32px; --h1:44px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1216; --fg:#e4e7eb; --muted:#9aa3af; --faint:#6f7885; --line:#242a32; --soft:#171b21;
+  --accent:#7fa9ff; --accent-soft:#17233b; --nbc:#6fcf9f; --warn:#f0c377; --warn-soft:#2e2511; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1216; --fg:#e4e7eb; --muted:#9aa3af; --faint:#6f7885; --line:#242a32; --soft:#171b21;
+  --accent:#7fa9ff; --accent-soft:#17233b; --nbc:#6fcf9f; --warn:#f0c377; --warn-soft:#2e2511; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:var(--base);line-height:1.7;font-weight:400;
+  padding-block:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));-webkit-font-smoothing:antialiased}
+/* plutajuća traka s tri gumba, bez zaglavlja */
+.dock{position:fixed;z-index:60;left:50%;transform:translateX(-50%);bottom:max(16px,env(safe-area-inset-bottom,0px));display:flex;align-items:stretch;background:var(--fg);color:var(--bg);border-radius:999px;box-shadow:0 8px 28px rgba(0,0,0,.28);padding:4px;gap:2px;max-width:calc(100vw - 24px)}
+.dock button{font:inherit;font-size:var(--s);font-weight:500;line-height:1;color:inherit;background:transparent;border:0;border-radius:999px;padding:12px 16px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.dock button:hover{background:color-mix(in srgb,var(--bg) 16%,transparent)}
+.dock button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.dock .ico{flex:none}
+.dock [aria-pressed="true"] .bm{fill:currentColor}
+.dock [aria-pressed="true"] .sl{display:none}
+.dock [aria-pressed="false"]{opacity:.75}
+.dock .sep{width:1px;background:color-mix(in srgb,var(--bg) 25%,transparent);margin:8px 2px}
+#bar{position:fixed;top:0;left:0;height:3px;width:0;background:var(--accent);z-index:90;pointer-events:none}
+.btn:focus-visible,.ref:focus-visible,#card button:focus-visible,nav a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* raspored: jedan stupac, kazalo kao ladica */
+.shell{display:block;max-width:680px;margin:0 auto}
+nav.rail{position:fixed;z-index:80;left:0;top:0;bottom:0;width:min(340px,90vw);overflow:auto;background:var(--bg);border-right:1px solid var(--line);
+  padding:16px 16px 96px;padding-left:max(16px,env(safe-area-inset-left,0px));font-size:var(--s);line-height:1.45;transform:translateX(-102%);transition:transform .2s}
+body.rail-on nav.rail{transform:none;box-shadow:0 0 48px rgba(0,0,0,.25)}
+nav.rail .rh{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px;font-weight:600;font-size:var(--base)}
+nav.rail .rh button{font:inherit;font-size:var(--s);border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:6px 12px;cursor:pointer}
+nav.rail a{display:block;color:var(--muted);text-decoration:none;padding:6px 8px;border-radius:6px}
+nav.rail a:hover{background:var(--soft);color:var(--fg)}
+nav.rail a.ch{font-weight:600;color:var(--fg);margin-top:8px}
+nav.rail a.sec{padding-left:24px}
+nav.rail a.on{color:var(--accent);background:var(--accent-soft)}
+nav.rail .grp{display:none} nav.rail .grp.open{display:block}
+main{min-width:0;padding:64px 0 160px}
+/* naslovnica */
+.kick{font-size:var(--xs);font-weight:600;letter-spacing:.04em;color:var(--accent);margin:0 0 8px}
+h1{font-size:var(--h1);line-height:1.12;letter-spacing:-.025em;font-weight:700;margin:0 0 16px;text-wrap:balance}
+.intro{font-size:var(--lede);line-height:1.6;color:var(--muted);margin:0 0 32px}
+.howto{background:var(--soft);border-radius:12px;padding:16px 24px;margin:0 0 32px;font-size:var(--s);line-height:1.7}
+.howto p{margin:0}
+.toc{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.toc li{margin:0;border-bottom:1px solid var(--line)}
+.toc a{display:flex;gap:16px;align-items:baseline;padding:12px 0;color:var(--fg);text-decoration:none;font-weight:500;font-size:var(--base);line-height:1.4}
+.toc a b{display:none}
+.toc a:hover span{color:var(--accent)}
+/* poglavlja */
+section.chapter{padding-top:96px}
+section.chapter:first-of-type{padding-top:64px}
+section.chapter>h2{font-size:var(--h2);line-height:1.2;letter-spacing:-.02em;font-weight:700;margin:0 0 24px;text-wrap:balance}
+
+.lede{font-size:var(--lede);line-height:1.6;color:var(--muted);margin:0 0 24px}
+h3{font-size:var(--h3);line-height:1.3;letter-spacing:-.012em;font-weight:650;margin:56px 0 16px;text-wrap:balance}
+h5{font-size:var(--base);line-height:1.4;font-weight:600;color:var(--muted);margin:24px 0 8px}
+h4{font-size:var(--base);line-height:1.4;font-weight:600;margin:32px 0 8px}
+p{margin:0 0 16px}
+ul,ol{margin:0 0 16px;padding-left:24px}
+li{margin:0 0 8px;padding-left:4px} li:last-child{margin-bottom:0}
+li>ul,li>ol{margin:8px 0 0}
+p,li,td,th{overflow-wrap:break-word}
+b,strong{font-weight:600}
+i,em{font-style:italic}
+.callout{background:var(--accent-soft);border-radius:12px;padding:16px 24px;margin:24px 0;line-height:1.7}
+.callout>:last-child{margin-bottom:0}
+.callout p,.callout ul,.callout ol{margin-bottom:8px}
+.tw{overflow-x:auto;max-width:100%;margin:24px 0}
+table{border-collapse:collapse;font-size:var(--s);line-height:1.5;margin:0;width:100%;display:table}
+th,td{border-bottom:1px solid var(--line);padding:8px 16px 8px 0;text-align:left;vertical-align:middle}
+th{font-weight:600;color:var(--muted);font-size:var(--xs);border-bottom:1px solid var(--fg);white-space:nowrap}
+td:last-child,th:last-child{padding-right:0}
+pre{background:var(--soft);border-radius:12px;padding:16px 24px;overflow-x:auto;font-size:var(--s);line-height:1.6;margin:24px 0}
+code{font-family:var(--mono);font-size:.85em;background:var(--soft);padding:2px 6px;border-radius:6px}
+pre code{background:none;padding:0;font-size:inherit}
+mjx-container[display="true"]{max-width:100%;overflow-x:auto;overflow-y:hidden;padding:2px 0}
+.eq{display:block;text-align:center;margin:16px 0}
+.eq .ref{margin-left:0}
+mjx-container[display="true"]{margin:8px 0!important}
+mjx-container:not([display]){white-space:nowrap;overflow:visible}
+.own-tag{font-size:var(--xs);font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:2px 8px;white-space:nowrap;margin-left:4px;display:inline-block;line-height:1.4}
+.own-text{background:var(--warn-soft);border-radius:4px;padding:1px 4px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+/* izvori: tiha bilješka uz rečenicu */
+.ref{font-size:var(--xs);line-height:1;font-weight:500;color:var(--faint);cursor:pointer;white-space:nowrap;margin-left:4px;padding:2px 6px;border-radius:6px;border:1px solid var(--line);vertical-align:2px;display:inline-block}
+.ref.nb{color:var(--nbc)}
+.ref:hover,.ref.open{background:var(--soft);color:var(--fg);border-color:var(--faint)}
+body.no-src .ref{display:none}
+#card{position:fixed;z-index:70;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:0 16px 48px rgba(0,0,0,.22);padding:16px 24px;width:min(480px,calc(100vw - 32px));max-height:min(70vh,520px);overflow:auto;font-size:var(--s);line-height:1.5}
+#card[hidden]{display:none}
+#card h5{margin:0 0 8px;font-size:var(--s);font-weight:600;line-height:1.35}
+#card .it+.it{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+#card .row{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:8px;align-items:start;margin:8px 0 0}
+#card .k{color:var(--muted);font-size:var(--xs);padding-top:2px}
+#card .v{font-family:var(--mono);font-size:var(--xs);word-break:break-all}
+#card button{font:inherit;font-size:var(--xs);border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:6px;padding:2px 8px;cursor:pointer}
+.src-index table{font-size:var(--s)}
+.src-index td:nth-child(2),.src-index td:nth-child(3){font-family:var(--mono);font-size:var(--xs);word-break:break-all;min-width:180px}
+a.xref{color:var(--accent);font-weight:500;text-decoration:none}a.xref:hover{text-decoration:underline}
+.viz{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:16px 24px;margin:24px 0;font-size:var(--s);line-height:1.5}
+.viz p{margin:0 0 12px}.viz .viz-t{font-weight:600;font-size:var(--base)}
+.viz .cap{color:var(--muted);font-size:var(--s);line-height:1.5;margin:12px 0 0}
+.viz .ctl{margin:0 0 12px}.viz .ctl label{display:flex;justify-content:space-between;gap:12px;margin:0 0 4px}
+.viz input[type=range]{width:100%;accent-color:var(--accent)}
+.viz .row2{margin:0 0 12px}.viz .btns{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.viz button{font:inherit;font-size:var(--s);font-weight:500;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:999px;padding:8px 16px;min-height:40px;cursor:pointer}
+.viz button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}.viz button:disabled{opacity:.4;cursor:default}
+.viz button:focus-visible,.viz input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.viz .out{margin:0 0 12px}.viz .out b{font-family:var(--mono);font-weight:500;color:var(--accent)}
+.viz .tw{margin:8px 0}.viz ol{margin:0 0 12px;padding-left:24px}
+.viz svg{width:100%;height:auto;display:block}
+.viz svg .tx{font:12px var(--mono);fill:var(--muted)}.viz svg .gl{stroke:var(--line);stroke-width:1}.viz svg .ax{stroke:var(--faint);stroke-width:1}
+.viz svg .ln1{fill:none;stroke:var(--accent);stroke-width:2.5}.viz svg .ln2{fill:none;stroke:var(--warn);stroke-width:1.5}.viz svg .ln3{fill:none;stroke:var(--faint);stroke-width:1.5;stroke-dasharray:2 4}
+.viz svg .lim{stroke:var(--accent);stroke-width:1.5;stroke-dasharray:6 4;opacity:.7}.viz svg .dt{fill:var(--bg);stroke:var(--accent);stroke-width:3}
+.viz .br{display:grid;grid-template-columns:minmax(110px,170px) 1fr auto;gap:8px;align-items:center;margin:4px 0;font-size:var(--xs)}
+.viz .bb{background:var(--line);border-radius:4px;height:12px;overflow:hidden}.viz .bb i{display:block;height:100%}
+.viz .b1{background:var(--faint)}.viz .b2{background:var(--accent)}.viz .b3{background:var(--warn)}.viz .bv{font-family:var(--mono)}
+.viz .cells{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.viz .cell{position:relative;min-width:44px;padding:16px 8px 8px;text-align:center;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-family:var(--mono);font-size:var(--base)}
+.viz .cell i{position:absolute;top:2px;left:0;right:0;font-style:normal;font-size:var(--xs);color:var(--muted)}
+.viz .cell.hi{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+
+.viz .cell.wide{min-width:120px;padding-top:20px}.viz .cell.src{border-style:dashed;border-color:var(--accent)}
+.viz select{font:inherit;font-size:var(--s);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;width:100%}
+.viz .blk{position:relative;display:flex;flex-wrap:wrap;gap:2px;padding:18px 6px 6px;border-radius:8px;border:1px solid var(--line)}
+.viz .blk i{position:absolute;top:2px;left:6px;font-style:normal;font-size:var(--xs);color:var(--muted);white-space:nowrap}
+.viz .blk.b0{background:var(--accent-soft)}.viz .blk.b1{background:var(--warn-soft)}
+.viz .mc{font-family:var(--mono);font-size:var(--xs);min-width:20px;text-align:center}
+.viz .gl-t{font-weight:600;margin:12px 0 4px}
+.own-tag::before{content:"("}.own-tag::after{content:")"}
+@media (max-width:480px){.viz{padding:16px}.viz .br{grid-template-columns:1fr auto}.viz .br .bb{grid-column:1/-1;order:3}}
+
+.viz .tlw{margin:0 0 12px}.viz .tlr{display:grid;grid-template-columns:64px 1fr;gap:8px;align-items:center;margin:4px 0;font-size:var(--xs)}
+.viz .tlt{position:relative;height:24px;background:var(--line);border-radius:6px;overflow:hidden}
+.viz .tlt i{position:absolute;top:0;bottom:0;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:var(--xs);color:var(--bg);overflow:hidden;white-space:nowrap;border-right:1px solid var(--bg)}
+.viz .sa{background:var(--accent)}.viz .sb{background:var(--warn)}.viz .sw{background:var(--faint)}
+.viz .tlax{display:flex;justify-content:space-between;color:var(--muted);font-family:var(--mono)}.viz .tlax em{font-style:normal}
+.viz table.pl th,.viz table.pl td{padding:4px 6px;text-align:center;min-width:24px;font-size:var(--xs)}.viz table.pl td.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.viz .grid{display:grid;gap:4px;margin:0 0 12px;max-width:360px}.viz .gc{text-align:center;padding:8px 0;border:1px solid var(--line);border-radius:6px;background:var(--bg);font-family:var(--mono);font-size:var(--xs);color:var(--muted)}
+.viz .gc.dn{background:var(--soft);color:var(--fg)}.viz .gc.hi{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.viz canvas{display:block;width:100%;max-width:300px;height:auto;aspect-ratio:1;background:var(--bg);border:1px solid var(--line);border-radius:8px;margin:0 0 12px}
+.viz td.ok{color:var(--fg)}.viz td.bad{color:var(--warn);font-weight:500}
+.viz pre{margin:0 0 12px;padding:12px 16px;font-size:var(--xs)}
+
+.viz .diag{margin:0 0 12px;padding:12px 16px;background:var(--bg);border:1px solid var(--line);border-radius:8px}
+.viz .drow{display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center}.viz .dl{font-size:var(--xs);color:var(--muted)}
+.viz .chips{display:flex;flex-wrap:wrap;gap:4px}.viz .chips span{min-width:24px;text-align:center;padding:2px 6px;border-radius:6px;font-family:var(--mono);font-size:var(--xs)}
+.viz .ci{background:var(--accent-soft);color:var(--accent)}.viz .cp{background:var(--accent);color:var(--bg)}.viz .cd{background:var(--warn-soft);color:var(--warn)}
+.viz .darr{text-align:left;padding-left:148px;color:var(--faint);line-height:1}
+@media (max-width:480px){.viz .drow{grid-template-columns:1fr}.viz .darr{padding-left:0}}
+
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}nav.rail{transition:none}}
+</style>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg:{fontCache:'global',displayAlign:'center'}};</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js" async></script>
+<div id="bar" aria-hidden="true"></div>
+<div class="shell">
+<nav class="rail" id="rail" aria-label="Sadržaj"><div class="rh"><span>Sadržaj</span><button type="button" id="railX">Zatvori</button></div><div id="railBody"></div></nav>
+<main>
+<p class="kick">Bilješke s kolegija · Paralelno programiranje</p>
+<h1>Bilježnica paralelnog programiranja</h1>
+<p class="intro">Jedan put kroz sedam predavanja i šest vježbi u C#-u i .NET-u. Uz svaku ideju stoji razlog i zaključak, pa vidite zašto vrijedi i kako se povezuje s ostalim.</p>
+<div class="howto"><p><b>Kako čitati.</b> Počnite sa slikom cjeline, zatim redom pratite poglavlja.</p><p>Svaka kartica daje pravilo, razlog (Zašto), plavu Ključnu ideju i primjer s brojevima s kolegija (Dokaz).</p><p>Siva oznaka navodi predavanje ili vježbu iz koje tvrdnja dolazi. Oznaka <span class="own-tag">zaključeno</span> označava vezu ili tvrdnju koju dodaju ove bilješke. Predavanja je ne navode.</p><p>Gumb Izvori sakriva i prikazuje sve sive oznake.</p></div>
+<ol class="toc" id="toc"></ol>
+<section id="ch1" class="chapter">
+<h2>Slika cjeline</h2>
+<p class="lede">Cijela tema u devet koraka. Pročitajte ovu stranicu prvu. Svaki korak upućuje na karticu koja ga dokazuje.</p>
+<h3>Argument na jednoj stranici</h3>
+<pre><code>Zašto i što -&gt; Mjerenje -&gt; Podjela posla -&gt; Što puca i kako se popravlja
+   -&gt; Modeli i async -&gt; Prefiksni zbroj -&gt; Zastoj i kolekcije</code></pre>
+<ol><li><b>Zašto.</b> Snaga i toplina zaustavljaju rast takta, pa se dodatni tranzistori pretvaraju u jezgre, a programer mora podijeliti posao (<a class="xref" href="#a1" title="Zašto paralelno danas">Zašto paralelno danas</a>).</li><li><b>Sklopovlje.</b> Paralelizam na razini bitova i instrukcija dobivamo besplatno. Podatkovni i zadatkovni paralelizam posao su programera. Model memorije određuje kako stvari pucaju (<a class="xref" href="#a3" title="Razine paralelizma, podatkovni i zadatkovni">Razine paralelizma</a>, <a class="xref" href="#a6" title="Dijeljena naspram odvojene memorije">Dijeljena naspram odvojene memorije</a>).</li><li><b>Mjerenje.</b> Sekvencijalni dio ograničava ubrzanje S (<a class="xref" href="#b2" title="Amdahlov zakon">Amdahlov zakon</a>). Režija i čekanje na barijeri djeluju kao dodatno sekvencijalno vrijeme <span class="own-tag">zaključeno</span>, pa Karp-Flattov e raste (<a class="xref" href="#b4" title="Karp-Flattova metrika">Karp-Flattova metrika</a>).</li><li><b>Podjela.</b> Dijelovi moraju biti nezavisni (<a class="xref" href="#c3" title="Ovisnosti i Bernsteinovi uvjeti">Ovisnosti i Bernsteinovi uvjeti</a>), otprilike jednake veličine i veći od svoje režije (<a class="xref" href="#c1" title="Koraci dizajna: tri pitanja i PCAM">Koraci dizajna</a>, <a class="xref" href="#b6" title="Režija i granularnost">Režija i granularnost</a>).</li><li><b>Što puca.</b> Operacije u više koraka nad dijeljenim podacima mogu bez upozorenja izgubiti ažuriranja (<a class="xref" href="#d1" title="Mehanizam utrke podataka">Mehanizam utrke podataka</a>, <a class="xref" href="#d2" title="Utrka podataka naspram utrke uvjeta">Utrka podataka naspram utrke uvjeta</a>).</li><li><b>Popravci i cijena.</b> Izolacija je besplatna. Lock i Interlocked koštaju vrijeme, pa sinkronizirajte rijetko (<a class="xref" href="#d3" title="Četiri popravka i izbor">Četiri popravka i izbor</a>, <a class="xref" href="#d5" title="Interlocked i cijena sinkronizacije">Interlocked i cijena sinkronizacije</a>). Lockovi donose vlastite zamke (<a class="xref" href="#d4" title="Lock, kritični odsječak, pravila za lock">Lock</a>, <a class="xref" href="#d6" title="Provjeri pa promijeni, i compare-and-swap">Provjeri</a>, <a class="xref" href="#g1" title="Zastoj i četiri uvjeta">Zastoj i četiri uvjeta</a>).</li><li><b>Modeli i async.</b> Algoritam u koracima s zajedničkim taktom na stvarnom stroju treba barijeru, a barijere koštaju više kako raste broj zadataka (<a class="xref" href="#e3" title="Zamka zajedničkog takta i barijera">Zamka zajedničkog takta i barijera</a>, <a class="xref" href="#e5" title="Barijera postaje skupa: manje procesora">Barijera postaje skupa</a>). Brent povezuje korake i posao (<a class="xref" href="#e6" title="Posao, koraci i Brentovo pravilo">Posao</a>). async je konkurentnost (<a class="xref" href="#e7" title="async/await">async/await</a>). Zaustavljanje zadatka je dogovor (<a class="xref" href="#e8" title="Otkazivanje je dogovor">Otkazivanje je dogovor</a>).</li><li><b>Razrađena obitelj.</b> Stablo prefiksnog zbroja daje logaritamski broj koraka. Operacija, redoslijed, nadopuna i blokovi odlučuju o uspjehu (<a class="xref" href="#f1" title="Scan, prescan, redukcija">Scan</a> do <a class="xref" href="#f5" title="Granularnost: tri oblika i blokovi">Granularnost</a>).</li><li><b>Zastoj i kolekcije.</b> Uklonite jedan od četiri uvjeta. Semafor, Wait/Pulse i BlockingCollection imaju svaki svoju zamku (<a class="xref" href="#g1" title="Zastoj i četiri uvjeta">Zastoj i četiri uvjeta</a> do <a class="xref" href="#g6" title="Konkurentne kolekcije i BlockingCollection">Konkurentne kolekcije i BlockingCollection</a>).</li></ol>
+<p>Ponavljajući zakon cijene <span class="own-tag">zaključeno</span>: svaki paralelni alat plaća čekanjem, dodatnim poslom ili rizikom. Najbolji dizajn ne dijeli ništa i spaja rezultate jednom.</p>
+<h3 id="early-terms">Pojmovi koje srećete rano</h3>
+<p>Gornji koraci koriste neke pojmove prije njihovih kartica. Svaki redak daje ideju u jednoj rečenici i vodi na karticu.</p>
+<ul><li><b>Ubrzanje S</b> je T(1)/T(N): sekvencijalno vrijeme podijeljeno paralelnim. Vidi <a class="xref" href="#b1">Ubrzanje i učinkovitost</a></li><li><b>Karp-Flattov e</b> je broj izračunat iz izmjerenog S. Ako e ostaje konstantan, ograničava vas sekvencijalni dio. Ako e raste s N, ograničavaju vas režija ili sklopovlje. Vidi <a class="xref" href="#b4">Karp-Flattova metrika</a></li><li><b>Zajednički takt</b> znači da svi procesori rade jedan korak istodobno na zajedničkom taktu. Pravi C# program nema zajednički takt, pa treba barijeru. Vidi <a class="xref" href="#e3">Zamka zajedničkog takta i barijera</a></li><li><b>Barijera</b> je točka u kojoj svaki zadatak čeka dok svi ne stignu. Vidi <a class="xref" href="#e3">Zamka zajedničkog takta i barijera</a>, vidi <a class="xref" href="#e5">Barijera postaje skupa</a></li><li><b>aPRAM</b> je PRAM model bez zajedničkog takta. Naplaćuje d za globalni pristup i B za barijeru. Vidi <a class="xref" href="#e4">aPRAM</a></li><li><b>EREW, CREW, CRCW</b> su inačice PRAM-a. Dopuštaju isključiva ili istodobna čitanja i pisanja. Vidi <a class="xref" href="#e2">PRAM i njegove inačice</a></li><li><b>Brentovo pravilo</b> ograničava vrijeme s p procesora na t + (q − t)/p. Ovdje je t broj koraka uz dovoljno procesora, a q ukupni posao. Vidi <a class="xref" href="#e6">Posao</a></li><li><b>CAS</b> (compare-and-swap) upisuje novu vrijednost samo ako varijabla još drži staru vrijednost koju ste pročitali. Vidi <a class="xref" href="#d6">Provjeri</a></li><li><b>Coffmanovi uvjeti</b> su četiri uvjeta koja svi moraju vrijediti za zastoj. Vidi <a class="xref" href="#g1">Zastoj i četiri uvjeta</a></li><li><b>Radno učinkovit</b> znači da paralelni algoritam obavlja otprilike jednako operacija kao sekvencijalni. Vidi <a class="xref" href="#f3">Blellochov up-sweep i down-sweep</a></li></ul>
+<div class="callout"><p><b>Opseg ispita.</b> Prvi ispit je u 8. tjednu i pokriva tjedne 1 do 7. Vježba 7 (nije u datotekama kolegija) ima filozofe s dva popravka i mjerenjem, parkiralište za najviše 3 automobila, red s <code>Wait</code>/<code>PulseAll</code> koji treba popraviti i pet pogrešaka iz tjedana 1 do 6 koje treba pronaći (Predavanje 7, "Prvi ispit i vježba 7").</p></div>
+<h4>O brojevima</h4><p>Svi brojevi dolaze iz izvora, i to s jednog stroja (i7-9750H, 6 jezgri, 12 logičkih) osim ako kartica ili izvor ne kažu drugačije. Brojevi su ovdje zapisani hrvatski: točka za tisućice, zarez za decimale (1.981.047, 0,51). Izvorne datoteke se međusobno razlikuju u zapisu, pa brojeve uspoređujte samo unutar jednog izvora. Hrvatski nazivi u kodu, poput <code>stanje</code>, <code>isplata</code> i <code>brojac</code>, dolaze iz koda vježbi.</p>
+</section>
+<section id="ch2" class="chapter">
+<h2>Zašto i što</h2>
+<p class="lede">Takt više ne raste, pa raste broj jezgri. Paralelizam na razini bitova i instrukcija dobivamo besplatno. Podatkovni i zadatkovni paralelizam posao su programera. Paralelizam traži različite jezgre koje rade istodobno. Konkurentnost znači da jedna jezgra izmjenjuje zadatke. Flynnove klase imenuju što sklopovlje nudi. Dijeljena ili odvojena memorija određuje tipičan kvar.</p>
+<h3 id="a1">Zašto paralelno danas</h3>
+<p>Mooreov zakon: broj tranzistora udvostruči se otprilike svake dvije godine. Takt procesora raste vrlo sporo od otprilike sredine 2000-ih.</p>
+<p><b>Zašto.</b> Viši takt znači veću snagu i toplinu. Zato dizajneri dodatne tranzistore ulažu u više jezgri.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Brži program više ne dolazi od bržeg procesora. Program mora iskoristiti jezgre.</p></div>
+<p><b>Dokaz.</b></p><ul><li>Rast jedne jezgre bio je 52 % godišnje (1986.-2003.), a zatim oko 3,5 % (od 2015.).</li><li>To je rekonstruirana krivulja.</li><li>Izmjerene vrijednosti: 40 % (1988.-2003.) i 8 % (2015.-2021.).</li><li>Llama 3 405B treba 3,8 · 10²⁵ operacija.</li><li>Jednoj jezgri trebalo bi oko 1,2 milijarde godina, jednom H100 oko 3000 godina, a 16.384 GPU-a oko 67 dana.</li><li>GPU-i rade na oko 40 % vrhunca.</li></ul>
+<p><b>Više.</b> Paralelno programiranje isplati se kad problem ima velik skup podataka ili mnogo nezavisnih izračuna. I stvarni je svijet paralelan, što je drugi razlog osim brzine. Stolno računalo ima mnogo funkcijskih jedinica, jezgri i sklopovskih dretvi. Biblioteke daju alate, ali vas ne štite od ovih pogrešaka.</p>
+<p><span class="ref" title="Predavanje 1 · Zašto sada: Mooreov zakon i zid frekvencije">Predavanje 1 · Zašto sada: Mooreov zakon i zid frekvencije</span><span class="ref" title="Predavanje 1 · Veliki jezični model: zašto mu treba mnogo jezgri">Predavanje 1 · Veliki jezični model: zašto mu…</span></p>
+<h3 id="a2">Paralelizam naspram konkurentnosti</h3>
+<p>Paralelizam znači da različite jezgre rade istodobno. Konkurentnost znači da operacijski sustav prebacuje zadatke na jednoj jezgri.</p>
+<p><b>Zašto.</b> Konkurentnost ne ubrzava izračun. Ona održava program responzivnim dok čeka mrežu ili disk.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Utrka podataka može nastati u oba slučaja, jer se prebacivanje može dogoditi usred operacije.</p></div>
+<p><b>Dokaz.</b> async/await daje 100 čekanja u 1004 ms bez ijedne dodatne jezgre (<a class="xref" href="#e7" title="async/await">async/await</a>).</p>
+<p><span class="ref" title="Predavanje 1 · Paralelizam naspram konkurentnosti">Predavanje 1 · Paralelizam naspram konkurentnosti</span></p>
+<div class="viz" data-w="concur"></div>
+<h3 id="a3">Razine paralelizma, podatkovni i zadatkovni</h3>
+<p>Razina bitova i instrukcija: radi sklopovlje. Podatkovni paralelizam: ista operacija nad različitim podacima. Zadatkovni paralelizam: različiti poslovi istodobno.</p>
+<p><b>Zašto.</b> Sklopovske razine ne traže posao programera. Podatkovni paralelizam raste s količinom podataka. Zadatkovni paralelizam ograničen je brojem poslova i čekanjem.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Mnogo jednakih elemenata traži podatkovni paralelizam. Nekoliko različitih poslova traži zadatkovni. Pravi programi miješaju oba.</p></div>
+<p><b>Dokaz.</b> Cjevovod od 4 instrukcije s 5 faza traje 5 + 3 = 8 ciklusa, a ne 20. Klimatski model koristi zadatkovni paralelizam među komponentama i podatkovni unutar svake. Šest segmenata kroz četiri filtra traje 4 + 5 = 9 koraka, a ne 24. Najsporiji filtar određuje tempo.</p>
+<p><span class="ref" title="Predavanje 1 · Razine paralelizma">Predavanje 1 · Razine paralelizma</span><span class="ref" title="Predavanje 1 · Primjer protočne obrade: obrada signala">Predavanje 1 · Primjer protočne obrade: obrada signala</span><span class="ref" title="Predavanje 1 · Modeliranje klime">Predavanje 1 · Modeliranje klime</span></p>
+<div class="viz" data-w="pipeline"></div>
+<h3 id="a4">Proces, dretva, planer, skup dretvi</h3>
+<p>Dretve jednog procesa dijele memoriju, ali svaka ima vlastiti stog. Planer operacijskog sustava prebacuje jezgru na drugu dretvu kad istekne vremenski odsječak, kad dretva čeka ili kad je spremna dretva višeg prioriteta.</p>
+<p><b>Zašto.</b></p><ul><li>Dijeljena memorija olakšava komunikaciju.</li><li>Također dopušta da dvije dretve mijenjaju jednu varijablu.</li><li>Program ne kontrolira prebacivanje.</li><li>Promjena konteksta izravno košta 3,8 µs (Linux 2.6.17, 2 × Xeon 2,0 GHz, ne i7).</li><li>Ako se računa i vrijeme ponovnog punjenja predmemorije, promjena traje od nekoliko µs do preko 1000 µs.</li></ul>
+<div class="callout"><p><b>Ključna ideja.</b> Zadatak je posao, a dretva je radnik. <code>Task.Run</code> je preporučen način pokretanja zadatka. Kolegij ne koristi <code>StartNew</code>. Broj računskih dretvi držite otprilike jednakim broju jezgri. Skup dretvi u .NET-u odlučuje koji zadatak dobiva koju dretvu. Operacijski sustav odlučuje kada dretva dobiva jezgru.</p></div>
+<p><b>Dokaz.</b> Prazan .NET program ima 8 dretvi. Vježba 2, zadatak 2 ima 25. 16 zadataka radi jednako brzo kao 12 (149 i 148 ms).</p>
+<p><span class="ref" title="Predavanje 1 · Proces i dretva">Predavanje 1 · Proces i dretva</span><span class="ref" title="Predavanje 3 · Stanja dretvi i promjena konteksta">Predavanje 3 · Stanja dretvi i promjena konteksta</span><span class="ref" title="Vježba 2 · Thread, ThreadPool, Task">Vježba 2 · Thread, ThreadPool, Task</span></p>
+<h3 id="a5">Flynnova taksonomija</h3>
+<p>Dva pitanja: ima li sklopovlje jedan ili više tokova instrukcija i jedan ili više tokova podataka? Odgovori daju SISD, SIMD, MISD i MIMD.</p>
+<p><b>Zašto.</b> Tok instrukcija su naredbe koje dohvaća jedna upravljačka jedinica. Tok podataka su operandi. Klasa govori koji paralelizam sklopovlje nudi. Program ne može iskoristiti ono što sklopovlju nedostaje.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Odaberite konstrukt koji odgovara klasi. SIMD daje podatkovni paralelizam, a MIMD zadatke. Računalo je MIMD sa SIMD jedinicama. Svaki C# <code>Task</code> radi na MIMD sklopovlju. SISD je osnovica za ubrzanje.</p></div>
+<p><b>Dokaz.</b> Jedna 256-bitna vektorska naredba zbraja 8 floatova odjednom. GPU warp (skupina od 32 dretve) izvodi jednu naredbu na svih 32 dretve. Grananje (<code>if</code>) usporava SIMD, jer neke jedinice moraju čekati. MISD je rijedak.</p>
+<p><span class="ref" title="Predavanje 2 · Četiri klase">Predavanje 2 · Četiri klase</span><span class="ref" title="Predavanje 2 · SIMD: ista naredba, mnogo podataka">Predavanje 2 · SIMD: ista naredba, mnogo podataka</span><span class="ref" title="Predavanje 2 · Gdje je tvoje računalo">Predavanje 2 · Gdje je tvoje računalo</span></p>
+<div class="viz" data-w="flynn"></div>
+<h3 id="a6">Dijeljena naspram odvojene memorije</h3>
+<p>Dijeljena memorija: jezgre vide isti RAM. Mreža računala: svako ima vlastitu memoriju i šalje poruke. Postoje tri programska modela: dijeljena memorija s dretvama, slanje poruka i podatkovni paralelizam.</p>
+<p><b>Zašto.</b> Dijeljena memorija je brza, ali daje utrke podataka. Odvojena memorija je sporija, ali se dobro skalira, a daje zastoj, izgubljene poruke i pogrešan redoslijed poruka.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Uz dijeljenu memoriju očekujte utrke podataka, a uz poruke zastoj i probleme redoslijeda poruka. Model nije sklopovlje: studenti šalju poruke na jednom prijenosniku. Prvi dio kolegija uči dijeljenu memoriju u C#-u. Drugi dio uči slanje poruka.</p></div>
+<p><b>Dokaz.</b> IBM Blue Gene/Q: 18 jezgri, 32 MB dijeljene L2 predmemorije, 16 računskih jezgri.</p>
+<p><span class="ref" title="Predavanje 1 · Arhitekture računala">Predavanje 1 · Arhitekture računala</span><span class="ref" title="Predavanje 3 · Modeli programiranja">Predavanje 3 · Modeli programiranja</span></p>
+<h4>Kako se ovo povezuje</h4>
+<ul><li>Okvir kvarova (utrka podataka, zastoj, nedeterminizam; mala granularnost, loša podjela, sekvencijalni dio) nalazi se u Predavanju 1, odjeljak "Što može poći po zlu". Svako kasnije poglavlje obrađuje jedan redak.</li><li><a class="xref" href="#a1" title="Zašto paralelno danas">Zašto paralelno danas</a> vodi na poglavlje Mjerenje, jer jezgre moraju dati mjerljiv dobitak.</li><li><a class="xref" href="#a6" title="Dijeljena naspram odvojene memorije">Dijeljena naspram odvojene memorije</a> vodi na poglavlje Što puca (dijeljena memorija daje utrke podataka) i na poglavlje Zastoj, semafori i konkurentne kolekcije (odvojena memorija i lockovi daju zastoj).</li><li><a class="xref" href="#a2" title="Paralelizam naspram konkurentnosti">Paralelizam naspram konkurentnosti</a> vodi na <a class="xref" href="#e7" title="async/await">async/await</a>, jer je async/await konkurentnost.</li><li><a class="xref" href="#a5" title="Flynnova taksonomija">Flynnova taksonomija</a> i <a class="xref" href="#a3" title="Razine paralelizma, podatkovni i zadatkovni">Razine paralelizma</a> vode na poglavlje Podjela posla: MIMD daje zadatkovni paralelizam, a SIMD podatkovni.</li></ul>
+</section>
+<section id="ch3" class="chapter">
+<h2>Mjerenje</h2>
+<p class="lede">Ubrzanje S = T(1)/T(N) i učinkovitost E = S/N pokazuju koliko program dobiva. Amdahl daje gornju granicu koju postavlja sekvencijalni dio. Stvarni rezultati su niži zbog šest uzroka. Karp-Flatt pokazuje koji je uzrok najveći. Gustafson postavlja drugo pitanje. Režija i granularnost odlučuju isplate li se mali zadaci.</p>
+<h3 id="b1">Ubrzanje i učinkovitost</h3>
+<p>S(N) = T(1)/T(N). E(N) = S(N)/N. Idealno: S = N, E = 1. Predavanje 1 piše U umjesto S za ubrzanje.</p>
+<p><b>Zašto.</b> S govori koliko je puta izvođenje brže. E govori koliki dio svake jezgre radi koristan posao. Zajedno pokazuju koliko je program udaljen od ideala.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Mjerite oboje. Pad E-a pokazuje ograničenje.</p></div>
+<p><b>Dokaz.</b> Monte Carlo pi, T(1) = 936 ms. N = 2: S = 2,00, E = 1,00. N = 12: 148 ms, S = 6,31, E = 0,53.</p>
+<p><span class="ref" title="Predavanje 3 · Ubrzanje i učinkovitost">Predavanje 3 · Ubrzanje i učinkovitost</span></p>
+<h3 id="b2">Amdahlov zakon</h3>
+<p>S(N) = 1 / ((1 − P) + P/N). P je dio vremena izvođenja koji se može podijeliti. Granica je 1/(1 − P).</p>
+<p><b>Zašto.</b> Sekvencijalni dio uvijek traje jednako. Samo se paralelni dio skraćuje. Kad N raste, P/N teži u 0, pa S teži u 1/(1 − P).</p>
+<div class="callout"><p><b>Ključna ideja.</b> Prije nego dodate jezgre, smanjite sekvencijalni dio. P je udio vremena, a ne udio naredbi.</p></div>
+<p><b>Dokaz.</b></p><ul><li>Granice: 2× kod P = 50 %, zatim 4×, 10×, 20×, a 100× kod P = 99 %.</li><li>P = 90 %: N = 10 daje S = 5,3, a N = 100 daje oko 9,2.</li><li>Pet naredbi, tri paralelne: S(3) = 1/(0,4 + 0,6/3) ≈ 1,67.</li><li>40 % sekvencijalno: 100 jezgri daje 2,46, a granica je 2,5.</li></ul>
+<p><span class="ref" title="Predavanje 1 · Amdahlov zakon: granica ubrzanja">Predavanje 1 · Amdahlov zakon: granica ubrzanja</span><span class="ref" title="Predavanje 3 · Amdahlov zakon">Predavanje 3 · Amdahlov zakon</span></p>
+<div class="viz" data-w="amdahl"></div>
+<h3 id="b3">Zašto je izmjereno ubrzanje niže</h3>
+<p>Postoji šest uzroka: sekvencijalni dio, režija, loša podjela, nedjeljivi zadaci, sklopovlje, memorija.</p>
+<p><b>Zašto.</b> Amdahl pokriva samo prvi uzrok, a stvarni program može imati više njih. Sklopovlje: 12 logičkih jezgri dijeli 6 fizičkih. Memorija: jezgre dijele predmemoriju i put do RAM-a.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Amdahl daje najbolji slučaj.</p></div>
+<p><b>Dokaz.</b> Program s pet naredbi ima samo tri nezavisna zadatka. Na 2 jezgre stvarni S = 5/4 = 1,25, dok Amdahl kaže 1,43. Ubrzanje staje blizu 12 zadataka (6,31 kod 12, 6,28 kod 16).</p>
+<p><span class="ref" title="Predavanje 3 · Nedjeljivi zadaci">Predavanje 3 · Nedjeljivi zadaci</span><span class="ref" title="Predavanje 3 · Zašto je izmjereno ubrzanje manje od Amdahlovog">Predavanje 3 · Zašto je izmjereno ubrzanje manje…</span></p>
+<h3 id="b4">Karp-Flattova metrika</h3>
+<p>e = (1/S − 1/N) / (1 − 1/N). Procjenjuje sekvencijalni udio iz izmjerenog S.</p>
+<p><b>Zašto.</b> e je Amdahl riješen po sekvencijalnom dijelu 1 − P, uz izmjereni S. Ako e ostaje konstantan, program ograničava pravi sekvencijalni dio. Ako e raste s N, ograničava ga nešto što raste s brojem zadataka: režija ili sklopovlje.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Koristite je nakon mjerenja. Ne predviđa i ne imenuje režiju.</p></div>
+<p><b>Dokaz.</b> Monte Carlo pi: e = 0,000 kod N = 2, 0,024 kod N = 6, 0,103 kod N = 16. Testni program s ugrađenim sekvencijalnim udjelom f = 0,5: e ostaje između oko 0,54 i 0,596. Za f = 0, N = 2, S = 2,11 daje e = −0,054 (mali N je šumovit, zaključeno).</p>
+<p><span class="ref" title="Predavanje 3 · Karp-Flattova metrika">Predavanje 3 · Karp-Flattova metrika</span></p>
+<div class="viz" data-w="kf"></div>
+<h3 id="b5">Gustafson i koji zakon koristiti</h3>
+<p>S(N) = N − s·(N − 1). Posao raste s N, a vrijeme ostaje fiksno.</p>
+<p><b>Zašto.</b></p><ul><li>Postavite vrijeme na N jezgri na 1, uz sekvencijalni dio s.</li><li>Jednoj jezgri za isti, veći posao treba s + N(1 − s), pa je S = N − s(N − 1).</li><li>Amdahl fiksira posao (jaka skalabilnost).</li><li>Gustafson fiksira vrijeme (slaba skalabilnost).</li><li>Oba zakona koriste istu ideju, ali kreću iz različite točke.</li><li>Dva sekvencijalna udjela, s i 1 − P, mjere se na različitim izvođenjima: s na paralelnom, 1 − P na sekvencijalnom.</li></ul>
+<div class="callout"><p><b>Ključna ideja.</b> Koristite Amdahla prije pisanja koda, Karp-Flatta nakon mjerenja, a Gustafsona kad posao može rasti.</p></div>
+<p><b>Dokaz.</b> s = 0,1, N = 10: Gustafson 9,1, Amdahl 5,3. N = 64: 57,7 naspram 8,77.</p>
+<p><span class="ref" title="Predavanje 3 · Gustafsonov zakon">Predavanje 3 · Gustafsonov zakon</span><span class="ref" title="Predavanje 3 · Koji zakon koristiti">Predavanje 3 · Koji zakon koristiti</span><span class="ref" title="Predavanje 3 · Notacija">Predavanje 3 · Notacija</span></p>
+<h3 id="b6">Režija i granularnost</h3>
+<p>Režija (tara) je cijena koju sekvencijalni program ne plaća: pokretanje zadataka, čekanje i spajanje. T(k) ≈ T(seq)/k + režija(k). Granularnost je količina posla po komunikaciji.</p>
+<p><b>Zašto.</b></p><ul><li>Skup dretvi pokreće dretve jednu po jednu, brzi zadaci čekaju najsporiji, a rezultati se spajaju.</li><li>Zato režija raste s brojem zadataka.</li><li>Ne smanjuje se kad dodajete jezgre.</li><li>Ovdje je zadatak zaseban komad posla, komunikacija je razmjena podataka, a sinkronizacija je čekanje drugih zadataka.</li><li>Dok zadatak čeka, njegova jezgra miruje.</li></ul>
+<div class="callout"><p><b>Ključna ideja.</b> Svaki zadatak treba mnogo više posla od svoje režije. Računa se i cijena po operaciji (vidi <a class="xref" href="#f5" title="Granularnost: tri oblika i blokovi">Granularnost</a>).</p></div>
+<p><b>Dokaz.</b> 1000 jedinica u 4 zadatka traje oko 410, a ne 250. Pi s 12 zadataka: N = 100: 1,9 µs sekvencijalno, 21,0 µs paralelno. N = 10.000.000: 100.996,3 µs naspram 14.766,2 µs. Prvi jasan dobitak (oko 3 puta) je kod N = 100.000 (zaključeno; izvor ne daje točan prag).</p>
+<p><span class="ref" title="Predavanje 2 · Granularnost">Predavanje 2 · Granularnost</span><span class="ref" title="Predavanje 2 · Režija (tara)">Predavanje 2 · Režija (tara)</span><span class="ref" title="Predavanje 2 · Zamka 1: sitni zadaci">Predavanje 2 · Zamka 1: sitni zadaci</span></p>
+<div class="viz" data-w="overhead"></div>
+<h3 id="b7">Mjerite ispravno</h3>
+<p>Koristite Release izvedbu. Prvo zagrijte program. Uzmite najkraće od 3 izvođenja (ili medijan od 21). Usporedite paralelni rezultat sa sekvencijalnim.</p>
+<p><b>Zašto.</b> Debug isključuje optimizacije, pa njegova vremena ne znače ništa. Prvi poziv je spor, pa vas jedno izvođenje može zavarati. Pogrešan paralelni program može izgledati brz, zato ga uvijek provjerite sekvencijalnim rezultatom.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Vrijeme bez provjere ispravnosti ne vrijedi ništa. Napomena: tipka F5 pokreće debugger čak i u Release izvedbi, pa pokrenite bez debuggiranja.</p></div>
+<p><b>Dokaz.</b> Vježba 2 ispisuje "ispravan" ili "POGREŠKA" za svaki k.</p>
+<p><span class="ref" title="Vježba 2 · Mjerenje vremena">Vježba 2 · Mjerenje vremena</span><span class="ref" title="Predavanje 2 · Ubrzanje">Predavanje 2 · Ubrzanje</span><span class="ref" title="Predavanje 1 · Organizacija kolegija">Predavanje 1 · Organizacija kolegija</span><span class="ref" title="Vježba 5 · Postavljanje i alati">Vježba 5 · Postavljanje i alati</span></p>
+<h4>Kako se ovo povezuje</h4>
+<ul><li>Lanac <span class="own-tag">zaključeno</span>: granularnost određuje režiju (<a class="xref" href="#b6" title="Režija i granularnost">Režija i granularnost</a>). Režija i čekanje na barijeri djeluju kao dodatni sekvencijalni dio, pa ih Amdahl ograničava (<a class="xref" href="#b2" title="Amdahlov zakon">Amdahlov zakon</a>), a Karp-Flattov e raste s N (<a class="xref" href="#b4" title="Karp-Flattova metrika">Karp-Flattova metrika</a>). Barijera po razini (44 za n = 2²²) takva je cijena (<a class="xref" href="#f3" title="Blellochov up-sweep i down-sweep">Blellochov up-sweep i down-sweep</a>). Aglomeracija u p blokova je uklanja (<a class="xref" href="#f5" title="Granularnost: tri oblika i blokovi">Granularnost</a>). Brentov t je dio koji se ne može smanjiti, kao 1 − P (<a class="xref" href="#e6" title="Posao, koraci i Brentovo pravilo">Posao</a>).</li><li><a class="xref" href="#b3" title="Zašto je izmjereno ubrzanje niže">Zašto je izmjereno ubrzanje niže</a> vodi na poglavlja Što puca i Modeli i async: čekanje na lock i barijeru je režija (<a class="xref" href="#d5" title="Interlocked i cijena sinkronizacije">Interlocked i cijena sinkronizacije</a>, <a class="xref" href="#e5" title="Barijera postaje skupa: manje procesora">Barijera postaje skupa</a>).</li><li>Gustafson i koji zakon koristiti vodi na Režiju i granularnost: veći posao po zadatku smanjuje udio režije, a to je Gustafsonov slučaj <span class="own-tag">zaključeno</span>.</li><li><a class="xref" href="#b6" title="Režija i granularnost">Režija i granularnost</a> vodi na <a class="xref" href="#c1" title="Koraci dizajna: tri pitanja i PCAM">Korake dizajna</a> (aglomeracija), <a class="xref" href="#c6" title="Monte Carlo pi i četiri zamke">Monte Carlo pi i četiri zamke</a> (sitni zadaci), <a class="xref" href="#f5" title="Granularnost: tri oblika i blokovi">Granularnost</a> (blokovi), <a class="xref" href="#e5" title="Barijera postaje skupa: manje procesora">Barijera postaje skupa</a> (manje procesora).</li><li><a class="xref" href="#b2" title="Amdahlov zakon">Amdahlov zakon</a> vodi na <a class="xref" href="#c7" title="Lanci ovisnosti: promijenite algoritam">Lance ovisnosti</a>: popravak za sekvencijalni lanac je novi algoritam, a ne više jezgri.</li></ul>
+</section>
+<section id="ch4" class="chapter">
+<h2>Podjela posla</h2>
+<p class="lede">Pronađite nezavisne dijelove, podijelite ih ravnomjerno, provjerite ispravnost, a zatim mjerite. Bernsteinovi uvjeti definiraju nezavisnost. Biblioteka raspoređuje posao, ali ga nikad ne provjerava. Izolacija, u kojoj svaki zadatak posjeduje svoje podatke, uklanja većinu zamki. Lanac ovisnosti traži novi algoritam.</p>
+<h3 id="c1">Koraci dizajna: tri pitanja i PCAM</h3>
+<p>Pitajte: što se može izvoditi istodobno, kako podijeliti posao i je li ispravan i brži? Fosterova PCAM metoda: particioniranje, komunikacija, aglomeracija, mapiranje.</p>
+<p><b>Zašto.</b> Prva dva PCAM koraka traže paralelizam. Zadnja dva prilagođavaju posao stroju. Prevoditelji rijetko dokazuju da su dijelovi nezavisni. S bibliotekom je programer odgovoran.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Svaka zamka s kolegija pripada jednom PCAM koraku.</p></div>
+<p><b>Dokaz.</b></p><ul><li>Podijeli pa vladaj (merge sort): ispod praga izvodite sekvencijalno, jer sitni zadaci koštaju režiju.</li><li>Brojanje prostih brojeva u k jednakih raspona: zadnji raspon traje najduže, pa koristite drugu podjelu.</li><li>Zbroj 10⁹ brojeva.</li><li>Particioniranje: jedan zadatak po zbrajanju daje utrku podataka.</li><li>Aglomeracija: k blokova po N/k, a premali blokovi znače režiju.</li><li>Mapiranje: ostatak dijeljenja N s k se gubi.</li></ul>
+<p><span class="ref" title="Predavanje 1 · Oblikovanje paralelnog programa">Predavanje 1 · Oblikovanje paralelnog programa</span><span class="ref" title="Predavanje 3 · Oblikovanje paralelnog programa: PCAM">Predavanje 3 · Oblikovanje paralelnog programa: PCAM</span><span class="ref" title="Predavanje 3 · Pregled vježbe 3">Predavanje 3 · Pregled vježbe 3</span><span class="ref" title="Predavanje 3 · Više primjera paralelizacije">Predavanje 3 · Više primjera paralelizacije</span></p>
+<h3 id="c2">Domenska i funkcijska dekompozicija</h3>
+<p>Domenska: svaka jezgra dobiva dio podataka. Funkcijska: svaki zadatak radi drugu funkciju.</p>
+<p><b>Zašto.</b> Susjedne ćelije moraju razmjenjivati svoje rubove, pa manji rub znači manje komunikacije. Najsporija komponenta određuje brzinu funkcijske podjele.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Odaberite podjelu s manjim rubom. Dajte više jezgri sporoj komponenti.</p></div>
+<p><b>Dokaz.</b> Polje 8 × 8 na 4 jezgre: trake imaju rub od 2 · 8 = 16 ćelija, blokovi imaju 2 · 4 = 8. Kolegij ne daje odgovor za 100 jezgri.</p>
+<p><span class="ref" title="Predavanje 3 · Domenska dekompozicija">Predavanje 3 · Domenska dekompozicija</span><span class="ref" title="Predavanje 3 · Funkcijska dekompozicija">Predavanje 3 · Funkcijska dekompozicija</span></p>
+<div class="viz" data-w="domain"></div>
+<h3 id="c3">Ovisnosti i Bernsteinovi uvjeti</h3>
+<p>I = pročitane varijable, O = zapisane varijable. Dijelovi 1 i 2 smiju raditi zajedno ako je I₁∩O₂ = ∅, O₁∩I₂ = ∅ i O₁∩O₂ = ∅.</p>
+<p><b>Zašto.</b> Ako se uvjet naruši, rezultat ovisi o tome koji je dio prvi. Čitanje dijeljenih podataka je dopušteno.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Nijedan dio ne smije pisati ono što drugi dio čita ili piše.</p></div>
+<p><b>Dokaz.</b> <code>a = x + y</code>, <code>b = x * 2</code>: rade zajedno. <code>x = 5</code> dodan bilo kojem od njih: nije dopušteno. <code>zbroj += a[i]</code> u petlji krši O₁∩O₂.</p>
+<p><span class="ref" title="Predavanje 3 · Bernsteinovi uvjeti">Predavanje 3 · Bernsteinovi uvjeti</span></p>
+<div class="viz" data-w="bern"></div>
+<h3 id="c4">Funkcija kao argument i closure</h3>
+<p>Delegat je tip za potpis metode. Lambda je funkcija bez imena. <code>Task.Run</code> i <code>Parallel.For</code> primaju delegat. Lambda drži samu varijablu, a ne njezinu vrijednost.</p>
+<p><b>Zašto.</b> Biblioteka odlučuje gdje i kada se tijelo izvodi. Ako se varijabla do tada promijeni, lambda vidi novu vrijednost.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Kopirajte varijablu petlje u lokalnu varijablu unutar tijela petlje.</p></div>
+<p><b>Dokaz.</b> <code>faktor = 3</code> pa 10: <code>puta(5)</code> daje 15 pa 50. Petlja sa zadacima: 40 40 40 40 umjesto 0 10 20 30. Popravak: <code>int j = i;</code>. Multicast delegat vraća samo zadnju vrijednost (5000, duljina liste 2). <code>foreach</code> stvara novu varijablu po iteraciji, ali <code>for</code> ne.</p>
+<p><b>Više.</b> <code>Action</code> ne vraća ništa, <code>Func</code> vraća tip naveden zadnji među tipskim argumentima, a <code>Predicate</code> vraća <code>bool</code>. LINQ <code>Where</code>, <code>Select</code> i <code>Aggregate</code> su Filter, Map i Reduce, a primaju delegate. Generička klasa stoga <code>Stog&lt;T&gt;</code> prima delegate i baca <code>InvalidOperationException</code> kod pop-a na praznom stogu.</p>
+<p><span class="ref" title="Vježba 1 · Zatvaranje: lambda hvata varijablu">Vježba 1 · Zatvaranje: lambda hvata varijablu</span><span class="ref" title="Vježba 1 · Action, Func i Predicate">Vježba 1 · Action, Func i Predicate</span><span class="ref" title="Vježba 1 · Generička klasa: Stog&lt;T&gt;">Vježba 1 · Generička klasa: Stog&lt;T&gt;</span><span class="ref" title="Vježba 1 · Multicast delegat">Vježba 1 · Multicast delegat</span><span class="ref" title="Vježba 2 · Zamka A">Vježba 2 · Zamka A</span></p>
+<div class="viz" data-w="closure"></div>
+<h3 id="c5">Task, Result i Parallel.For</h3>
+<p><code>Task.Run</code> pokreće delegat na dretvi iz skupa i odmah se vraća. <code>Result</code> blokira dok zadatak ne završi. <code>Task.WaitAll</code> čeka mnogo zadataka. <code>Parallel.For(0, n, ...)</code> završava tek kad završe sve iteracije. Završni indeks je isključen.</p>
+<p><b>Zašto.</b> Trenutni povratak omogućuje da dva zadatka rade zajedno. Kraj petlje djeluje kao barijera, pa su rezultati nakon nje potpuni. Lokalna varijabla po dijelu uklanja dijeljeni upis.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Pokrenite sve zadatke prije prvog čekanja. Petlja je sigurna ako svaka iteracija piše samo svoj element.</p></div>
+<p><b>Dokaz.</b></p><ul><li><code>Paralelno(f, g)</code>: f = 4500000001500000000, g = 216816, 1056 ms sekvencijalno, 833 ms paralelno.</li><li>Vrijeme je otprilike max(tf, tg).</li><li>Bez <code>ToArray()</code> lijeni <code>Select</code> pokreće zadatke jedan po jedan <span class="own-tag">zaključeno</span>.</li><li>Idiom izolacije: jedan element rezultata po dijelu, pa <code>Sum()</code> nakon petlje.</li><li><code>Parallel.For</code> s lokalnim stanjem ima tri lambde: početak, tijelo i kraj (jedan <code>Interlocked.Add</code> po zadatku).</li></ul>
+<p><span class="ref" title="Vježba 2 · Task.Run i Result">Vježba 2 · Task.Run i Result</span><span class="ref" title="Vježba 2 · Zadatak 1">Vježba 2 · Zadatak 1</span><span class="ref" title="Vježba 2 · Zadatak 2">Vježba 2 · Zadatak 2</span><span class="ref" title="Predavanje 4 · Popravak: sinkroniziraj rjeđe">Predavanje 4 · Popravak: sinkroniziraj rjeđe</span></p>
+<h3 id="c6">Monte Carlo pi i četiri zamke</h3>
+<p>π ≈ 4K/N, gdje je K broj točaka unutar četvrtine kruga. Pogreška pada kao 1/√N, pa 10 puta manja pogreška traži 100 puta više točaka. Točke su nezavisne.</p>
+<p><b>Zašto.</b> Svaki zadatak može generirati vlastite slučajne točke. Zamke razbijaju ovu jednostavnu podjelu.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Izolirajte: svakom zadatku dajte vlastiti <code>Random</code> i vlastiti brojač, pa spojite jednom. Zadnjem zadatku dajte ostatak.</p></div>
+<p><b>Dokaz.</b></p><ul><li>Zamka 1, sitni zadaci (<a class="xref" href="#b6" title="Režija i granularnost">Režija i granularnost</a>).</li><li>Zamka 2, dijeljeni brojač: pi = 0,30134 (871 ms), uz oko 90 % izgubljenih uvećanja.</li><li>Zamka 3, dijeljeni <code>Random</code>: pi = 3,99995, 4203 ms naspram 998 ms sekvencijalno, jer <code>Random</code> vraća 0 kad ga koristi više zadataka bez sinkronizacije.</li><li>Zamka 4: N = 1.000.000.007, k = 8 gubi 7 točaka.</li><li>Izolacija: pi = 3,14168 u 144 ms.</li></ul>
+<p><span class="ref" title="Predavanje 2 · Zamka 2">Predavanje 2 · Zamka 2</span><span class="ref" title="Predavanje 2 · Zamka 4">Predavanje 2 · Zamka 4</span><span class="ref" title="Predavanje 2 · Popravak: izolacija">Predavanje 2 · Popravak: izolacija</span></p>
+<div class="viz" data-w="pi"></div>
+<h3 id="c7">Lanci ovisnosti: promijenite algoritam</h3>
+<p>Lanac (Fibonacci, wavefront, odd-even sort) ne paralelizira se petlju po petlju. Grupirajte nezavisni posao u korake.</p>
+<p><b>Zašto.</b> Sekvencijalno vrijeme je zbroj svih koraka. Paralelno vrijeme određuju najdulji dio i čekanje <span class="own-tag">zaključeno</span>. Ako svaki korak treba prethodni rezultat, dodatne jezgre ne pomažu. Unutar koraka zadaci su nezavisni. Između koraka sve jezgre čekaju.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Tražite što je nezavisno. Veći zadaci (jedan blok po jezgri) znače manje čekanja.</p></div>
+<p><b>Dokaz.</b> Fibonacci je prefiksni zbroj matrica 2 × 2 (<a class="xref" href="#f1" title="Scan, prescan, redukcija">Scan</a>). Wavefront i odd-even sort: <a class="xref" href="#c8" title="Wavefront i odd-even sort">Wavefront i odd-even sort</a>.</p>
+<p><span class="ref" title="Predavanje 3 · Lanac ovisnosti">Predavanje 3 · Lanac ovisnosti</span><span class="ref" title="Predavanje 3 · Levenshteinova udaljenost i wavefront">Predavanje 3 · Levenshteinova udaljenost i wavefront</span><span class="ref" title="Predavanje 3 · Sortiranje neparno-parno">Predavanje 3 · Sortiranje neparno-parno</span><span class="ref" title="Predavanje 3 · Wavefront i neparno-parno: isti obrazac">Predavanje 3 · Wavefront i neparno-parno: isti obrazac</span><span class="ref" title="Predavanje 1 · Sekvencijalni program, paralelni program, paralelni problem">Predavanje 1 · Sekvencijalni program, paralelni…</span></p>
+<h3 id="c8">Wavefront i odd-even sort</h3>
+<p>Wavefront: ćelija D[i][j] čita lijevu, gornju i gornju lijevu ćeliju, pa je jedna antidijagonala nezavisna. Odd-even sort: svi parovi jedne faze uspoređuju se odjednom. Neparna faza (1, 2), (3, 4). Parna faza (0, 1), (2, 3).</p>
+<p><b>Zašto.</b></p><ul><li>Element se po fazi pomiče samo za jedno mjesto, pa se parovi moraju mijenjati od faze do faze.</li><li>Inače element nikad ne prijeđe granicu para.</li><li>Parovi u jednoj fazi ne dijele nijedan element (Bernstein).</li><li>Wavefront čeka pravu ovisnost.</li><li>Odd-even čeka jer njegove faze diraju iste elemente.</li><li>Odd-even uvijek radi n faza, čak i na sortiranom polju.</li></ul>
+<div class="callout"><p><b>Ključna ideja.</b> Oba su koraci s čekanjem između njih. Jedan blok po jezgri popravlja oba (sortirajte blok, zatim razmijenite i ponovno podijelite vrijednosti sa susjednim blokom (merge-split)).</p></div>
+<p><b>Dokaz.</b> Tablica 6 × 6: m + n − 1 = 11 koraka umjesto 36. Sedam obrnutih elemenata: 7 faza. 21 usporedba: 21 korak (bubble sort), 7 koraka (odd-even, 3 jezgre). Posao O(n²) naspram O(n log n). Ostali slučajevi: N-body (svi trebaju nove položaje), Floyd (redak k i stupac k), stabla igara (nejednake grane).</p>
+<p><span class="ref" title="Predavanje 3 · Levenshteinova udaljenost i wavefront">Predavanje 3 · Levenshteinova udaljenost i wavefront</span><span class="ref" title="Predavanje 3 · Sortiranje neparno-parno">Predavanje 3 · Sortiranje neparno-parno</span><span class="ref" title="Predavanje 3 · Wavefront i neparno-parno: isti obrazac">Predavanje 3 · Wavefront i neparno-parno: isti obrazac</span><span class="ref" title="Predavanje 3 · Više primjera paralelizacije">Predavanje 3 · Više primjera paralelizacije</span></p>
+<div class="viz" data-w="wave"></div>
+<div class="viz" data-w="oddeven"></div>
+<h4>Kako se ovo povezuje</h4>
+<ul><li><a class="xref" href="#c3" title="Ovisnosti i Bernsteinovi uvjeti">Ovisnosti i Bernsteinovi uvjeti</a> vodi na poglavlje Što puca: narušen Bernsteinov uvjet bez sinkronizacije je utrka podataka (<a class="xref" href="#d2" title="Utrka podataka naspram utrke uvjeta">Utrka podataka naspram utrke uvjeta</a>).</li><li><a class="xref" href="#c6" title="Monte Carlo pi i četiri zamke">Monte Carlo pi i četiri zamke</a> vodi na <a class="xref" href="#d1" title="Mehanizam utrke podataka">Mehanizam utrke podataka</a> (dijeljeni brojač je utrka podataka) i na <a class="xref" href="#d3" title="Četiri popravka i izbor">Četiri popravka i izbor</a> (izolacija je popravak 1).</li><li><a class="xref" href="#c5" title="Task, Result i Parallel.For">Task</a> vodi na <a class="xref" href="#e3" title="Zamka zajedničkog takta i barijera">Zamku zajedničkog takta i barijeru</a> i <a class="xref" href="#f6" title="Barijera između razina i primjene">Barijeru između razina</a>: kraj <code>Parallel.For</code> je barijera koju te kartice koriste.</li><li><a class="xref" href="#c2" title="Domenska i funkcijska dekompozicija">Domenska i funkcijska dekompozicija</a> vodi na <a class="xref" href="#f5" title="Granularnost: tri oblika i blokovi">Granularnost</a> i <a class="xref" href="#c8" title="Wavefront i odd-even sort">Wavefront i odd-even sort</a>: blok po jezgri je domenska podjela <span class="own-tag">zaključeno</span>.</li><li><a class="xref" href="#c7" title="Lanci ovisnosti: promijenite algoritam">Lanci ovisnosti</a> vode na poglavlje Obitelj prefiksnog zbroja: lanac ovisnosti rješava stablo prefiksnog zbroja (<a class="xref" href="#f1" title="Scan, prescan, redukcija">Scan</a>).</li><li><a class="xref" href="#c1" title="Koraci dizajna: tri pitanja i PCAM">Koraci dizajna</a> vode na <a class="xref" href="#e5" title="Barijera postaje skupa: manje procesora">Barijera postaje skupa</a>: aglomeracija je isto što i "manje procesora, više posla svakom" <span class="own-tag">zaključeno</span>.</li></ul>
+</section>
+<section id="ch5" class="chapter">
+<h2>Što puca</h2>
+<p class="lede">Operacija u više koraka nad dijeljenim podacima može se pomiješati s koracima drugih zadataka, pa se ažuriranje može izgubiti. Pogreška je tiha. Popravak je izbjegavanje dijeljenja. Ako se dijeljenje ne može izbjeći, cijelu operaciju učinite nedjeljivom, i to rijetko.</p>
+<h3 id="d1">Mehanizam utrke podataka</h3>
+<p><code>brojac++</code> ima tri koraka: učitaj, dodaj 1 i zapiši.</p>
+<p><b>Zašto.</b> Svaki zadatak ima vlastiti registar. Dva zadatka učitaju 5 i oba zapišu 6. Jedno uvećanje je izgubljeno. Planer bira redoslijed, pa se rezultat mijenja od izvođenja do izvođenja.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Rezultat je pogrešan, mijenja se od izvođenja do izvođenja i ne pojavljuje se nikakva pogreška. Jedna jezgra može sakriti problem <span class="own-tag">zaključeno</span>.</p></div>
+<p><b>Dokaz.</b> 12 zadataka × 1.000.000 uvećanja: 2.636.084, 2.201.987, 1.790.437 (izgubljeno 78 do 85 %). Bilješke s predavanja kažu da je rezultat na jednoj jezgri gotovo uvijek ispravan.</p>
+<p><span class="ref" title="Predavanje 4 · Zamka: utrka podataka na brojaču">Predavanje 4 · Zamka: utrka podataka na brojaču</span><span class="ref" title="Predavanje 4 · Zašto nastaje utrka podataka">Predavanje 4 · Zašto nastaje utrka podataka</span></p>
+<div class="viz" data-w="race"></div>
+<h3 id="d2">Utrka podataka naspram utrke uvjeta</h3>
+<p>Utrka podataka (data race): dvije dretve pristupaju jednoj lokaciji, jedan od pristupa piše i ništa ih ne sinkronizira. Utrka uvjeta (race condition): ispravnost ovisi o redoslijedu ili vremenu koraka.</p>
+<p><b>Zašto.</b> Utrka podataka je pristup jednoj lokaciji bez utvrđenog redoslijeda među pristupima. Utrka uvjeta je pravilo nad više koraka koje traži jedan određeni redoslijed. Utrka uvjeta može nastati čak i kad je svaki korak zaštićen (izvor ne daje primjer obrnutog slučaja). Brojač je oboje.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Štitite svaku operaciju koja mora ostati cjelovita, a ne svaku varijablu.</p></div>
+<p><b>Dokaz.</b> Račun od 10.000 EUR, svaki korak atomaran: <code>stanje</code> −5, <code>isplata</code> 10.005.</p>
+<p><span class="ref" title="Predavanje 4 · Utrka podataka i utrka uvjeta">Predavanje 4 · Utrka podataka i utrka uvjeta</span><span class="ref" title="Predavanje 4 · Zamka: provjeri, pa promijeni">Predavanje 4 · Zamka: provjeri, pa promijeni</span></p>
+<h3 id="d3">Četiri popravka i izbor</h3>
+<p>Izolacija, nepromjenjivost, međusobno isključivanje (lock), atomarne operacije (Interlocked).</p>
+<p><b>Zašto.</b> Izolacija i nepromjenjivost znače da nijedan zadatak ne piše u dijeljene podatke, pa vrijede Bernsteinovi uvjeti (<a class="xref" href="#c3" title="Ovisnosti i Bernsteinovi uvjeti">Ovisnosti i Bernsteinovi uvjeti</a>) i nitko ne mora čekati. Lock i Interlocked sinkroniziraju, pa koštaju vrijeme.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Prvo probajte izolaciju. Za jednu varijablu i jednu operaciju koristite Interlocked. Za više koraka ili varijabli koristite lock ili petlju s compare-and-swap. Za kolekcije koristite lock, lokalne kolekcije ili konkurentne kolekcije.</p></div>
+<p><b>Dokaz.</b> Zbroj, pi, brojač: izolacija. Ulazno polje: nepromjenjivost. Brojač: Interlocked. Račun: lock ili CAS. Lista rezultata: lokalne liste.</p>
+<p><span class="ref" title="Predavanje 4 · Četiri popravka">Predavanje 4 · Četiri popravka</span><span class="ref" title="Predavanje 4 · Što odabrati">Predavanje 4 · Što odabrati</span><span class="ref" title="Vježba 3 · Što student treba znati nakon 4. tjedna">Vježba 3 · Što student treba znati nakon 4. tjedna</span></p>
+<h3 id="d4">Lock, kritični odsječak, pravila za lock</h3>
+<p>Kritični odsječak pušta unutra jedan zadatak odjednom. <code>lock (o)</code> se prevodi u <code>Monitor.Enter</code> i <code>Monitor.Exit</code> unutar <code>try/finally</code>.</p>
+<p><b>Zašto.</b> Bez locka dva zadatka miješaju svoje korake nad dijeljenim podacima i ažuriranje se gubi (utrka podataka). Lock pušta unutra jedan zadatak odjednom. Čekanje je cijena. Lock štiti samo od koda koji zaključava isti objekt.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Koristite privatni objekt za lock. Nikad <code>lock (this)</code>, <code>lock (typeof(X))</code> ni string. Odsječak neka bude kratak. Ne čekajte unutar njega. Ne koristite <code>await</code> unutar njega.</p></div>
+<p><b>Dokaz.</b> Dva zadatka, po dva uvećanja (stranica vježbe 3): 924 redoslijeda bez zaštite, 6 s dijeljenim lockom, 184.756 s lockom po zadatku (lock ne uklanja nijedan redoslijed; zaključeno iz broja koraka u Vježbi 3). Svaki zadatak sa svojim objektom za lock: 1.981.047. Jedan dijeljeni objekt za lock: 12.000.000, ali 427 do 449 ms naspram 5 ms sekvencijalno.</p>
+<p><span class="ref" title="Vježba 3 · Brojanje svih mogućih poredaka">Vježba 3 · Brojanje svih mogućih poredaka</span><span class="ref" title="Predavanje 4 · Pravila za naredbu lock">Predavanje 4 · Pravila za naredbu lock</span><span class="ref" title="Predavanje 4 · Zamka: svaki zadatak svoj objekt za zaključavanje">Predavanje 4 · Zamka: svaki zadatak svoj objekt za zaključavanje</span><span class="ref" title="Predavanje 4 · Popravak naredbom lock">Predavanje 4 · Popravak naredbom lock</span></p>
+<h3 id="d5">Interlocked i cijena sinkronizacije</h3>
+<p>Interlocked čini jednu operaciju nad jednom varijablom nedjeljivom: Increment, Decrement, Add, Exchange, CompareExchange, Read.</p>
+<p><b>Zašto.</b> Procesor obavlja posao jednom atomarnom instrukcijom. Unatoč tome, sve jezgre se i dalje natječu za jednu memorijsku lokaciju (više jezgri tada dodaje čekanje, zaključeno). Interlocked po koraku je oko 40 puta sporiji od sekvencijalnog (203 naspram 5 ms). Sve metode po koraku su 40 do 140 puta sporije.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Sinkronizirajte jednom po zadatku, a ne jednom po koraku.</p></div>
+<p><b>Dokaz.</b> Najbolje od 3, 12 zadataka, 12.000.000 uvećanja: sekvencijalno 5,0 ms, bez zaštite 12,0 (pogrešno), lock 456,0, klasa <code>Lock</code> 711,0, Interlocked 203,0, lokalno pa jedan <code>Add</code> 1,0, <code>Parallel.For</code> s lokalnim stanjem 8,0. Stroj autora vježbe: lock oko 155 ms, Interlocked oko 246 ms. Mjerite na vlastitom računalu.</p>
+<p><span class="ref" title="Predavanje 4 · Trošak sinkronizacije">Predavanje 4 · Trošak sinkronizacije</span><span class="ref" title="Predavanje 4 · Popravak: sinkroniziraj rjeđe">Predavanje 4 · Popravak: sinkroniziraj rjeđe</span><span class="ref" title="Vježba 3 · Interlocked i lokalni brojač">Vježba 3 · Interlocked i lokalni brojač</span></p>
+<div class="viz" data-w="cost"></div>
+<h3 id="d6">Provjeri pa promijeni, i compare-and-swap</h3>
+<p><code>CompareExchange(ref x, novo, staro)</code> upisuje <code>novo</code> (novu vrijednost) samo ako <code>x</code> još jednako <code>staro</code> (staroj vrijednosti koju ste pročitali) i vraća ono što je našao.</p>
+<p><b>Zašto.</b> Ako je drugi zadatak stigao prvi, ništa se ne upisuje, a petlja čita ponovno.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Lock je jednostavniji i radi za više varijabli. CAS ne treba objekt za lock, ali treba petlju s ponavljanjem.</p></div>
+<p><b>Dokaz.</b> Lock oko oba koraka ili CAS petlja: <code>stanje</code> 0, <code>isplata</code> 10.000. Isti obrazac pojavljuje se kod "dodaj ključ ako ga nema" i "rezerviraj ako je slobodno".</p>
+<p><span class="ref" title="Predavanje 4 · Popravak: provjeri i promijeni zajedno">Predavanje 4 · Popravak: provjeri i promijeni zajedno</span></p>
+<div class="viz" data-w="cas"></div>
+<h3 id="d7">Kolekcije i izgubljeni čvor</h3>
+<p><code>List&lt;T&gt;.Add</code> ima tri koraka. <code>Push</code> na povezanom stogu ima dva: poveži, zatim postavi vrh.</p>
+<p><b>Zašto.</b> Dva zadatka čitaju isti vrh. Drugi upis prepisuje prvi. Čvor je izgubljen.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Obične kolekcije nisu sigurne za istodobno pisanje. Istodobno čitanje je sigurno.</p></div>
+<p><b>Dokaz.</b> Lista: pohranjeno je samo 159.341 od 1.200.000 elemenata, a ponekad se baci <code>ArgumentException</code>. Stog bez zaštite: ostaje samo 188.117 čvorova. CAS push: 1.200.000, ništa izgubljeno. <code>ConcurrentStack&lt;T&gt;</code> koristi CAS.</p>
+<p><span class="ref" title="Predavanje 4 · Zamka: List&lt;T&gt; iz mnogo zadataka">Predavanje 4 · Zamka: List&lt;T&gt; iz mnogo zadataka</span><span class="ref" title="Predavanje 4 · Kako se element gubi">Predavanje 4 · Kako se element gubi</span><span class="ref" title="Vježba 3 · Zadatak 3">Vježba 3 · Zadatak 3</span></p>
+<div class="viz" data-w="lostnode"></div>
+<h4>Kako se ovo povezuje</h4>
+<ul><li><a class="xref" href="#d1" title="Mehanizam utrke podataka">Mehanizam utrke podataka</a> nadovezuje se na <a class="xref" href="#c6" title="Monte Carlo pi i četiri zamke">Monte Carlo pi i četiri zamke</a> i <a class="xref" href="#c3" title="Ovisnosti i Bernsteinovi uvjeti">Ovisnosti i Bernsteinove uvjete</a>. <a class="xref" href="#d5" title="Interlocked i cijena sinkronizacije">Interlocked i cijena sinkronizacije</a> i <a class="xref" href="#f5" title="Granularnost: tri oblika i blokovi">Granularnost</a> dijele jedno pravilo: sinkronizirajte jednom po zadatku, a blok to omogućuje <span class="own-tag">zaključeno</span>.</li><li><a class="xref" href="#d4" title="Lock, kritični odsječak, pravila za lock">Lock</a> vodi na <a class="xref" href="#g1" title="Zastoj i četiri uvjeta">Zastoj i četiri uvjeta</a>: dva locka uzeta različitim redoslijedom uzrokuju zastoj. <a class="xref" href="#d4" title="Lock, kritični odsječak, pravila za lock">Lock</a> vodi na <a class="xref" href="#g5" title="Čekanje na uvjet">Čekanje na uvjet</a>: <code>Monitor.Wait</code> otpušta lock i ponovno ga uzima, pa treba petlja <code>while</code>.</li><li><a class="xref" href="#d7" title="Kolekcije i izgubljeni čvor">Kolekcije i izgubljeni čvor</a> vode na <a class="xref" href="#g6" title="Konkurentne kolekcije i BlockingCollection">Konkurentne kolekcije i BlockingCollection</a>, gotove konkurentne kolekcije.</li><li><a class="xref" href="#d6" title="Provjeri pa promijeni, i compare-and-swap">Provjeri</a> se vraća u <a class="xref" href="#g6" title="Konkurentne kolekcije i BlockingCollection">Konkurentnim kolekcijama i BlockingCollection</a> kao "provjeri, pa uzmi".</li><li><a class="xref" href="#d4" title="Lock, kritični odsječak, pravila za lock">Lock</a> vodi na <a class="xref" href="#e7" title="async/await">async/await</a>: <code>await</code> nije dopušten unutar <code>lock</code>.</li></ul>
+</section>
+<section id="ch6" class="chapter">
+<h2>Modeli i async</h2>
+<p class="lede">Model kaže što analiza broji. RAM broji korake. PRAM broji korake, a memoriju i čekanje smatra besplatnima. aPRAM dodaje d i B. Jaz između modela i stroja uzrokuje zamku zajedničkog takta. Barijera to popravlja, ali barijere koštaju više kako raste broj zadataka. async/await je čekanje bez dretve. Otkazivanje je dogovor.</p>
+<h3 id="e1">RAM i zamka modela</h3>
+<p>RAM (random access machine, ne RAM memorija): jedan procesor, a svaka operacija traje 1.</p>
+<p><b>Zašto.</b> RAM ne vidi sporiju dijeljenu memoriju ni čekanje.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Jednaka RAM cijena može značiti vrlo različita vremena.</p></div>
+<p><b>Dokaz.</b> 12.000.000 uvećanja: 1 ms naspram 456 ms, 450 puta.</p>
+<p><span class="ref" title="Predavanje 5 · RAM: model sekvencijalnog računala">Predavanje 5 · RAM: model sekvencijalnog računala</span><span class="ref" title="Predavanje 5 · Zamka modela">Predavanje 5 · Zamka modela</span></p>
+<h3 id="e2">PRAM i njegove inačice</h3>
+<p>p RAM procesora, jedna dijeljena memorija i zajednički takt (lock step). EREW, CREW i CRCW razlikuju se po tome koje istodobne pristupe dopuštaju. CRCW pravila pisanja: COMMON, ARBITRARY, PRIORITY.</p>
+<p><b>Zašto.</b> PRAM skriva komunikaciju, pa pokazuje čisti paralelizam problema. Slabiji model radi nepromijenjen na jačem. Obrnuto košta O(log p) po CRCW koraku.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Poredak je PRIORITY ≥ ARBITRARY ≥ COMMON ≥ CREW ≥ EREW. PRAM s p procesora i t koraka traje najviše p·t koraka na jednom procesoru. PRAM je fizički nemoguć. Njegova vrijednost nije u predviđanju stvarnog vremena.</p></div>
+<p><b>Dokaz.</b> "Postoji li nula?": CRCW traje 1 korak, a EREW stablo traje log₂ 8 = 3 koraka. PRAM korak ima faze čitanja, računanja i pisanja. Pet gotovih primjera PRAM pristupa nalazi se u Vježbi 4, "Jedan PRAM korak".</p>
+<p><span class="ref" title="Predavanje 5 · PRAM">Predavanje 5 · PRAM</span><span class="ref" title="Predavanje 5 · EREW, CREW i CRCW">Predavanje 5 · EREW, CREW i CRCW</span><span class="ref" title="Predavanje 5 · Kako su modeli povezani">Predavanje 5 · Kako su modeli povezani</span><span class="ref" title="Vježba 4 · Jedan PRAM korak">Vježba 4 · Jedan PRAM korak</span><span class="ref" title="Vježba 4 · Postoji li nula u polju? CRCW u jednom koraku, EREW u log n">Vježba 4 · Postoji li nula u polju? CRCW u jednom…</span></p>
+<div class="viz" data-w="pram"></div>
+<h3 id="e3">Zamka zajedničkog takta i barijera</h3>
+<p>Glava povezane liste: korak 1 <code>M[i] := 0</code>, korak 2 <code>M[next[i]] := 1</code>, korak 3 glava je tamo gdje je <code>M[i] = 0</code>. Ispravno je na EREW PRAM-u u 3 koraka, O(1).</p>
+<p><b>Zašto.</b> U C#-u zadatak izvodi sva tri koraka za svoj čvor. Prethodnik može upisati 1 prije ili poslije nego što čvor i upiše 0. U oba slučaja čvor i javlja da je glava.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Algoritam je ispravan samo uz zajednički takt. Između zavisnih koraka stavite barijeru.</p></div>
+<p><b>Dokaz.</b> n = 1000: 1000 glava, i u običnom <code>for</code>. Uz tri petlje <code>Parallel.For</code> ili <code>Barrier</code>: 1 glava (vježba navodi "654").</p>
+<p><span class="ref" title="Predavanje 5 · Primjer: glava povezane liste u PRAM-u">Predavanje 5 · Primjer: glava povezane liste u PRAM-u</span><span class="ref" title="Predavanje 5 · Zamka">Predavanje 5 · Zamka</span><span class="ref" title="Predavanje 5 · Popravak: barijera između koraka">Predavanje 5 · Popravak: barijera između koraka</span><span class="ref" title="Vježba 4 · Zadatak 1">Vježba 4 · Zadatak 1</span></p>
+<div class="viz" data-w="barrier"></div>
+<h3 id="e4">aPRAM: faze, d i B</h3>
+<p>Nema zajedničkog takta. Lokalni pristup traje 1, globalni pristup traje d, a barijera traje B (2 ≤ d ≤ B ≤ p). Barijere dijele izvođenje u faze. Nijedan zadatak ne čita lokaciju koju drugi zadatak piše u istoj fazi.</p>
+<p><b>Zašto.</b> Pravilo faza zabranjuje utrku podataka. Uzastopni globalni pristupi se preklapaju: k pristupa traje d + k − 1.</p>
+<div class="callout"><p><b>Ključna ideja.</b> aPRAM pokazuje što paralelizam košta. Ispravnost mora vrijediti za bilo koje kašnjenje.</p></div>
+<p><b>Dokaz.</b> d = 4, B = 16 (izmišljene primjerne vrijednosti): jedan PRAM korak košta 2B + 2d + 1 = 41. Trag s procesorom P3 koji kasni 10 vremenskih jedinica: 71 s barijerama (glava 3), 23 bez njih (glave 0 i 3, pogrešno). BSP i LogP također broje komunikaciju.</p>
+<p><span class="ref" title="Predavanje 5 · aPRAM">Predavanje 5 · aPRAM</span><span class="ref" title="Predavanje 5 · Pravilo faza">Predavanje 5 · Pravilo faza</span><span class="ref" title="Predavanje 5 · Praćenje izvođenja na aPRAM-u">Predavanje 5 · Praćenje izvođenja na aPRAM-u</span><span class="ref" title="Predavanje 5 · Nakon PRAM-a: BSP i LogP">Predavanje 5 · Nakon PRAM-a: BSP i LogP</span></p>
+<div class="viz" data-w="apram"></div>
+<h3 id="e5">Barijera postaje skupa: manje procesora</h3>
+<p>Vrijeme barijere raste s p. Jedan aPRAM procesor može simulirati B PRAM procesora.</p>
+<p><b>Zašto.</b> U izmišljenom primjeru jedan PRAM korak košta 41 jedinicu, a 32 od toga su barijere (<a class="xref" href="#e4" title="aPRAM: faze, d i B">aPRAM</a>). Više procesora čini svaku barijeru duljom.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Koristite manje zadataka s više posla svaki. To je aglomeracija (zaključen naziv, iz <a class="xref" href="#c1" title="Koraci dizajna: tri pitanja i PCAM">Koraka dizajna</a>).</p></div>
+<p><b>Dokaz.</b> Barijera: 52 ns (1 zadatak), 3.113 (12), 19.037 (24). Oko 60 puta od 1 do 12. S p/B procesora: 5B + 2d − 2 = 86 po koraku, posao 5.504 naspram 41.984, oko 7,6 puta manje. <code>Parallel.For</code> daje jednom zadatku raspon.</p>
+<p><span class="ref" title="Predavanje 5 · Zamka: barijera postaje skupa">Predavanje 5 · Zamka: barijera postaje skupa</span><span class="ref" title="Predavanje 5 · Popravak: p / B procesora">Predavanje 5 · Popravak: p / B procesora</span><span class="ref" title="Predavanje 5 · U C#: jedan zadatak za mnogo iteracija">Predavanje 5 · U C#: jedan zadatak za mnogo iteracija</span></p>
+<div class="viz" data-w="barcost"></div>
+<h3 id="e6">Posao, koraci i Brentovo pravilo</h3>
+<p>t = koraci uz dovoljno procesora. q = ukupno operacija (posao). S p procesora: najviše t + (q − t)/p koraka.</p>
+<p><b>Zašto.</b> t koraka se ne može smanjiti, kao sekvencijalni dio 1 − P <span class="own-tag">zaključeno</span>. Preostalih q − t operacija raspoređuje se na p procesora, pa je vrijeme t + (q − t)/p. Pravilo ne traži novi algoritam. Ignorira režiju zadataka.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Sami koraci ne odlučuju. Posao je važan. (Riječ "span" za t je zaključena.)</p></div>
+<p><b>Dokaz.</b> Blelloch: 44 + 8.388.562/12 ≈ 699.091. Prefiksni zbroj korak po korak: oko 7,3 milijuna, gore od sekvencijalnih 4.194.303.</p>
+<p><span class="ref" title="Predavanje 6 · Brentovo pravilo">Predavanje 6 · Brentovo pravilo</span></p>
+<div class="viz" data-w="brent"></div>
+<h3 id="e7">async/await</h3>
+<p><code>await</code> vraća dretvu u skup dok zadatak čeka. Ne dodaje nijednu jezgru.</p>
+<p><b>Zašto.</b> Čekanje ne treba jezgru. Metoda <code>async</code> bez <code>await</code> izvodi se do kraja na dretvi pozivatelja. <code>Thread.Sleep</code>, <code>Wait</code> i <code>Result</code> drže dretvu.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Za čekanje koristite async/await. Za računanje koristite <code>Task.Run</code> ili <code>Parallel.For</code>. Nikad <code>await</code> unutar <code>lock</code>, jer se dretva može promijeniti.</p></div>
+<p><b>Dokaz.</b> Tri čekanja od 1 s: 3003 ms jedno po jedno, 1001 ms s <code>WhenAll</code>. 100 čekanja: 1004 ms. <code>Racunaj</code> bez <code>Task.Run</code>: 1686 ms, s njim: 513 ms. 100 × <code>Sleep</code>: 7006 ms.</p>
+<p><span class="ref" title="Predavanje 5 · async/await: konkurentnost">Predavanje 5 · async/await: konkurentnost</span><span class="ref" title="Predavanje 5 · Zamka: async ne znači paralelno">Predavanje 5 · Zamka: async ne znači paralelno</span><span class="ref" title="Predavanje 5 · Zamka: blokiranje usred async koda">Predavanje 5 · Zamka: blokiranje usred async koda</span></p>
+<div class="viz" data-w="async"></div>
+<h3 id="e8">Otkazivanje je dogovor</h3>
+<p>Zadatak se ne može zaustaviti izvana. <code>Cancel()</code> i <code>CancelAfter(ms)</code> postavljaju zahtjev. Zadatak provjerava token. <code>Sleep</code> ga ignorira. <code>WaitOne(ms)</code>, <code>Task.Delay(ms, token)</code> i <code>SignalAndWait(token)</code> reagiraju na njega.</p>
+<p><b>Zašto.</b> Samo zadatak zna kada ga je sigurno zaustaviti, pa to okruženje ne može napraviti izvana <span class="own-tag">zaključeno</span>. Otkazivanje je stoga zahtjev kojeg se zadatak dogovorno pridržava.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Čekajte pozivom koji prihvaća token. <code>Wait()</code> na otkazanom zadatku baca <code>AggregateException</code>.</p></div>
+<p><b>Dokaz.</b> <code>Sleep</code>: zaustavljanje kasni 592 ms. <code>WaitOne</code>: oko 1 ms. 100 <code>Task.Delay</code> s <code>CancelAfter(300)</code>: 324 ms, 100 od 100 otkazano.</p>
+<p><b>Više.</b> Zadatak koji samo izađe iz petlje završava sa statusom <code>RanToCompletion</code>. Da bi dobio <code>Canceled</code>, bacite <code>OperationCanceledException</code> i token predajte i pri stvaranju. Bez toga je status <code>Faulted</code>. Token koji je već otkazan znači da se zadatak nikad ne pokreće.</p>
+<p><span class="ref" title="Vježba 5 · Tema 1">Vježba 5 · Tema 1</span><span class="ref" title="Vježba 5 · Tema 2">Vježba 5 · Tema 2</span><span class="ref" title="Vježba 5 · Tema 3">Vježba 5 · Tema 3</span><span class="ref" title="Vježba 5 · Zadatak 1">Vježba 5 · Zadatak 1</span><span class="ref" title="Vježba 4 · Zadatak 3">Vježba 4 · Zadatak 3</span></p>
+<h3 id="e9">Periodični zadaci, vraćanje rezultata, spora barijera</h3>
+<p>K-ti poziv mora se izvršiti u (k − 1)·ms. Spavajte <code>Math.Max(0, k·ms − elapsed)</code>. <code>Periodicno2&lt;U&gt;</code> drži lokalnu listu i vraća je kao <code>Result</code>. Barijera čeka najsporiji zadatak.</p>
+<p><b>Zašto.</b> Fiksno spavanje dodaje vrijeme akcije, pa raspored klizi. Dijeljena lista koja se čita dok se piše je utrka podataka. Ispravan program s barijerom i dalje može biti spor.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Podatke vratite nakon što zadatak završi. Čekanju na barijeri dajte token i vremensko ograničenje.</p></div>
+<p><b>Dokaz.</b> Akcija od 300 ms svakih 1000 ms: 10 poziva u 9,5 s (poziv 10 u 9007 ms). Zaglavljen zadatak na barijeri: 10016 ms; s tokenom od 2000 ms: 2010 ms.</p>
+<p><span class="ref" title="Vježba 5 · Tema 5">Vježba 5 · Tema 5</span><span class="ref" title="Vježba 5 · Tema 6">Vježba 5 · Tema 6</span><span class="ref" title="Vježba 5 · Tema 7">Vježba 5 · Tema 7</span><span class="ref" title="Vježba 5 · Zadatak 2">Vježba 5 · Zadatak 2</span><span class="ref" title="Vježba 5 · Zadatak 5">Vježba 5 · Zadatak 5</span></p>
+<h4>Kako se ovo povezuje</h4>
+<ul><li><a class="xref" href="#e3" title="Zamka zajedničkog takta i barijera">Zamka zajedničkog takta i barijera</a> i <a class="xref" href="#e4" title="aPRAM: faze, d i B">aPRAM</a> vode na <a class="xref" href="#f6" title="Barijera između razina i primjene">Barijeru između razina</a>: ista zamka zajedničkog takta pojavljuje se u prefiksnom zbroju kroz razine.</li><li><a class="xref" href="#e5" title="Barijera postaje skupa: manje procesora">Barijera postaje skupa</a> vodi na <a class="xref" href="#b6" title="Režija i granularnost">Režiju i granularnost</a> i <a class="xref" href="#f5" title="Granularnost: tri oblika i blokovi">Granularnost</a>: zadaci moraju nositi dovoljno posla.</li><li><a class="xref" href="#e7" title="async/await">async/await</a> vodi na <a class="xref" href="#a2" title="Paralelizam naspram konkurentnosti">Paralelizam naspram konkurentnosti</a> (konkurentnost) i na <a class="xref" href="#d4" title="Lock, kritični odsječak, pravila za lock">Lock</a> (nema <code>await</code> u <code>lock</code>).</li><li><a class="xref" href="#e9" title="Periodični zadaci, vraćanje rezultata, spora barijera">Periodični zadaci</a> vode na <a class="xref" href="#d7" title="Kolekcije i izgubljeni čvor">Kolekcije i izgubljeni čvor</a>: dijeljena lista treba lock s obje strane <span class="own-tag">zaključeno</span>.</li><li><a class="xref" href="#g6" title="Konkurentne kolekcije i BlockingCollection">Konkurentne kolekcije i BlockingCollection</a> i <a class="xref" href="#e8" title="Otkazivanje je dogovor">Otkazivanje je dogovor</a> <span class="own-tag">zaključeno</span>: <code>BlockingCollection</code> završava s <code>CompleteAdding</code>, a zadatak tokenom. Oboje su signali kraja.</li><li><a class="xref" href="#e2" title="PRAM i njegove inačice">PRAM i njegove inačice</a> vode na <a class="xref" href="#f1" title="Scan, prescan, redukcija">Scan</a>: algoritam stabla je EREW.</li></ul>
+</section>
+<section id="ch7" class="chapter">
+<h2>Obitelj prefiksnog zbroja</h2>
+<p class="lede">Neki problemi koji izgledaju kao da se moraju izvoditi korak za korakom ipak imaju paralelni algoritam s logaritamskim brojem koraka. Metoda traži asocijativnu operaciju i stablo. Da bi algoritam bio i ispravan i brz, treba radnu učinkovitost, ispravnu operaciju, barijeru po razini i dovoljno posla po zadatku.</p>
+<h3 id="f1">Scan, prescan, redukcija</h3>
+<p>Scan: a₀, a₀⊕a₁, ... Prescan: I, a₀, ..., gdje je svaki unos zbroj svega prije njega, bez samog elementa. Redukcija: jedan ukupni zbroj. I je neutralni element: 0 za +, 1 za ·, najmanji broj za max.</p>
+<p><b>Zašto.</b> Stablo zapisuje zbroj svega lijevo od i, bez aᵢ. Zato daje prescan. Scan je prescan pomaknut jedno mjesto ulijevo, s ukupnim zbrojem dodanim na kraju.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Znajte tri izlaza. Za različite primjene mijenja se samo ⊕.</p></div>
+<p><b>Dokaz.</b> Za ulaz 3 1 7 0 4 1 6 3 scan je 3 4 11 11 15 16 22 25, prescan je 0 3 4 11 11 15 16 22, a redukcija je 25.</p>
+<p><span class="ref" title="Predavanje 6 · Problem prefiksnog zbroja">Predavanje 6 · Problem prefiksnog zbroja</span></p>
+<h3 id="f2">Tri pokušaja koji pođu po zlu</h3>
+<p>(1) <code>Parallel.For</code> nad <code>b[i] = b[i-1] + a[i]</code>. (2) Korak po korak (Hillis i Steele) s jednim poljem. (3) Korak po korak s dva polja.</p>
+<p><b>Zašto.</b> (1) ne uspijeva jer svaki korak treba rezultat prethodnog, a to je ovisnost među iteracijama petlje. (2) čita i piše isto polje u jednom koraku, što je utrka podataka. (3) je ispravan, ali radi n log₂ n − (n − 1) zbrajanja.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Malo koraka nije dovoljno. Cilj je O(log n) koraka i O(n) posla. Na PRAM-u je (2) ispravan, jer se svako čitanje dogodi prije bilo kojeg pisanja. Dva procesora čitaju <code>b[1]</code> u jednom koraku, pa je model CREW. C# nema zajednički takt.</p></div>
+<p><b>Dokaz.</b> n = 2²². (1) 4.162.572 pogrešnih od 4.194.304. (2) 4.194.302 pogrešna. (3) 0 pogrešnih, ali s 88.080.385 zbrajanja (21 put više) i 405,3 ms naspram 56,5 ms.</p>
+<p><span class="ref" title="Predavanje 6 · Zamka 1">Predavanje 6 · Zamka 1</span><span class="ref" title="Predavanje 6 · Zamka 2">Predavanje 6 · Zamka 2</span><span class="ref" title="Predavanje 6 · Zamka 3">Predavanje 6 · Zamka 3</span></p>
+<div class="viz" data-w="failscan"></div>
+<h3 id="f3">Blellochov up-sweep i down-sweep</h3>
+<p>Up-sweep: zbroj para ide u desno dijete. Down-sweep: korijen dobiva I, lijevo dijete kopira roditelja, a desno dijete dobiva roditelj ⊕ stara lijeva vrijednost.</p>
+<p><b>Zašto.</b> Redukcija čuva zbrojeve lijevih podstabala. Down-sweep daje svakom čvoru sve što mu je slijeva: A za lijevo dijete i A ⊕ B za desno dijete.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Traje 2 log₂ n koraka i 2(n − 1) operacija, pa je radno učinkovit. Paralelizirajte samo unutar razine.</p></div>
+<p><b>Dokaz.</b> Polje nakon redukcije je 3 4 7 11 4 5 6 25. Down-sweep završava s 0 3 4 11 11 15 16 22. Za n = 2²²: 8.388.606 operacija i 44 barijere.</p>
+<p><span class="ref" title="Predavanje 6 · Blelloch, faza 1">Predavanje 6 · Blelloch, faza 1</span><span class="ref" title="Predavanje 6 · Blelloch, faza 2">Predavanje 6 · Blelloch, faza 2</span><span class="ref" title="Predavanje 6 · Koraci i rad">Predavanje 6 · Koraci i rad</span></p>
+<div class="viz" data-w="scan"></div>
+<h3 id="f4">Zamke u operaciji</h3>
+<p>Stablo mijenja mjesto zagrada, pa ⊕ mora biti asocijativan. Stablo nikad ne zamjenjuje operande, pa ⊕ ne mora biti komutativan. Nadopunite s I.</p>
+<p><b>Zašto.</b> Zbrajanje floatova nije točno asocijativno. Zamijenjeni operandi u down-sweepu kvare stringove. Nadopuna nulom ubacuje dodatnu vrijednost u max.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Uvijek računajte lijevo ⊕ desno. Nadopunite neutralnim elementom. Ne uspoređujte floatove s <code>==</code>.</p></div>
+<p><b>Dokaz.</b></p><ul><li>Oduzimanje daje −5 umjesto −19.</li><li>Zbrojevi floatova: 2.097.121,0 sekvencijalno, 2.097.140,8 sa stablom i 2.097.140,73 s tipom double.</li><li>Stringovi daju "cab" umjesto "abc".</li><li>Zbroj za n = 20 bez nadopune je 74, a ne 210.</li><li>Vježba 6 navodi četiri zamke: drugačiji rezultat, kod koji radi za 16, ali ne za 20, paralelna inačica koja je sporija i kod koji radi za +, ali ne za vašu operaciju.</li></ul>
+<p><span class="ref" title="Predavanje 6 · Zamka 4">Predavanje 6 · Zamka 4</span><span class="ref" title="Predavanje 6 · Zamka 5">Predavanje 6 · Zamka 5</span><span class="ref" title="Predavanje 6 · Kad n nije potencija broja 2">Predavanje 6 · Kad n nije potencija broja 2</span><span class="ref" title="Vježba 6 · Zadatak 0">Vježba 6 · Zadatak 0</span><span class="ref" title="Vježba 6 · Četiri zamke dana">Vježba 6 · Četiri zamke dana</span></p>
+<h3 id="f5">Granularnost: tri oblika i blokovi</h3>
+<p>Jedan zadatak po paru, jedan <code>Parallel.For</code> po razini ili p blokova. S blokovima zbrojite svaki blok, napravite prescan p zbrojeva, a zatim prescan svakog bloka počevši od njegova pomaka.</p>
+<p><b>Zašto.</b> Režija zadatka veća je od jednog zbrajanja. Skupi ⊕ čini zadatke vrijednima njihove cijene.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Koristite blokove. Stablo tada radi samo nad p zbrojeva. Veličine blokova razlikuju se najviše za 1.</p></div>
+<p><b>Dokaz.</b></p><ul><li>Za n = 2¹⁸: sekvencijalno 0,51 ms, po razini 4,91, zadatak po paru 918,05.</li><li>Vrijeme bloka 2(⌈n/p⌉ + ⌈lg p⌉) = 699.060 za n = 2²², p = 12.</li><li>Zadatak na papiru s n = 20, p = 8: zbrojevi blokova 12 7 18 17 3 6 9 7, ukupno 79.</li><li>Pomaci 0 12 19 37 54 57 63 72 su razrađen odgovor <span class="own-tag">zaključeno</span>.</li></ul>
+<p><span class="ref" title="Predavanje 6 · Zamka 6">Predavanje 6 · Zamka 6</span><span class="ref" title="Predavanje 6 · Manje procesora: blokovi">Predavanje 6 · Manje procesora: blokovi</span><span class="ref" title="Predavanje 6 · Blokovi u C#">Predavanje 6 · Blokovi u C#</span><span class="ref" title="Vježba 6 · Zadatak 3">Vježba 6 · Zadatak 3</span><span class="ref" title="Vježba 6 · Papirnati zadatak za kod kuće">Vježba 6 · Papirnati zadatak za kod kuće</span></p>
+<div class="viz" data-w="blocks"></div>
+<h3 id="f6">Barijera između razina i primjene</h3>
+<p><code>Parallel.For</code> nad razinama izvodi razine zajedno. Jedan <code>Parallel.For</code> po razini koristi svoj kraj kao barijeru.</p>
+<p><b>Zašto.</b> Razina r + 1 čita zbroj koji razina r još nije zapisala. Bez barijere se razine preklapaju i zbrojevi su pogrešni. Kraj <code>Parallel.For</code> čeka sve zadatke, pa je jedan <code>Parallel.For</code> po razini barijera.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Paralelizirajte unutar razine, nikad preko razina. Scan je gradivni blok, a između primjena mijenja se samo ⊕: kompakcija (+), radix sort (+), linija vidljivosti (max), usporedba stringova ("prva razlika") i rekurzija xᵢ = aᵢ·xᵢ₋₁ + bᵢ (nad parovima).</p></div>
+<p><b>Dokaz.</b> Točan rezultat je 207.616.572. Preko razina rezultati su 204.141, 6.034.845 i 8.537.133. Barijere za n = 2²⁰: 40 (zaključen broj u datoteci vježbe).</p>
+<p><span class="ref" title="Predavanje 6 · Veza s modelima: barijera">Predavanje 6 · Veza s modelima: barijera</span><span class="ref" title="Predavanje 6 · Gdje se koristi prefiksni zbroj">Predavanje 6 · Gdje se koristi prefiksni zbroj</span><span class="ref" title="Vježba 6 · Završna pitanja">Vježba 6 · Završna pitanja</span></p>
+<h3 id="f7">Primjene: GCD i binarni brojevi</h3>
+<p>GCD redaka: redukcija stablom sa zaštitom za nedostajućeg partnera, pa duljina ne mora biti 2^k. Binarni brojevi: svaki bit je dio s vrijednošću i duljinom. <code>Spoji(x, y) = ((x.v &lt;&lt; y.l) | y.v, x.l + y.l)</code>, s neutralnim (0, 0).</p>
+<p><b>Zašto.</b> GCD je asocijativan i komutativan <span class="own-tag">zaključeno</span>. Spajanje nizova bitova je asocijativno, ali nije komutativno <span class="own-tag">zaključeno</span>, pa je redoslijed operanada bitan. Ugniježđeni paralelni retci, sa stablom unutar svakog retka, stvaraju mnogo malih zadataka <span class="own-tag">zaključeno</span>.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Paralelizirajte na jednoj razini, s dovoljno posla u svakom zadatku. Scan je koristan za više od +.</p></div>
+<p><b>Dokaz.</b> Vremena za GCD (sekvencijalno, stablo po retku i sekvencijalno unutar retka): 12 × 1.000.000: 42,6 / 33,2 / 7,8 ms. 100.000 × 10: 4,8 / 117,2 / 2,1 ms. <code>Prefiksi</code> za <code>10100100</code>: 1 2 5 10 20 41 82 164.</p>
+<p><span class="ref" title="Vježba 6 · Zadatak 4">Vježba 6 · Zadatak 4</span><span class="ref" title="Vježba 6 · Zadatak 5">Vježba 6 · Zadatak 5</span></p>
+<h4>Kako se ovo povezuje</h4>
+<ul><li><a class="xref" href="#f1" title="Scan, prescan, redukcija">Scan</a> rješava lanac iz <a class="xref" href="#c7" title="Lanci ovisnosti: promijenite algoritam">Lanaca ovisnosti</a> i Fibonaccija.</li><li><a class="xref" href="#f2" title="Tri pokušaja koji pođu po zlu">Tri pokušaja koji pođu po zlu</a> ponovno koristi <a class="xref" href="#d1" title="Mehanizam utrke podataka">Mehanizam utrke podataka</a> i <a class="xref" href="#c3" title="Ovisnosti i Bernsteinovi uvjeti">Ovisnosti i Bernsteinove uvjete</a>. <a class="xref" href="#f6" title="Barijera između razina i primjene">Barijera između razina</a> ponovno koristi <a class="xref" href="#e3" title="Zamka zajedničkog takta i barijera">Zamku zajedničkog takta i barijeru</a> i <a class="xref" href="#e4" title="aPRAM: faze, d i B">aPRAM</a>.</li><li>Odd-even sort (O(n²) posla, <a class="xref" href="#c7" title="Lanci ovisnosti: promijenite algoritam">Lanci ovisnosti</a>) i scan korak po korak (<a class="xref" href="#f2" title="Tri pokušaja koji pođu po zlu">Tri pokušaja koji pođu po zlu</a>) oba padaju na testu radne učinkovitosti. Koraci wavefronta i odd-even sorta su PRAM-slični koraci s barijerom <span class="own-tag">zaključeno</span>.</li><li><a class="xref" href="#f7" title="Primjene: GCD i binarni brojevi">Primjene</a> pokazuju nekomutativni slučaj iz <a class="xref" href="#f4" title="Zamke u operaciji">Zamki u operaciji</a>.</li><li><a class="xref" href="#f5" title="Granularnost: tri oblika i blokovi">Granularnost</a> koristi <a class="xref" href="#b6" title="Režija i granularnost">Režiju i granularnost</a> i <a class="xref" href="#e5" title="Barijera postaje skupa: manje procesora">Barijeru koja postaje skupa</a>. <a class="xref" href="#f5" title="Granularnost: tri oblika i blokovi">Granularnost</a> i <a class="xref" href="#e6" title="Posao, koraci i Brentovo pravilo">Posao</a> zajedno daju pogled na posao i korake.</li><li><a class="xref" href="#f4" title="Zamke u operaciji">Zamke u operaciji</a> pokazuju da rezultati vježbe ovise o operaciji, pa testirajte nekomutativnom.</li></ul>
+</section>
+<section id="ch8" class="chapter">
+<h2>Zastoj, semafori, konkurentne kolekcije</h2>
+<p class="lede">Svaki alat ima zamku, a svaka zamka ima popravak. Zastoj zahtijeva četiri uvjeta, pa uklanjanje jednog od njih sprječava zastoj. Livelock i gladovanje su druge vrste kvara. Semafor dopušta najviše K zadataka unutra. Wait/Pulse i BlockingCollection rješavaju problem proizvođača i potrošača.</p>
+<h3 id="g1">Zastoj i četiri uvjeta</h3>
+<p>Zastoj: zadaci čekaju jedan na drugoga zauvijek. Uvjeti (Coffman) su: međusobno isključivanje, držanje i čekanje, bez preuzimanja i kružno čekanje.</p>
+<p><b>Zašto.</b> Moraju vrijediti sva četiri. Krug nastaje samo ako svaki zadatak uzme prvi lock prije nego što ijedan zadatak uzme drugi lock, pa se zastoj ne pojavljuje u svakom izvođenju.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Uklonite jedan uvjet. Međusobno isključivanje ne može se ukloniti za stvarne resurse, pa izbjegavajte njihovo dijeljenje. Za držanje i čekanje zatražite sve odjednom (jedan lock za oba). Za bez preuzimanja vratite ono što držite (<code>Monitor.TryEnter</code>, zatim <code>Exit</code>). Za kružno čekanje koristite isti redoslijed, što je najjeftinije. Program ne javlja iznimku i ne troši procesorsko vrijeme.</p></div>
+<p><b>Dokaz.</b> Zadatak 1 uzima A pa B, a zadatak 2 uzima B pa A: program se zaustavlja. S istim redoslijedom: 201 ms.</p>
+<p><span class="ref" title="Predavanje 7 · Četiri nužna uvjeta zastoja (Coffman)">Predavanje 7 · Četiri nužna uvjeta zastoja…</span><span class="ref" title="Predavanje 7 · Prevencija: ukloni jedan uvjet">Predavanje 7 · Prevencija: ukloni jedan uvjet</span><span class="ref" title="Predavanje 4 · Nova zamka: zastoj">Predavanje 4 · Nova zamka: zastoj</span></p>
+<div class="viz" data-w="deadlock"></div>
+<h3 id="g2">Filozofi za stolom i tri popravka</h3>
+<p>Ima pet vilica, a svaki filozof uzima lijevu, pa desnu. Popravci su: prvo uzmi nižu vilicu (redoslijed), dopusti najviše četiri za stolom (konobar) ili vrati vilicu i pokušaj ponovo.</p>
+<p><b>Zašto.</b> Redoslijed i konobar uklanjaju kružno čekanje. Vraćanje i ponovni pokušaj uklanjaju uvjet bez preuzimanja, ali vode do livelocka.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Redoslijed je popravak. Vraćanje i ponovni pokušaj ne smatraju se popravkom.</p></div>
+<p><b>Dokaz.</b> 5 od 5 pokušaja završava zastojem nakon 3 s. S redoslijedom: 11.798 ms, po 100.000 obroka. S konobarom (<code>SemaphoreSlim(4)</code>): 12.294 ms. Livelock u istom ritmu: 0 obroka i 2,9 do 3,8 milijuna pokušaja. Provjera stanja: zadana verzija ima 82 stanja, s 1 zastojem; redoslijed ima 70, s 0; konobar ima 491, s 0.</p>
+<p><span class="ref" title="Predavanje 7 · Zamka: svi uzimaju lijevu vilicu">Predavanje 7 · Zamka: svi uzimaju lijevu vilicu</span><span class="ref" title="Predavanje 7 · Popravak 1">Predavanje 7 · Popravak 1</span><span class="ref" title="Predavanje 7 · Popravak 2">Predavanje 7 · Popravak 2</span><span class="ref" title="Predavanje 7 · Livelock">Predavanje 7 · Livelock</span><span class="ref" title="Predavanje 7 · Popravci i Coffmanovi uvjeti">Predavanje 7 · Popravci i Coffmanovi uvjeti</span></p>
+<div class="viz" data-w="dining"></div>
+<h3 id="g3">Livelock, gladovanje, pravednost</h3>
+<p>Livelock: zadaci i dalje rade, ali ne napreduju. Gladovanje: ostali napreduju, ali jedan zadatak nikad ne dobije resurs.</p>
+<p><b>Zašto.</b> <code>lock</code> ne jamči nikakav redoslijed, pa je gladovanje dopušteno. Ako nijedan zadatak ne može gladovati, ne može nastati ni zastoj. Obrat ne vrijedi.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Gladovanje je moguće, ali rijetko. Semafor ne daje FIFO ni LIFO redoslijed.</p></div>
+<p><b>Dokaz.</b> 12 zadataka, 1 s: najmanje ulazaka bilo je 23.007, najviše 26.002, omjer 1,1. Nijedan zadatak nije ostao bez ulaska. Omjer najvećeg i najmanjeg broja ulazaka, 1,1, pokazuje da gladovanje nije nastupilo.</p>
+<p><span class="ref" title="Predavanje 7 · Gladovanje">Predavanje 7 · Gladovanje</span><span class="ref" title="Predavanje 7 · Je li lock pošten? Izmjereno">Predavanje 7 · Je li lock pošten? Izmjereno</span></p>
+<h3 id="g4">Semafor</h3>
+<p><code>SemaphoreSlim(K)</code>: <code>Wait</code> uzima dozvolu, <code>Release</code> je vraća. Najviše K zadataka je istovremeno unutra.</p>
+<p><b>Zašto.</b> Lock pušta jednog zadatka unutra. Semafor pušta K zadataka unutra, kao parkiralište s K mjesta. Dozvole su brojač, pa izgubljeni ili višak <code>Release</code> mijenja ograničenje.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Stavite <code>Release</code> u <code>finally</code>. Za „najviše K” koristite semafor. Za zaštitu podataka koristite lock.</p></div>
+<p><b>Dokaz.</b> 20 zadataka po 50 ms: bez semafora nijedan nije dao 12 odjednom, 109 ms. <code>SemaphoreSlim(3)</code> dao je 3 odjednom, 361 ms. Kad je Release preskočen: 7 od 15 završilo. S <code>finally</code>: 15 od 15 završilo. Parkiralište iz vježbe 7 također mora osloboditi svoju dozvolu kad se automobil pokvari (zaključena veza s <code>finally</code>).</p>
+<p><b>Više.</b> Iznimka preskače <code>Release</code>, pa se dozvola gubi. Svatko može pozvati release, a višak poziva diže brojač iznad K.</p>
+<p><span class="ref" title="Predavanje 7 · Semafor: najviše K istovremeno">Predavanje 7 · Semafor: najviše K istovremeno</span><span class="ref" title="Predavanje 7 · Zamka: Release se preskoči">Predavanje 7 · Zamka: Release se preskoči</span><span class="ref" title="Predavanje 7 · Semafor nije zaključavanje">Predavanje 7 · Semafor nije zaključavanje</span></p>
+<div class="viz" data-w="sema"></div>
+<h3 id="g5">Čekanje na uvjet</h3>
+<p>Potrošač: <code>lock</code>, pa <code>while (queue empty) Monitor.Wait</code>. Proizvođač: stavi u red, pa <code>PulseAll</code>. <code>Wait</code> otpušta lock, a ponovno ga uzima prije nego što se vrati.</p>
+<p><b>Zašto.</b> Nakon buđenja uvjet možda više ne vrijedi. Pulse se ne pamti.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Koristite <code>while</code>, a ne <code>if</code>. Provjerite uvjet prije <code>Wait</code>.</p></div>
+<p><b>Dokaz.</b> 4 potrošača, 200.000 elemenata: <code>if</code> je dao 26 poziva <code>Dequeue</code> na praznom redu, a <code>while</code> 0. Pulse poslan prije <code>Wait</code>: <code>Wait</code> je istekao nakon 1 s.</p>
+<p><span class="ref" title="Predavanje 7 · Čekanje na uvjet">Predavanje 7 · Čekanje na uvjet</span><span class="ref" title="Predavanje 7 · Zamka: if umjesto while">Predavanje 7 · Zamka: if umjesto while</span><span class="ref" title="Predavanje 7 · Zamka: impuls se ne pamti">Predavanje 7 · Zamka: impuls se ne pamti</span></p>
+<h3 id="g6">Konkurentne kolekcije i BlockingCollection</h3>
+<p>ConcurrentQueue, Stack, Bag, Dictionary i BlockingCollection sami upravljaju sinkronizacijom. BlockingCollection ima kapacitet, <code>CompleteAdding</code> i <code>GetConsumingEnumerable</code>.</p>
+<p><b>Zašto.</b> Kapacitet sprječava da brz proizvođač napuni memoriju. <code>while (!IsCompleted) Take()</code> je „provjeri, pa uzmi”, primjer za „provjeri, pa promijeni”.</p>
+<div class="callout"><p><b>Ključna ideja.</b> Koristite <code>GetConsumingEnumerable</code>. Čeka i uzima element u jednoj operaciji.</p></div>
+<p><b>Dokaz.</b> 4 potrošača, 20 izvođenja: <code>Take</code> je bacio iznimku 54 puta uz provjeru, a 0 puta uz <code>foreach</code>. Kapacitet 100: najviše 100 elemenata.</p>
+<p><span class="ref" title="Predavanje 7 · Konkurentne kolekcije">Predavanje 7 · Konkurentne kolekcije</span><span class="ref" title="Predavanje 7 · BlockingCollection i kapacitet">Predavanje 7 · BlockingCollection i kapacitet</span><span class="ref" title="Predavanje 7 · Zamka: provjeri, pa uzmi">Predavanje 7 · Zamka: provjeri, pa uzmi</span></p>
+<div class="viz" data-w="blockcol"></div>
+<h4>Kako se ovo povezuje</h4>
+<ul><li><a class="xref" href="#g1" title="Zastoj i četiri uvjeta">Zastoj i četiri uvjeta</a> proširuje <a class="xref" href="#d4" title="Lock, kritični odsječak, pravila za lock">Lock</a> (lockovi), a <a class="xref" href="#d6" title="Provjeri pa promijeni, i compare-and-swap">Provjeri</a> (provjeri, pa promijeni) ponovno se pojavljuje u <a class="xref" href="#g6" title="Konkurentne kolekcije i BlockingCollection">Konkurentne kolekcije i BlockingCollection</a>.</li><li><a class="xref" href="#g4" title="Semafor">Semafor</a> je konobar iz <a class="xref" href="#g2" title="Filozofi za stolom i tri popravka">Filozofi za stolom i tri popravka</a>. <a class="xref" href="#g5" title="Čekanje na uvjet">Čekanje na uvjet</a> i <a class="xref" href="#g6" title="Konkurentne kolekcije i BlockingCollection">Konkurentne kolekcije i BlockingCollection</a> su dva oblika istog problema proizvođača i potrošača.</li><li>Dio 2 kolegija (prosljeđivanje poruka) donosi iste probleme zastoja i redoslijeda (vidi <a class="xref" href="#a6" title="Dijeljena naspram odvojene memorije">Dijeljena naspram odvojene memorije</a>).</li></ul>
+</section>
+<section id="ch9" class="chapter">
+<h2>Simptomi i odluke</h2>
+<p class="lede">Počnite ovdje kad nešto pođe po zlu ili kad započnete novi problem. Tri dijela u nastavku daju pretragu simptoma, vodič korak po korak i popis popravaka.</p>
+<h3 id="lk-connect">Pretraga simptoma: ako vidite X, pomislite na Y</h3>
+<p>Koristite ovu tablicu kad program pokazuje simptom. Stupac kartice povezuje s punim razlogom.</p>
+<div class="tw"><table>
+<tr><th>Ako vidite</th><th>Pomislite na</th><th>Kartica</th><th>Jer (izvor)</th></tr>
+<tr><td>Ubrzanje znatno ispod k</td><td>Karp-Flattov e naspram N</td><td><a class="xref" href="#b4" title="Karp-Flattova metrika">Karp-Flattova metrika</a></td><td>Konstantan e znači sekvencijalni dio. Rastući e znači režiju ili hardver. (Ne imenuje režiju.) (Predavanje 3, Karp-Flattova metrika)</td></tr>
+<tr><td>Ubrzanje se ne mijenja iznad 12 zadataka</td><td>Logičke jezgre i pool dretvi</td><td><a class="xref" href="#b3" title="Zašto je izmjereno ubrzanje niže">Zašto je izmjereno ubrzanje niže</a></td><td>Stroj ima 6 fizičkih i 12 logičkih jezgri (Predavanje 2, Ubrzanje)</td></tr>
+<tr><td>Paralelno sporije od sekvencijalnog na malom ulazu</td><td>Granularnost</td><td><a class="xref" href="#b6" title="Režija i granularnost">Režija i granularnost</a></td><td>Režija je veća od posla: N = 100 daje 21,0 naspram 1,9 µs (Predavanje 2, Zamka 1: sitni zadaci)</td></tr>
+<tr><td>Rezultat se mijenja pri svakom izvođenju, bez greške</td><td>Utrka podataka</td><td><a class="xref" href="#d1" title="Mehanizam utrke podataka">Mehanizam utrke podataka</a></td><td>Koraci različitih zadataka miješaju se (Predavanje 4, Zašto nastaje utrka podataka: brojac++ su tri koraka)</td></tr>
+<tr><td>Brojač premali</td><td>Izgubljeno ažuriranje</td><td><a class="xref" href="#d1" title="Mehanizam utrke podataka">Mehanizam utrke podataka</a></td><td>Oba zadatka čitaju istu staru vrijednost (Predavanje 4, Zamka: utrka podataka na brojaču)</td></tr>
+<tr><td><code>+=</code> na dijeljenoj varijabli u <code>Parallel.For</code></td><td>Lokalna suma po zadatku</td><td><a class="xref" href="#c3" title="Ovisnosti i Bernsteinovi uvjeti">Ovisnosti i Bernsteinovi uvjeti</a></td><td>O₁∩O₂ nije prazan (Predavanje 1, Dizajn paralelnog programa; Predavanje 3, Bernsteinovi uvjeti)</td></tr>
+<tr><td>Isti Id ili 40 40 40 40</td><td>Closure nad varijablom petlje</td><td><a class="xref" href="#c4" title="Funkcija kao argument i closure">Funkcija kao argument</a></td><td>Lambda zadržava varijablu (Vježba 1, Closure: lambda hvata varijablu)</td></tr>
+<tr><td>pi blizu 4 i sporo</td><td>Dijeljeni <code>Random</code></td><td><a class="xref" href="#c6" title="Monte Carlo pi i četiri zamke">Monte Carlo pi i četiri zamke</a></td><td><code>Random</code> nije siguran za dretve i daje 0 (Predavanje 2, Zamka 3: dijeljeni generator (Random))</td></tr>
+<tr><td>Lock postoji, rezultat netočan</td><td>Lock objekt po zadatku</td><td><a class="xref" href="#d4" title="Lock, kritični odsječak, pravila za lock">Lock</a></td><td>Lock štiti samo od istog objekta (Predavanje 4, Zamka: svaki zadatak ima svoj lock objekt)</td></tr>
+<tr><td>Svaki korak atomaran, rezultat netočan</td><td>Utrka uvjeta</td><td><a class="xref" href="#d2" title="Utrka podataka naspram utrke uvjeta">Utrka podataka naspram utrke uvjeta</a></td><td>Provjera i promjena su dva koraka (Predavanje 4, Utrka podataka i utrka uvjeta)</td></tr>
+<tr><td>Elementi nestaju s liste ili stoga</td><td>Kolekcija nije sigurna za dretve</td><td><a class="xref" href="#d7" title="Kolekcije i izgubljeni čvor">Kolekcije i izgubljeni čvor</a></td><td><code>Add</code> i <code>Push</code> imaju više koraka (Predavanje 4, Zamka: List&lt;T&gt; iz mnogo zadataka)</td></tr>
+<tr><td>Program stoji, bez CPU-a</td><td>Zastoj</td><td><a class="xref" href="#g1" title="Zastoj i četiri uvjeta">Zastoj i četiri uvjeta</a></td><td>Četiri Coffmanova uvjeta (Predavanje 7, Četiri nužna uvjeta zastoja (Coffman))</td></tr>
+<tr><td>Program radi vruće, bez napretka</td><td>Livelock</td><td><a class="xref" href="#g3" title="Livelock, gladovanje, pravednost">Livelock</a></td><td>Zadaci se vraćaju i pokušavaju ponovo u istom ritmu (Predavanje 7, Livelock: „vrati pa pokušaj ponovo”)</td></tr>
+<tr><td>Semafor zauvijek blokiran nakon iznimki</td><td><code>Release</code> u <code>finally</code></td><td><a class="xref" href="#g4" title="Semafor">Semafor</a></td><td>Iznimka preskače <code>Release</code> (Predavanje 7, Zamka: Release se preskače)</td></tr>
+<tr><td><code>Dequeue</code> na praznom redu nakon buđenja</td><td><code>while</code>, a ne <code>if</code></td><td><a class="xref" href="#g5" title="Čekanje na uvjet">Čekanje na uvjet</a></td><td>Uvjet možda ne vrijedi nakon <code>PulseAll</code> (Predavanje 7, Zamka: if umjesto while)</td></tr>
+<tr><td><code>Take</code> baca iznimku na kraju</td><td><code>GetConsumingEnumerable</code></td><td><a class="xref" href="#g6" title="Konkurentne kolekcije i BlockingCollection">Konkurentne kolekcije i BlockingCollection</a></td><td>Provjera pa uzimanje nije atomarno (Predavanje 7, Zamka: provjeri pa uzmi)</td></tr>
+<tr><td>1.000 glava iz algoritma s listom</td><td>Barijera između koraka</td><td><a class="xref" href="#e3" title="Zamka zajedničkog takta i barijera">Zamka zajedničkog takta i barijera</a></td><td>Točno samo u zajedničkom taktu (Predavanje 5, Zamka: isti algoritam bez zajedničkog takta)</td></tr>
+<tr><td>Trošak barijere skoči pri 24 zadatka</td><td>Manje zadataka, više posla po zadatku</td><td><a class="xref" href="#e5" title="Barijera postaje skupa: manje procesora">Barijera postaje skupa</a></td><td>B raste s p (Predavanje 5, Zamka: barijera postaje skupa)</td></tr>
+<tr><td>Metoda <code>async</code> bez <code>await</code></td><td><code>Task.Run</code></td><td><a class="xref" href="#e7" title="async/await">async/await</a></td><td>Izvodi se u dretvi pozivatelja (Predavanje 5, Zamka: async ne znači paralelno)</td></tr>
+<tr><td>100 × <code>Thread.Sleep</code> traje 7 s</td><td><code>await Task.Delay</code></td><td><a class="xref" href="#e7" title="async/await">async/await</a></td><td>Sleep zadržava dretvu (Predavanje 5, Zamka: blokiranje usred async koda)</td></tr>
+<tr><td><code>Cancel()</code> ne zaustavlja zadatak</td><td>Zadatak mora provjeravati token</td><td><a class="xref" href="#e8" title="Otkazivanje je dogovor">Otkazivanje je dogovor</a></td><td>Otkazivanje je dogovor (Vježba 5, Tema 1: Otkazivanje je dogovor (CancellationToken))</td></tr>
+<tr><td>Periodični posao kasni</td><td>Spavaj <code>k·ms − proteklo</code></td><td><a class="xref" href="#e9" title="Periodični zadaci, vraćanje rezultata, spora barijera">Periodični zadaci</a></td><td>Fiksno spavanje dodaje vrijeme akcije (Vježba 5, Tema 5: Periodični rad bez pomaka)</td></tr>
+<tr><td>Petlja čita <code>b[i-1]</code></td><td>Stablo prefiksnog zbroja</td><td><a class="xref" href="#f1" title="Scan, prescan, redukcija">Scan</a></td><td>Asocijativnost daje log koraka (Predavanje 6, Ideja: asocijativnost i stablo)</td></tr>
+<tr><td>Scan netočan na svim pozicijama</td><td>Dva niza ili Blelloch</td><td><a class="xref" href="#f2" title="Tri pokušaja koji pođu po zlu">Tri pokušaja koji pođu po zlu</a></td><td>Jedan niz u koraku je utrka podataka (Predavanje 6, Zamka 2: jedan niz unutar koraka)</td></tr>
+<tr><td>21 put više zbrajanja</td><td>Nije učinkovito s obzirom na posao</td><td><a class="xref" href="#f2" title="Tri pokušaja koji pođu po zlu">Tri pokušaja koji pođu po zlu</a></td><td>n log₂ n naspram 2(n − 1) (Predavanje 6, Zamka 3: točno, ali previše posla)</td></tr>
+<tr><td>Pogrešan string ili rezultat oduzimanja</td><td>Asocijativnost i redoslijed operanada</td><td><a class="xref" href="#f4" title="Zamke u operaciji">Zamke u operaciji</a></td><td>Stablo mijenja zagrade, nikad ne zamjenjuje operande (Predavanje 6, Zamka 4: asocijativnost; Zamka 5: redoslijed operanada)</td></tr>
+<tr><td>Maksimum nad negativnima daje 0</td><td>Neutralni element</td><td><a class="xref" href="#f4" title="Zamke u operaciji">Zamke u operaciji</a></td><td>Dopunjavanje nulom dodaje vrijednost (Predavanje 6, Kad n nije potencija od 2: dopunjavanje i zamka 7)</td></tr>
+<tr><td>Rezultat pogrešan za n = 20, točan za 16</td><td>Dopunjavanje ili blokovi</td><td><a class="xref" href="#f5" title="Granularnost: tri oblika i blokovi">Granularnost</a></td><td>Stablo treba n = 2^k (Vježba 6, Zadatak 0: indeksi stabla)</td></tr>
+</table></div>
+<h3 id="lk-decide">Vodič odluke za novi paralelni problem</h3>
+<p>Slijedite korake redom. Svaki korak navodi karticu koja daje njegov razlog.</p>
+<ol><li><b>Isplati li se problem?</b> Procijenite P i primijenite Amdahla.</li><li><b>Što je neovisno?</b> Provjerite Bernsteinove uvjete na dijelovima.</li><li><b>Postoji li lanac ovisnosti?</b> Ako da, tražite promijenjeni algoritam: valni front, stablo ili prefiksni zbroj.</li><li><b>Paralelizam podataka ili zadataka?</b> Uz mnogo jednakih elemenata koristite paralelizam podataka. Uz nekoliko različitih poslova koristite paralelizam zadataka.</li><li><b>Koja jedinica?</b> Za računski posao koristite <code>Task.Run</code> ili <code>Parallel.For</code>. Za posao koji čeka koristite <code>async</code>/<code>await</code>.</li><li><b>Kako podijeliti?</b> Koristite jednake blokove, otprilike jedan po jezgri. Zadnji blok preuzima ostatak.</li><li><b>Mogu li zadaci izbjeći dijeljenje?</b> Dajte svakom zadatku vlastitu varijablu, element niza ili listu. Jednom spojite.</li><li><b>Ako je dijeljenje potrebno, koji alat?</b> Za jednu varijablu i jednu operaciju koristite Interlocked. Za više koraka koristite lock ili CAS petlju. Za najviše K koristite semafor. Za čekanje na uvjet koristite <code>while</code> s <code>Wait</code>, ili BlockingCollection.</li><li><b>Ovise li koraci o prethodnim koracima?</b> Dodajte barijeru između njih i paralelizirajte samo unutar koraka. Razlog: zajednički takt ne postoji u C#-u (<a class="xref" href="#e3" title="Zamka zajedničkog takta i barijera">Zamka zajedničkog takta i barijera</a>, <a class="xref" href="#f6" title="Barijera između razina i primjene">Barijera između razina</a>).</li><li><b>Uzimate li dva locka?</b> Uvijek ih uzimajte u istom redoslijedu. Razlog: to uklanja kružno čekanje (<a class="xref" href="#g1" title="Zastoj i četiri uvjeta">Zastoj i četiri uvjeta</a>).</li><li><b>Mora li zadatak stati?</b> Proslijedite token, provjeravajte ga i čekajte pozivima koji poštuju token. Razlog: zaustavljanje je dogovor (<a class="xref" href="#e8" title="Otkazivanje je dogovor">Otkazivanje je dogovor</a>).</li><li><b>Izmjerite.</b> Release build, zagrijavanje, najkraće od 3, usporedite rezultat sa sekvencijalnim, izračunajte S, E i e. Razlog: pogrešan program može izgledati brzo, a e pokazuje ograničava li S sekvencijalni dio ili režija i hardver (<a class="xref" href="#b7" title="Mjerite ispravno">Mjerite ispravno</a>, <a class="xref" href="#b4" title="Karp-Flattova metrika">Karp-Flattova metrika</a>).</li></ol>
+<h3 id="lk-pitfalls">Katalog zamki</h3>
+<p>Tablica simptoma iznad sadrži retke „ako vidite, pomislite”. Ova tablica navodi još simptoma s njihovim popravkom. Ne ponavlja retke iznad.</p>
+<div class="tw"><table>
+<tr><th>Simptom</th><th>Uzrok</th><th>Popravak</th><th>Gdje se uči</th></tr>
+<tr><td>Nejednaki dijelovi, jedna jezgra radi</td><td>Loša podjela</td><td>Jednaki blokovi</td><td><a class="xref" href="#b3" title="Zašto je izmjereno ubrzanje niže">Zašto je izmjereno ubrzanje niže</a>, <a class="xref" href="#c1" title="Koraci dizajna: tri pitanja i PCAM">Koraci dizajna</a></td></tr>
+<tr><td>Vrijeme u debugu</td><td>Optimizacije isključene</td><td>Release</td><td><a class="xref" href="#b7" title="Mjerite ispravno">Mjerite ispravno</a></td></tr>
+<tr><td>Nema dobitka: nedjeljivi zadaci</td><td>Manje zadataka nego jezgri</td><td>Više, manjih zadataka</td><td><a class="xref" href="#b3" title="Zašto je izmjereno ubrzanje niže">Zašto je izmjereno ubrzanje niže</a></td></tr>
+<tr><td>Točno, ali sporije od sekvencijalnog</td><td>Sinkronizacija po iteraciji</td><td>Držite lokalno, pa sinkronizirajte jednom</td><td><a class="xref" href="#d5" title="Interlocked i cijena sinkronizacije">Interlocked i cijena sinkronizacije</a></td></tr>
+<tr><td>Model kaže da sve košta 1</td><td>RAM ignorira memoriju</td><td>aPRAM</td><td><a class="xref" href="#e1" title="RAM i zamka modela">RAM i zamka modela</a>, <a class="xref" href="#e4" title="aPRAM: faze, d i B">aPRAM</a></td></tr>
+<tr><td>Čitanje tuđeg upisa u fazi</td><td>Pravilo faze prekršeno</td><td>Dvije faze</td><td><a class="xref" href="#e4" title="aPRAM: faze, d i B">aPRAM</a></td></tr>
+<tr><td><code>await</code> u <code>lock</code></td><td>Dretva se može promijeniti</td><td>Nije dopušteno</td><td><a class="xref" href="#e7" title="async/await">async/await</a>, <a class="xref" href="#d4" title="Lock, kritični odsječak, pravila za lock">Lock</a></td></tr>
+<tr><td>Status <code>Faulted</code>, ne <code>Canceled</code></td><td>Token nije proslijeđen pri stvaranju</td><td>Proslijedite token dvaput</td><td><a class="xref" href="#e8" title="Otkazivanje je dogovor">Otkazivanje je dogovor</a></td></tr>
+<tr><td>Dijeljena lista čita se dok se piše</td><td>Utrka podataka</td><td>Vratite listu na kraju ili zaključajte obje strane <span class="own-tag">zaključeno</span></td><td><a class="xref" href="#e9" title="Periodični zadaci, vraćanje rezultata, spora barijera">Periodični zadaci</a>, <a class="xref" href="#d7" title="Kolekcije i izgubljeni čvor">Kolekcije i izgubljeni čvor</a></td></tr>
+<tr><td>Barijera čeka spori zadatak</td><td>Najsporiji određuje vrijeme</td><td>Token s vremenskim ograničenjem</td><td><a class="xref" href="#e9" title="Periodični zadaci, vraćanje rezultata, spora barijera">Periodični zadaci</a></td></tr>
+<tr><td>Zadatak po paru 918,05 ms (zamka 6)</td><td>Sitni zadaci</td><td>Blokovi</td><td><a class="xref" href="#f5" title="Granularnost: tri oblika i blokovi">Granularnost</a></td></tr>
+<tr><td>Ugniježđeni paralelni redovi, sporo (vježba 6, zadatak 4)</td><td>Mnogo malih zadataka <span class="own-tag">zaključeno</span></td><td>Jedna paralelna razina</td><td>Vježba 6</td></tr>
+<tr><td>Paralelni scan kroz razine: 204.141</td><td>Razine se izvode zajedno</td><td>Jedan <code>Parallel.For</code> po razini</td><td><a class="xref" href="#f6" title="Barijera između razina i primjene">Barijera između razina</a></td></tr>
+<tr><td>Zbroj float-ova se razlikuje od sekvencijalnog</td><td>Zbrajanje float-ova nije asocijativno</td><td>Ne uspoređujte s <code>==</code></td><td><a class="xref" href="#f4" title="Zamke u operaciji">Zamke u operaciji</a></td></tr>
+<tr><td>Amdahl i Gustafson pomiješani</td><td>s i 1 − P se razlikuju</td><td>Navedite gdje se svaki mjeri</td><td><a class="xref" href="#b5" title="Gustafson i koji zakon koristiti">Gustafson i koji zakon koristiti</a></td></tr>
+<tr><td>Karp-Flattov e negativan pri N = 2</td><td>Šum pri malom N <span class="own-tag">zaključeno</span></td><td>Nema popravka u izvoru</td><td><a class="xref" href="#b4" title="Karp-Flattova metrika">Karp-Flattova metrika</a></td></tr>
+<tr><td>Jedna jezgra skriva utrku podataka</td><td>Malo stvarnih preklapanja <span class="own-tag">zaključeno</span></td><td>Testirajte na mnogo jezgri <span class="own-tag">zaključeno</span></td><td><a class="xref" href="#d1" title="Mehanizam utrke podataka">Mehanizam utrke podataka</a></td></tr>
+<tr><td>Pulse prije <code>Wait</code></td><td>Pulse se ne pamti</td><td>Prvo provjerite uvjet</td><td><a class="xref" href="#g5" title="Čekanje na uvjet">Čekanje na uvjet</a></td></tr>
+</table></div>
+</section>
+<section id="ch10" class="chapter">
+<h2>Referenca</h2>
+<p class="lede">Formule s izračunatim primjerom iz kolegija i tablica hrvatskih termina.</p>
+<h3 id="lk-numbers">Brojevi i formule koje treba zapamtiti</h3>
+<div class="tw"><table>
+<tr><th>Formula</th><th>Primjer iz kolegija</th><th>Izvor</th></tr>
+<tr><td>S = T(1)/T(N), E = S/N</td><td>S 6,31, E 0,53 pri N = 12</td><td>Predavanje 3</td></tr>
+<tr><td>Amdahl: 1/((1−P)+P/N)</td><td>P = 90 %, N = 10: 5,3; granica 10</td><td>Predavanje 1, Predavanje 3</td></tr>
+<tr><td>PRAM korak na aPRAM-u: 2B + 2d + 1</td><td>41 za d = 4, B = 16</td><td>Predavanje 5</td></tr>
+<tr><td>Režija: T(k) ≈ T(seq)/k + režija(k)</td><td>1000 jedinica, 4 zadatka: oko 410</td><td>Predavanje 2</td></tr>
+<tr><td>Karp-Flatt: e = (1/S − 1/N)/(1 − 1/N)</td><td>N = 8, S = 5,71: 0,057</td><td>Predavanje 3</td></tr>
+<tr><td>Gustafson: S = N − s(N−1)</td><td>s = 0,1, N = 64: 57,7</td><td>Predavanje 3</td></tr>
+<tr><td>Brent: t + (q − t)/p</td><td>44 + 8.388.562/12 ≈ 699.091</td><td>Predavanje 6</td></tr>
+<tr><td>Posao scana korak po korak: n log₂ n − (n−1)</td><td>88.080.385 za n = 2²²</td><td>Predavanje 6</td></tr>
+<tr><td>Blelloch: 2 log₂ n koraka, 2(n−1) operacija</td><td>44 koraka, 8.388.606</td><td>Predavanje 6</td></tr>
+</table></div>
+<h3 id="lk-glossary">Pojmovnik: engleski i hrvatski</h3>
+<p>Predavanja koriste hrvatske termine. Ova tablica povezuje svaki od njih s engleskim terminom u ovim bilješkama.</p>
+<div class="tw"><table>
+<tr><th>Engleski</th><th>Hrvatski</th><th>Izvor</th></tr>
+<tr><td>parallelism</td><td>paralelizam</td><td>Predavanje 1</td></tr>
+<tr><td>concurrency</td><td>konkurentnost</td><td>Predavanje 1</td></tr>
+<tr><td>data race</td><td>utrka podataka</td><td>Predavanje 4</td></tr>
+<tr><td>race condition</td><td>utrka uvjeta</td><td>Predavanje 4</td></tr>
+<tr><td>speedup</td><td>ubrzanje</td><td>Predavanje 3</td></tr>
+<tr><td>efficiency</td><td>učinkovitost</td><td>Predavanje 3</td></tr>
+<tr><td>overhead</td><td>režija</td><td>Predavanje 2</td></tr>
+<tr><td>granularity</td><td>granularnost</td><td>Predavanje 2</td></tr>
+<tr><td>Flynn taxonomy</td><td>Flynnova taksonomija</td><td>Predavanje 2</td></tr>
+<tr><td>Amdahl's law</td><td>Amdahlov zakon</td><td>Predavanje 3</td></tr>
+<tr><td>Karp-Flatt metric</td><td>Karp-Flattova metrika</td><td>Predavanje 3</td></tr>
+<tr><td>Bernstein conditions</td><td>Bernsteinovi uvjeti</td><td>Predavanje 3</td></tr>
+<tr><td>thread pool</td><td>fond dretvi</td><td>Predavanje 1</td></tr>
+<tr><td>scheduler</td><td>raspoređivač</td><td>Predavanje 1</td></tr>
+<tr><td>context switch</td><td>promjena konteksta</td><td>Predavanje 3</td></tr>
+<tr><td>delegate</td><td>delegat</td><td>Vježba 1</td></tr>
+<tr><td>closure</td><td>zatvaranje nad varijablom</td><td>Vježba 1</td></tr>
+<tr><td>isolation</td><td>izolacija</td><td>Predavanje 4</td></tr>
+<tr><td>immutability</td><td>nepromjenjivost</td><td>Predavanje 4</td></tr>
+<tr><td>critical section</td><td>kritični odsječak</td><td>Predavanje 4</td></tr>
+<tr><td>mutual exclusion</td><td>međusobno isključivanje</td><td>Predavanje 4</td></tr>
+<tr><td>atomic operation</td><td>atomarna operacija</td><td>Predavanje 4</td></tr>
+<tr><td>deadlock</td><td>zastoj, potpuni zastoj</td><td>Predavanje 7</td></tr>
+<tr><td>livelock</td><td>živo blokiranje</td><td>Predavanje 7</td></tr>
+<tr><td>starvation</td><td>izgladnjivanje</td><td>Predavanje 7</td></tr>
+<tr><td>semaphore</td><td>semafor</td><td>Predavanje 7</td></tr>
+<tr><td>concurrent collections</td><td>konkurentne kolekcije</td><td>Predavanje 7</td></tr>
+<tr><td>barrier</td><td>barijera</td><td>Predavanje 5</td></tr>
+<tr><td>lock step</td><td>(nije prevedeno)</td><td>Predavanje 5</td></tr>
+<tr><td>PRAM, aPRAM</td><td>PRAM, asinkroni PRAM</td><td>Predavanje 5</td></tr>
+<tr><td>Brent's rule</td><td>Brentovo pravilo</td><td>Predavanje 6</td></tr>
+<tr><td>prefix sum (scan)</td><td>prefiksni zbroj</td><td>Predavanje 6</td></tr>
+<tr><td>prescan</td><td>isključivi scan</td><td>Predavanje 6</td></tr>
+<tr><td>reduction</td><td>redukcija</td><td>Predavanje 6</td></tr>
+<tr><td>neutral element</td><td>neutralni element</td><td>Predavanje 6</td></tr>
+<tr><td>associativity</td><td>asocijativnost</td><td>Predavanje 6</td></tr>
+<tr><td>cancellation</td><td>prekid</td><td>Vježba 5</td></tr>
+<tr><td>task, communication, synchronization</td><td>zadatak, komunikacija, sinkronizacija</td><td>Predavanje 2</td></tr>
+<tr><td>wavefront</td><td>valna fronta</td><td>Predavanje 3</td></tr>
+<tr><td>domain decomposition</td><td>dekompozicija domene</td><td>Predavanje 3</td></tr>
+<tr><td>strong, weak scalability</td><td>jaka, slaba skalabilnost</td><td>Predavanje 3</td></tr>
+<tr><td>Gustafson's law</td><td>Gustafsonov zakon</td><td>Predavanje 3</td></tr>
+<tr><td>PCAM</td><td>(nije prevedeno)</td><td>Predavanje 3</td></tr>
+<tr><td>Blelloch algorithm</td><td>Blellochov algoritam</td><td>Vježba 6</td></tr>
+<tr><td>work-efficient</td><td>(nije prevedeno)</td><td>Predavanje 6</td></tr>
+</table></div>
+</section>
+<section id="ch11" class="chapter">
+<h2>Dodatak: gdje se izvori ne slažu</h2>
+<p class="lede">Izvori se ne slažu uvijek. Pri prvom čitanju preskočite ovo poglavlje. Koristite ga kad se dva broja u kolegiju ne podudaraju.</p>
+<h3 id="lk-conflicts">Gdje se izvori ne slažu</h3>
+<p>Svaki redak bilježi jedan sukob i ono što je poznato. Ni jedan redak ne odabire stranu bez razloga.</p>
+<div class="tw"><table>
+<tr><th>Točka</th><th>Što je poznato</th></tr>
+<tr><td>Sekvencijalno vrijeme za pi</td><td>998 ms (Predavanje 2, slajd 16, slajd 18, bilješke uz slajd 19), 936 ms (Predavanje 2, slajd 21, Predavanje 3), 927 ms za k = 1. Izvor ne objašnjava zašto. Različita mjerenja <span class="own-tag">zaključeno</span>.</td></tr>
+<tr><td>Medijan ili najbolje</td><td>Predavanje 2, slajd 14 koristi medijan od 21. Predavanje 2, slajd 21 i vježba 2 koriste najkraće od 3. Oba su navedena.</td></tr>
+<tr><td>Krivulje rasta</td><td>Predavanje 1, slajd 18 rekonstruira 52 % (1986–2003), slajd 19 mjeri 40 % (1988–2003). Ne uspoređujte izravno.</td></tr>
+<tr><td>Lock naspram Interlocked</td><td>Predavanje: lock 456 ms, Interlocked 203 ms (oko dva puta brže). Komentari u vježbi: lock oko 155 ms, Interlocked oko 246 ms. Predavanje 4, slajd 9 navodi oko 440 ms (427, 443, 449), a slajd 13 navodi 456. Objašnjenje nije dano. Izmjerite na vlastitom računalu.</td></tr>
+<tr><td>Tvrdnja o jednom izvođenju po zadatku</td><td>Predavanje 4, slajd 13 kaže da je to brže od sekvencijalnog. <code>Parallel.For</code> s lokalnim stanjem traje 8 ms, što je sporije od 5 ms. Brži je samo redak od 1 ms.</td></tr>
+<tr><td>Vrijeme nezaštićenog brojača</td><td>Predavanje 4: 12 ms, sporije od sekvencijalnog 5 ms. Vježba 2, zamka B: komentar u kodu navodi oko 80 ms s ispravkom, u odnosu na oko 23 ms bez zaštite. Slajd: 21,9 ms bez zaštite, 3,0 ms s ispravkom, „oko 7 puta sporije“. Sukob oko toga što je brže.</td></tr>
+<tr><td>Jedna jezgra i utrka podataka</td><td>Predavanje 4, slajd 3 kaže da je pogreška „rijetka“. Bilješke uz predavanje kažu da je rezultat „gotovo uvijek točan“.</td></tr>
+<tr><td>Udio izgubljenih ažuriranja</td><td>Predavanje 2: oko 90 % (12 zadataka). Vježba 2: oko polovica (2 zadatka). Predavanje 4: 78 do 85 %. Različiti slučajevi.</td></tr>
+<tr><td>Vremena zadatka 1 u vježbi 2</td><td>Slajd: 1687 i 831 ms (omjer 2,03, iznad navedene najveće vrijednosti 2). Komentar u kodu: 1056 i 833 ms. Nije objašnjeno.</td></tr>
+<tr><td>Inicijalizacija generatora slučajnih brojeva u .NET-u</td><td>Bilješke uz predavanje 2: trenutačni .NET ne daje jednake nizove iz <code>new Random()</code> u istoj milisekundi. Stari .NET Framework jest. Komentar u kodu vježbe 2 (zamka D) tvrdi da jest. Vježba je namijenjena za .NET 10, pa je komentar vjerojatno zastario <span class="own-tag">zaključeno</span>. Bilješke uz vježbu 2 navode da je pogreška 2 redoslijed ispisa.</td></tr>
+<tr><td>Šest ili sedam zamki</td><td>Predavanje 6 kaže sedam zamki, a njegova tablica ima sedam. Bilješka uz slajd 1 vježbe 6 kaže šest. Predavanje 2 kaže četiri zamke. Vježba 2 ima četiri (A do D). Tablice predavanja 4 i predavanja 5 imaju šest redaka. Predavanje 1, slajd 45 navodi šest problema. Brojevi se razlikuju između skupova slajdova.</td></tr>
+<tr><td>Nedostaje vježba za 3. tjedan</td><td>Predavanje 1, slajdovi 11 i 12 stavljaju „Parallel.For i faktor ubrzanja“ u 3. tjedan. Nije u datotekama kolegija. Predavanje 3 to naziva „vježba 3“. Mapa za predavanje 3 pripada 4. tjednu. Demo stranice (<code>amdahl.html</code>, <code>zakoni.html</code>, <code>valna.html</code>, <code>parnepar.html</code>) i vježba 7 nisu u repozitoriju.</td></tr>
+<tr><td>Vježba usporedbe nizova</td><td>Predavanje 6, slajdovi 30 i 33 kažu da je u vježbi 6. Takav projekt ne postoji.</td></tr>
+<tr><td>Vježba o Fibonaccijevu nizu i prefiksu</td><td>Nijedan zadatak ne odgovara predavanju 3, slajdu 24.</td></tr>
+<tr><td>Ubrzanje prefiksnog zbroja</td><td>Predavanje 6, slajd 28: najbolji S oko 1,7 (n = 2²⁴). Komentar u vježbi: S do 4,23. Uzrok nije poznat.</td></tr>
+<tr><td>Formule za blokove</td><td>Predavanje 6, slajd 26: prvih n % p procesora dobiva još jedan element. Kod vježbe: <code>b·n/p</code>. Razlikuju se najviše za 1.</td></tr>
+<tr><td>Vremena asinkronih zadataka</td><td>Vizualizacija: 1915, 1686, 513 ms; 7006 ms. Komentari u kodu: 1030, 1017, 348 ms; 7528 ms. Nije objašnjeno.</td></tr>
+<tr><td>Coffmanova klasa za „vrati se i pokušaj ponovno“</td><td>Slajdovi: uklanja uvjet bez preotimanja. Također uklanja držanje i čekanje <span class="own-tag">zaključeno</span>.</td></tr>
+<tr><td>Redoslijedi naspram vjerojatnosti</td><td>Vježba 3 broji redoslijede (924, 6, 184.756). Nisu vjerojatnosti.</td></tr>
+<tr><td>Vrijeme zaustavljanja u vježbi 5</td><td>Bilješke uz predavanje kažu 300 ms „nakon zaustavljanja“. Može značiti 300 ms nakon početka čekanja. Otvoreno.</td></tr>
+</table></div>
+</section>
+<section class="chapter src-index" id="sources"><h2>Kazalo izvora</h2>
+<p class="lede">Svaka datoteka je izvadak iz jednog skupa slajdova predavanja ili mape vježbe. Svaka je datoteka provjerena na potpunost i točnost. Oznake u tekstu pokazuju predavanje ili vježbu i temu.</p>
+<div class="tw"><table><tr><th>Izvor</th><th>Obuhvaća</th><th>Kartice koje ga citiraju</th></tr><tr><td>Predavanje 1</td><td>Zašto paralelno, hardver, uvod u Amdahla, što može poći po zlu</td><td>9</td></tr><tr><td>Predavanje 2</td><td>Flynn, granularnost, režija, Monte Carlo pi</td><td>4</td></tr><tr><td>Predavanje 3</td><td>Amdahl, Karp-Flatt, Gustafson, Bernstein, PCAM</td><td>12</td></tr><tr><td>Predavanje 4</td><td>Utrka podataka, lock, Interlocked, compare-and-swap</td><td>9</td></tr><tr><td>Predavanje 5</td><td>RAM, PRAM, aPRAM, barijera, async/await</td><td>6</td></tr><tr><td>Predavanje 6</td><td>Prefiksni zbroj, Blelloch, blokovi, Brentovo pravilo</td><td>7</td></tr><tr><td>Predavanje 7</td><td>Zastoj, semafor, konkurentne kolekcije</td><td>6</td></tr><tr><td>Vježba 1</td><td>Delegati i lambda kao tijela zadataka</td><td>1</td></tr><tr><td>Vježba 2</td><td>Zadaci, ubrzanje, četiri zamke</td><td>4</td></tr><tr><td>Vježba 3</td><td>Utrka podataka, lock, Interlocked</td><td>4</td></tr><tr><td>Vježba 4</td><td>Modeli i async/await</td><td>3</td></tr><tr><td>Vježba 5</td><td>Prekidanje i periodični zadaci</td><td>3</td></tr><tr><td>Vježba 6</td><td>Projekti prefiksnog zbroja</td><td>4</td></tr></table></div>
+</section>
+</main></div>
+<div id="card" hidden role="dialog" aria-label="Izvor"></div>
+<div class="dock" role="toolbar" aria-label="Alati">
+  <button type="button" id="railBtn" aria-controls="rail" aria-expanded="false"><svg class="ico" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h12M2 8h12M2 12h12"/></svg>Sadržaj</button>
+  <span class="sep"></span>
+  <button type="button" id="srcBtn" aria-pressed="true" title="Prikaži ili sakrij oznake izvora uz tvrdnje"><svg class="ico" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path class="bm" d="M4 2h8v12l-4-3-4 3z"/><path class="sl" d="M2 14L14 2"/></svg>Izvori</button>
+  <span class="sep"></span>
+  <button type="button" id="theme"><svg class="ico" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M8 2a6 6 0 0 1 0 12z" fill="currentColor"/></svg>Tema</button>
+</div>
+<script>
+var DECK={},NB={};
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+var dn=function(p){return parseInt(p.slice(1),10)};
+/* spoji uzastopne oznake u jednu */
+(function(){var refs=[].slice.call(document.querySelectorAll('.ref[data-k]')),done=new Set();
+  refs.forEach(function(r){if(done.has(r))return;var run=[r],n=r;
+    for(;;){var s=n.nextSibling;while(s&&s.nodeType===3&&!s.textContent.trim())s=s.nextSibling;
+      if(s&&s.nodeType===1&&s.classList.contains('ref')&&s.hasAttribute('data-k')){run.push(s);n=s}else break}
+    run.forEach(function(x){done.add(x)});
+    r.setAttribute('data-keys',run.map(function(x){return x.getAttribute('data-k')}).join(','));
+    run.slice(1).forEach(function(x){x.remove()})})})();
+function label(keys){var P=keys.map(function(k){return k.split(':')}),f=P[0];
+  var same=P.every(function(p){return p[0]===f[0]&&p[1]===f[1]});
+  var nums=P.map(function(p){return parseInt(p[2],10)});
+  var shown=nums.length>4?nums.slice(0,3).join(', ')+' i '+(nums.length-3):nums.join(', ');
+  if(!same)return keys.length+' izvora';
+  if(f[0]==='s')return 'Predavanje '+dn(f[1])+' · '+(nums.length>1?'slajd ':'slajd ')+shown;
+  var n=NB[f[1]];return (n?n.chip:'Bilježnica')+' · ćelija '+shown}
+document.querySelectorAll('.ref[data-keys]').forEach(function(r){
+  var keys=r.getAttribute('data-keys').split(',');r.tabIndex=0;r.setAttribute('role','button');
+  if(keys[0].charAt(0)==='n')r.classList.add('nb');r.textContent=label(keys)});
+var card=document.getElementById('card'),cur=null;
+function row(k,v){var d=el('div','row');d.appendChild(el('span','k',k));d.appendChild(el('span','v',v));var b=el('button',null,'Kopiraj');b.type='button';
+  b.onclick=function(e){e.stopPropagation();try{navigator.clipboard.writeText(v).then(function(){b.textContent='Kopirano'},function(){b.textContent='Označi'})}catch(x){b.textContent='Označi'}};d.appendChild(b);return d}
+function item(k){var p=k.split(':'),it=el('div','it');
+  if(p[0]==='s'){var d=DECK[p[1]],n=parseInt(p[2],10),nn=('0'+n).slice(-2);
+    it.appendChild(el('h5',null,'Predavanje '+dn(p[1])+' · slajd '+n+(d&&d.titles[n]?' · '+d.titles[n]:'')));
+    it.appendChild(row('Slika slajda','theory/sources/slides/'+p[1]+'/s-'+nn+'.png'));
+    it.appendChild(row('PDF (str. '+n+')','theory/sources/pdf/'+p[1]+'.pdf'));
+    it.appendChild(row('Transkript','theory/lectures/'+p[1]+'.md  (## Slajd '+nn+')'));
+  }else{var n=NB[p[1]],c=parseInt(p[2],10),cc=('0'+c).slice(-2);
+    it.appendChild(el('h5',null,(n?n.label:p[1])+' · ćelija '+c));
+    it.appendChild(row('Bilježnica',n?n.path:p[1]));
+    it.appendChild(row('Transkript','theory/notebooks/'+p[1]+'.md  (## Ćelija '+cc+')'));
+    if(n&&n.figs&&n.figs[c])it.appendChild(row('Slika izlaza',n.figs[c]))}
+  return it}
+function show(r){card.textContent='';r.getAttribute('data-keys').split(',').forEach(function(k){card.appendChild(item(k))});
+  card.hidden=false;var b=r.getBoundingClientRect(),w=card.offsetWidth,h=card.offsetHeight;
+  var x=Math.max(8,Math.min(b.left,innerWidth-w-8)),y=b.bottom+8;if(y+h>innerHeight-8)y=Math.max(8,b.top-h-8);
+  card.style.left=x+'px';card.style.top=y+'px';if(cur)cur.classList.remove('open');cur=r;r.classList.add('open')}
+function hide(){card.hidden=true;if(cur)cur.classList.remove('open')}
+document.addEventListener('click',function(e){var r=e.target.closest&&e.target.closest('.ref[data-keys]');
+  if(r){if(cur===r&&!card.hidden){hide();return}show(r);return}if(!card.contains(e.target))hide()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')hide();
+  if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('ref')){e.preventDefault();e.target.click()}});
+/* kazalo */
+var rail=document.getElementById('railBody'),railNav=document.getElementById('rail'),toc=document.getElementById('toc'),links=[],groups={};
+document.querySelectorAll('section.chapter').forEach(function(s,i){
+  var h=s.querySelector('h2');if(!h)return;var isSrc=s.id==='sources';
+  var a=el('a','ch',h.textContent);a.href='#'+s.id;a.dataset.t=s.id;rail.appendChild(a);links.push(a);
+  if(!isSrc){var li=el('li'),t=el('a');t.href='#'+s.id;t.appendChild(el('span',null,h.textContent));li.appendChild(t);toc.appendChild(li)}
+  var g=el('div','grp');g.id='g-'+s.id;rail.appendChild(g);groups[s.id]=g;
+  s.querySelectorAll('h3').forEach(function(t,j){if(!t.id)t.id=s.id+'-s'+j;var b=el('a','sec',t.textContent);b.href='#'+t.id;b.dataset.t=t.id;g.appendChild(b);links.push(b)})});
+var heads=links.map(function(a){return document.getElementById(a.dataset.t)}),tick=false;
+function upd(){tick=false;var dh=document.documentElement,mx=dh.scrollHeight-innerHeight;document.getElementById('bar').style.width=(mx>0?Math.min(100,scrollY/mx*100):0)+'%';
+  var idx=0;for(var i=0;i<heads.length;i++){if(heads[i]&&heads[i].getBoundingClientRect().top<innerHeight*0.3)idx=i}
+  var chap=null;for(var j=idx;j>=0;j--){if(links[j].classList.contains('ch')){chap=links[j].dataset.t;break}}
+  Object.keys(groups).forEach(function(k){groups[k].classList.toggle('open',k===chap)});
+  links.forEach(function(a,i){a.classList.toggle('on',i===idx)})}
+addEventListener('scroll',function(){if(!tick){tick=true;requestAnimationFrame(upd)}},{passive:true});
+/* kontrole */
+var B=document.body,rb=document.getElementById('railBtn');
+function setRail(on){B.classList.toggle('rail-on',on);rb.setAttribute('aria-expanded',on);if(on)upd()}
+rb.onclick=function(e){e.stopPropagation();setRail(!B.classList.contains('rail-on'))};
+document.getElementById('railX').onclick=function(){setRail(false)};
+railNav.addEventListener('click',function(e){if(e.target.closest('a'))setRail(false)});
+document.addEventListener('click',function(e){if(B.classList.contains('rail-on')&&!railNav.contains(e.target))setRail(false)});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')setRail(false)});
+var sb=document.getElementById('srcBtn');
+function setSrc(on,save){B.classList.toggle('no-src',!on);sb.setAttribute('aria-pressed',on);hide();if(save){try{localStorage.setItem('nnSrc2',on?'1':'0')}catch(e){}}}
+sb.onclick=function(){setSrc(B.classList.contains('no-src'),true)};
+var srcOn=true;try{srcOn=localStorage.getItem('nnSrc2')!=='0'}catch(e){}
+setSrc(srcOn,false);
+try{var T=localStorage.getItem('nnTheme');if(T)document.documentElement.setAttribute('data-theme',T)}catch(e){}
+document.getElementById('theme').onclick=function(){var d=document.documentElement,c=d.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'),n=c==='dark'?'light':'dark';d.setAttribute('data-theme',n);try{localStorage.setItem('nnTheme',n)}catch(e){}};
+upd();
+</script>
+<script>(function(){
+var UID=0;
+function fmt(x,d){return Number(x).toLocaleString('hr-HR',{maximumFractionDigits:d==null?2:d,minimumFractionDigits:d==null?0:d})}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function mk(r,h){r.u='w'+(++UID)+'-';r.innerHTML=h.replace(/\{u\}/g,r.u)}
+function g(r,id){return r.querySelector('#'+r.u+id)}
+function slider(id,label,min,max,step,val){return '<div class="ctl"><label for="{u}'+id+'">'+label+' <b id="{u}'+id+'v"></b></label><input type="range" id="{u}'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'"></div>'}
+function bind(r,ids,fn){ids.forEach(function(i){g(r,i).addEventListener('input',fn)});fn()}
+function val(r,id){return parseFloat(g(r,id).value)}
+function setv(r,id,t){g(r,id+'v').textContent=t}
+function path(pts){return pts.map(function(p,i){return (i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)}).join(' ')}
+var W=320,H=190,L=38,R=10,T=14,B=30;
+function chart(spec){
+  var sx=function(x){return L+(W-L-R)*(x-(spec.xmin||0))/(spec.xmax-(spec.xmin||0))},sy=function(y){return H-B-(H-B-T)*Math.min(y,spec.ymax)/spec.ymax};
+  var g='';
+  spec.yt.forEach(function(y){g+='<line class="gl" x1="'+L+'" x2="'+(W-R)+'" y1="'+sy(y)+'" y2="'+sy(y)+'"/><text class="tx" x="'+(L-6)+'" y="'+(sy(y)+4)+'" text-anchor="end">'+fmt(y,spec.yd||0)+'</text>'});
+  spec.xt.forEach(function(x){g+='<text class="tx" x="'+sx(x)+'" y="'+(H-B+16)+'" text-anchor="middle">'+x+'</text>'});
+  g+='<line class="ax" x1="'+L+'" x2="'+(W-R)+'" y1="'+(H-B)+'" y2="'+(H-B)+'"/><line class="ax" x1="'+L+'" x2="'+L+'" y1="'+T+'" y2="'+(H-B)+'"/>';
+  spec.lines.forEach(function(l){g+='<path class="'+l.cls+'" d="'+path(l.pts.map(function(p){return [sx(p[0]),sy(p[1])]}))+'"/>'});
+  if(spec.hline!=null)g+='<line class="lim" x1="'+L+'" x2="'+(W-R)+'" y1="'+sy(spec.hline)+'" y2="'+sy(spec.hline)+'"/>'+(spec.hlabel?'<text class="tx" x="'+(W-R-2)+'" y="'+(sy(spec.hline)-4)+'" text-anchor="end">'+spec.hlabel+'</text>':'');
+  if(spec.dot)g+='<circle class="dt" cx="'+sx(spec.dot[0])+'" cy="'+sy(spec.dot[1])+'" r="5"/>';
+  g+='<text class="tx" x="'+(W-R)+'" y="'+(H-2)+'" text-anchor="end">'+spec.xl+'</text><text class="tx" x="'+L+'" y="'+(T-3)+'" text-anchor="start">'+spec.yl+'</text>';
+  return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(spec.alt)+'">'+g+'</svg>'}
+function bar(lab,v,mx,cls,txt){return '<div class="br"><span class="bl">'+lab+'</span><span class="bb"><i class="'+cls+'" style="width:'+Math.max(0.5,100*v/mx)+'%"></i></span><span class="bv">'+(txt||fmt(v,0))+'</span></div>'}
+var OUT='<div class="out" id="{u}o" role="status" aria-live="polite"></div>';
+var builders={};
+
+/* Amdahl, Gustafson */
+builders.amdahl=function(r){
+  mk(r,'<p class="viz-t">Isprobajte: koliko dalje možete doći s više jezgri?</p>'+
+   slider('P','Udio posla koji se može izvoditi paralelno',0,99,1,90)+slider('N','Broj jezgri',1,64,1,10)+
+   '<div class="row2"><label><input type="checkbox" id="{u}G"> Prikaži i Gustafsonov model (posao raste s brojem jezgri)</label></div>'+OUT+'<div id="{u}c"></div>'+
+   '<p class="cap">Puna plava linija: Amdahlovo ubrzanje S = 1 / ((1 − P) + P/N) za isti posao. Crtkana linija: njezina granica 1/(1 − P). Točkasta linija: idealno ubrzanje S = N. Narančasta linija (ako je označena): Gustafson S = N − s(N − 1) uz s = 1 − P. Gustafson odgovara na drugo pitanje, jer posao raste s N, a s se mjeri na paralelnom izvođenju.</p>');
+  bind(r,['P','N'],draw);g(r,'G').addEventListener('change',draw);
+  function draw(){var P=val(r,'P')/100,N=val(r,'N'),gus=g(r,'G').checked;
+    var A=function(n){return 1/((1-P)+P/n)},S=A(N),E=S/N,lim=1/(1-P),Gs=N-(1-P)*(N-1);
+    setv(r,'P',fmt(P*100,0)+' %');setv(r,'N',N);
+    g(r,'o').innerHTML='Ubrzanje S = <b>'+fmt(S,2)+'</b> &nbsp; Učinkovitost E = S/N = <b>'+fmt(E*100,0)+' %</b><br>Granica uz neograničen broj jezgri: <b>'+fmt(lim,1)+'</b>'+(gus?' &nbsp; Gustafson S = <b>'+fmt(Gs,1)+'</b>':'');
+    var a=[],gp=[],id=[];for(var n=1;n<=64;n++){a.push([n,A(n)]);gp.push([n,n-(1-P)*(n-1)]);id.push([n,n])}
+    var ls=[{pts:id,cls:'ln3'}];if(gus)ls.push({pts:gp,cls:'ln2'});ls.push({pts:a,cls:'ln1'});
+    g(r,'c').innerHTML=chart({xmax:64,ymax:64,xt:[1,16,32,48,64],yt:[0,16,32,48,64],xl:'jezgre N',yl:'ubrzanje S',alt:'Ubrzanje u odnosu na broj jezgri. Za N = '+N+' ubrzanje je '+fmt(S,2)+', a granica je '+fmt(lim,1)+'.',lines:ls,hline:lim,hlabel:'granica',dot:[N,S]})}};
+
+/* Overhead */
+builders.overhead=function(r){
+  mk(r,'<p class="viz-t">Isprobajte: više zadataka pomaže, pa zatim šteti</p>'+
+   slider('K','Broj zadataka',1,64,1,4)+slider('C','Režija po zadatku (vremenske jedinice)',0,100,5,40)+OUT+'<div id="{u}c"></div>'+
+   '<p class="cap">Posao traje 1000 vremenskih jedinica. Plava linija: ukupno vrijeme, otprilike 1000/k + režija(k). Točkasta linija: dio posla 1000/k. Narančasta linija: dio režije c · k. Slika kao jednostavan model koristi režiju = c · k. Kolegij daje jednu točku podataka: 4 zadatka koštaju oko 410, što odgovara c = 40. Krivulja je ilustracija, a ne podatak iz kolegija.</p>');
+  bind(r,['K','C'],function(){var k=val(r,'K'),c=val(r,'C'),Tt=function(x){return 1000/x+c*x},t=Tt(k);
+    setv(r,'K',k);setv(r,'C',c);
+    var best=c>0?Math.sqrt(1000/c):64;best=Math.max(1,Math.min(64,Math.round(best)));
+    g(r,'o').innerHTML='Vrijeme (zadaci: '+k+'): <b>'+fmt(t,0)+'</b> &nbsp; Dio posla: '+fmt(1000/k,0)+' &nbsp; Dio režije: '+fmt(c*k,0)+'<br>Najbolji broj zadataka u ovom modelu: <b>'+best+'</b> (vrijeme '+fmt(Tt(best),0)+'). Sekvencijalno vrijeme: 1000.';
+    var tot=[],wk=[],ov=[];for(var x=1;x<=64;x++){tot.push([x,Tt(x)]);wk.push([x,1000/x]);ov.push([x,c*x])}
+    g(r,'c').innerHTML=chart({xmax:64,ymax:2000,xt:[1,16,32,48,64],yt:[0,500,1000,1500,2000],xl:'zadaci k',yl:'vrijeme',alt:'Vrijeme u odnosu na broj zadataka. Uz k = '+k+' vrijeme je '+fmt(t,0)+'.',lines:[{pts:wk,cls:'ln3'},{pts:ov,cls:'ln2'},{pts:tot,cls:'ln1'}],hline:1000,hlabel:'sekvencijalno 1000',dot:[k,t]})})};
+
+/* Karp-Flatt as a cause selector */
+builders.kf=function(r){
+  mk(r,'<p class="viz-t">Isprobajte: koji uzrok čini e ravnim, a koji ga čini rastućim?</p>'+
+   '<div class="ctl"><label for="{u}cause">Uzrok koji ograničava ubrzanje</label><select id="{u}cause"><option value="seq">Sekvencijalni dio</option><option value="ovh">Režija koja raste s brojem zadataka</option><option value="hw">Ograničenje hardvera (6 fizičkih jezgri)</option></select></div>'+
+   '<div class="ctl" id="{u}sw"><label for="{u}F"><span id="{u}fl"></span> <b id="{u}Fv"></b></label><input type="range" id="{u}F" min="1" max="30" step="1" value="5"></div>'+OUT+'<div id="{u}c"></div>'+
+   '<p class="cap">e = (1/S − 1/N) / (1 − 1/N). Prikaz za svaki N iz odabranog uzroka izračunava ubrzanje S, a zatim crta e. Stvarni sekvencijalni dio daje ravni e. Režija ili ograničenje hardvera daju rastući e. Krivulje su ilustracije. Provjerite prema podacima iz kolegija: N = 8 i S = 5,71 daju e = 0,057.</p>');
+  function S(c,f,n){if(c==='seq')return 1/(f+(1-f)/n);if(c==='ovh')return 1/(1/n+f/100*n/4);return Math.min(n,6)}
+  function draw(){var c=g(r,'cause').value,f=val(r,'F');
+    g(r,'fl').textContent=c==='seq'?'Udio sekvencijalnog dijela posla':c==='ovh'?'Režija po zadatku, u % od T(1) (÷4)':'Nije korišteno';
+    g(r,'F').disabled=c==='hw';setv(r,'F',c==='seq'?f+' %':c==='ovh'?f+' %':'-');
+    var ff=c==='seq'?f/100:f,pts=[],tab='<div class="tw"><table><tr><th>Zadaci N</th><th>Ubrzanje S</th><th>e</th></tr>';
+    var e=function(n){var s=S(c,ff,n);return (1/s-1/n)/(1-1/n)};
+    for(var n=2;n<=16;n++)pts.push([n,e(n)]);
+    [2,4,8,16].forEach(function(n){tab+='<tr><td>'+n+'</td><td>'+fmt(S(c,ff,n),2)+'</td><td><b>'+fmt(e(n),3)+'</b></td></tr>'});
+    tab+='</table></div>';
+    var rising=e(16)-e(2)>0.02;
+    g(r,'o').innerHTML=tab+'<b>'+(rising?'e raste s N: nešto što raste s brojem zadataka ograničava ubrzanje (režija ili hardver).':'e ostaje ravno: stvarni sekvencijalni dio ograničava ubrzanje.')+'</b>';
+    var mx=Math.max(0.2,Math.ceil(Math.max.apply(null,pts.map(function(p){return p[1]}))*10)/10);
+    g(r,'c').innerHTML=chart({xmin:2,xmax:16,ymax:mx,yd:2,xt:[2,4,8,12,16],yt:[0,mx/2,mx],xl:'zadaci N',yl:'e',alt:'Karp-Flattov e u odnosu na broj zadataka. '+(rising?'Raste.':'Ostaje ravno.'),lines:[{pts:pts,cls:'ln1'}],dot:[16,e(16)]})}
+  g(r,'cause').addEventListener('change',draw);g(r,'F').addEventListener('input',draw);draw()};
+
+/* Data race */
+builders.race=function(r){
+  var st;
+  mk(r,'<p class="viz-t">Isprobajte: dva zadatka izvode <code>counter++</code></p>'+
+   '<p>Svaki zadatak ima tri koraka: pročitati zajednički brojač u vlastiti registar, dodati 1 registru, upisati registar natrag. Brojač počinje od 0, pa je točan rezultat 2. Savjet: da izgubite ažuriranje, neka oba zadatka čitaju prije nego što koji upiše.</p>'+
+   '<div class="row2"><label><input type="checkbox" id="{u}lk"> Zaštitite tri koraka lockom (promjena ovoga ponovno postavlja izvođenje)</label></div>'+
+   '<div class="btns"><button type="button" id="{u}a">Izvedi sljedeći korak zadatka A</button><button type="button" id="{u}b">Izvedi sljedeći korak zadatka B</button><button type="button" id="{u}rnd">Slučajni redoslijed (ponavljaj)</button><button type="button" id="{u}rs">Ponovno</button></div>'+OUT);
+  var names=['pročitaj brojač u registar','dodaj 1 registru','upiši registar u brojač','gotovo'];
+  function lk(){return g(r,'lk').checked}
+  function reset(){st={c:0,t:[{pc:0,reg:null},{pc:0,reg:null}],lock:-1,msg:''};draw()}
+  function can(i){var t=st.t[i];if(t.pc>=3)return false;if(lk()&&t.pc===0&&st.lock!==-1&&st.lock!==i)return false;return true}
+  function step(i){var t=st.t[i];
+    if(t.pc>=3){st.msg='Zadatak '+'AB'[i]+' je već gotov.';draw();return}
+    if(!can(i)){st.msg='Zadatak '+'AB'[i]+' mora čekati: drugi zadatak drži lock.';draw();return}
+    st.msg='';
+    if(t.pc===0){if(lk())st.lock=i;t.reg=st.c;st.msg='Zadatak '+'AB'[i]+' čita '+st.c+'.'}
+    else if(t.pc===1){t.reg=t.reg+1;st.msg='Zadatak '+'AB'[i]+' sada u registru ima '+t.reg+'.'}
+    else if(t.pc===2){var lost=st.c>t.reg-1;st.msg='Zadatak '+'AB'[i]+' upisuje '+t.reg+' preko '+st.c+'.'+(lost?' Ažuriranje drugog zadatka je izgubljeno.':'');st.c=t.reg;if(st.lock===i)st.lock=-1}
+    t.pc++;draw()}
+  function draw(){var h='<div class="cells"><span class="cell wide"><i>zajednička memorija: brojač</i>'+st.c+'</span>';
+    st.t.forEach(function(t,i){h+='<span class="cell wide"><i>registar zadatka '+'AB'[i]+'</i>'+(t.reg==null?'-':t.reg)+'</span>'});
+    h+='</div><div class="tw"><table><tr><th>Zadatak</th><th>Sljedeći korak</th></tr>';
+    st.t.forEach(function(t,i){h+='<tr><td>'+'AB'[i]+'</td><td>'+(t.pc<3?(t.pc+1)+'. '+names[t.pc]:'gotovo')+'</td></tr>'});
+    h+='</table></div>';
+    if(st.msg)h+=esc(st.msg)+'<br>';
+    if(st.t[0].pc>=3&&st.t[1].pc>=3)h+='<b>'+(st.c===2?'Točno: 2.':'Izgubljeno ažuriranje! Rezultat je '+st.c+', a ne 2. Oba zadatka pročitala su istu staru vrijednost.')+'</b>';
+    g(r,'o').innerHTML=h;g(r,'a').disabled=!can(0);g(r,'b').disabled=!can(1)}
+  g(r,'a').onclick=function(){step(0)};g(r,'b').onclick=function(){step(1)};
+  g(r,'rs').onclick=reset;g(r,'lk').onchange=reset;
+  g(r,'rnd').onclick=function(){reset();var n=0;while((st.t[0].pc<3||st.t[1].pc<3)&&n++<50){var o=[0,1].filter(can);if(!o.length)break;step(o[Math.floor(Math.random()*o.length)])}};
+  reset()};
+
+/* Brent rule */
+builders.brent=function(r){
+  mk(r,'<p class="viz-t">Isprobajte: Brentovo pravilo za prefiksni zbroj</p>'+
+   slider('M','Veličina polja n = 2^m, m =',1,24,1,22)+slider('Q','Procesori p',1,64,1,12)+OUT+'<div id="{u}c"></div>'+
+   '<p class="cap">Stablasti algoritam (Blelloch) treba t = 2·log2(n) koraka i q = 2(n − 1) operacija kad ima dovoljno procesora. Brent: s p procesora treba najviše t + (q − t)/p koraka. Jednostavno korak-po-korak skeniranje zbraja sve n ćelija u svakom od log2(n) koraka, pa izvodi n·log2(n) − (n − 1) zbrajanja. Vrijeme ovdje je otprilike njegov posao podijeljen s p. Pravilo zanemaruje režiju zadataka, pa su stvarna vremena veća. Zadane vrijednosti m = 22, p = 12 daju primjer iz kolegija: 44 koraka i oko 699.091 (ista vrijednost kao na kartici).</p>');
+  bind(r,['M','Q'],function(){var m=val(r,'M'),p=val(r,'Q'),n=Math.pow(2,m),t=2*m,q=2*(n-1),b=t+(q-t)/p,seq=n-1,naive=n*m-(n-1),nt=naive/p;
+    setv(r,'M',m+' (n = '+fmt(n,0)+')');setv(r,'Q',p);
+    g(r,'o').innerHTML='Koraka uz dovoljno procesora: <b>'+t+'</b> &nbsp; Ukupno operacija: <b>'+fmt(q,0)+'</b><br>Brentova granica vremena (procesori: '+p+'): <b>'+fmt(b,0)+'</b> koraka &nbsp; Sekvencijalno skeniranje: '+fmt(seq,0)+' koraka<br>Ubrzanje zajamčeno ovom granicom (sekvencijalno vrijeme / Brentovo vrijeme): <b>'+fmt(seq/b,1)+'</b>';
+    var mx=Math.max(naive,seq,q),mt=Math.max(nt,seq,b);
+    g(r,'c').innerHTML='<p class="gl-t">Posao (broj zbrajanja)</p>'+bar('Skeniranje korak po korak',naive,mx,'b3')+bar('Stablasti algoritam',q,mx,'b2')+bar('Sekvencijalno skeniranje',seq,mx,'b1')+
+      '<p class="gl-t">Vrijeme (procesori: '+p+', koraci)</p>'+bar('Skeniranje korak po korak',nt,mt,'b3')+bar('Stablasti algoritam (Brent)',b,mt,'b2')+bar('Sekvencijalno skeniranje',seq,mt,'b1')})};
+
+/* Blelloch stepper */
+builders.scan=function(r){
+  var init=[3,1,7,0,4,1,6,3],states=[];
+  (function(){var a=init.slice(),n=8;states.push({a:a.slice(),hi:[],src:[],ops:0,note:'Početak. Cilj: za svaku poziciju zbroj svih vrijednosti prije nje (predskeniranje).'});
+    for(var d=1;d<n;d*=2){var hi=[],src=[],ns=[];for(var i=2*d-1;i<n;i+=2*d){ns.push('a['+i+'] = '+a[i-d]+' + '+a[i]+' = '+(a[i-d]+a[i]));src.push(i-d);a[i]+=a[i-d];hi.push(i)}
+      states.push({a:a.slice(),hi:hi,src:src,ops:hi.length,note:'Uzlazni prolaz, udaljenost parova '+d+': zbroj svakog para ide u desnu ćeliju. '+ns.join('; ')+'.'})}
+    a[n-1]=0;states.push({a:a.slice(),hi:[n-1],src:[],ops:0,note:'Korijen postavi na 0, neutralni element zbrajanja.'});
+    for(var d2=n/2;d2>=1;d2/=2){var hi2=[],src2=[],ns2=[];for(var j=2*d2-1;j<n;j+=2*d2){var t=a[j-d2],par=a[j];ns2.push('lijevo a['+(j-d2)+'] = '+par+'; desno a['+j+'] = '+par+' + '+t+' = '+(par+t));a[j-d2]=par;a[j]=par+t;hi2.push(j-d2,j)}
+      states.push({a:a.slice(),hi:hi2,src:[],ops:hi2.length/2,note:'Silazni prolaz, udaljenost parova '+d2+': lijeva ćelija preuzima vrijednost roditelja. Desna ćelija preuzima roditelja + staru vrijednost lijeve. '+ns2.join('; ')+'.'})}
+    states[states.length-1].note+=' Gotovo: svaka ćelija sadrži zbroj svega prije nje.'})();
+  var k=0;
+  mk(r,'<p class="viz-t">Isprobajte: prođite stablasti prefiksni zbroj</p><div class="btns"><button type="button" id="{u}pv">Natrag</button><button type="button" id="{u}nx">Sljedeći korak</button><button type="button" id="{u}rs">Počni ponovno</button></div><div id="{u}o" role="status" aria-live="polite"></div>'+
+   '<p class="cap">Ulaz: 3 1 7 0 4 1 6 3. Rezultat: 0 3 4 11 11 15 16 22. Plave ćelije se upisuju u ovom koraku. Crtkane ćelije su lijevi partneri koji se čitaju. Ovaj prikaz ima 7 poteza: 3 razine prema gore, ponovno postavljanje korijena, 3 razine prema dolje. Stablo ima 2·log2(8) = 6 razina paralelnog posla i ukupno 2(8 − 1) = 14 zbrajanja. Ćelije u jednoj razini ne ovise jedna o drugoj, pa se mogu izvoditi paralelno. Barijera razdvaja razine.</p>');
+  function draw(){var s=states[k],h='<div class="cells">';s.a.forEach(function(v,i){h+='<span class="cell'+(s.hi.indexOf(i)>=0?' hi':'')+(s.src.indexOf(i)>=0?' src':'')+'"><i>'+i+'</i>'+v+'</span>'});
+    h+='</div><p><b>Potez '+k+' od '+(states.length-1)+'.</b> '+esc(s.note)+(s.ops?' Zbrajanja u ovom potezu: '+s.ops+'.':'')+'</p>';g(r,'o').innerHTML=h;
+    g(r,'pv').disabled=k===0;g(r,'nx').disabled=k===states.length-1}
+  g(r,'nx').onclick=function(){if(k<states.length-1){k++;draw();if(k===states.length-1)g(r,'rs').focus()}};
+  g(r,'pv').onclick=function(){if(k>0){k--;draw()}};
+  g(r,'rs').onclick=function(){k=0;draw()};draw()};
+
+/* Deadlock */
+builders.deadlock=function(r){
+  var sc={
+    same:[['Zadatak 1 uzima lock A.','drži A','ne traži ništa','ne drži ništa','traži A'],['Zadatak 2 pokušava lock A. Mora čekati, jer zadatak 1 drži A.','drži A','traži B','ne drži ništa','čeka A'],['Zadatak 1 uzima lock B, radi, zatim oslobađa B i A.','ne drži ništa','gotovo','ne drži ništa','traži A'],['Zadatak 2 sada uzima A, zatim B. Oba zadatka završavaju.','gotovo','gotovo','gotovo','gotovo']],
+    diff:[['Zadatak 1 uzima lock A.','drži A','traži B','ne drži ništa','traži B'],['Zadatak 2 uzima lock B.','drži A','traži B','drži B','traži A'],['Zadatak 1 pokušava lock B. Čeka zadatak 2.','drži A','čeka B','drži B','traži A'],['Zadatak 2 pokušava lock A. Čeka zadatak 1. Oba čekaju zauvijek: kružno čekanje. Ovo je zastoj (deadlock).','drži A','čeka B','drži B','čeka A']],
+    late:[['Zadatak 1 uzima lock A.','drži A','traži B','ne drži ništa','nije započeo'],['Zadatak 1 uzima lock B, radi, zatim oslobađa oba locka.','gotovo','gotovo','ne drži ništa','nije započeo'],['Zadatak 2 uzima lock B. A nitko ne drži.','gotovo','gotovo','drži B','traži A'],['Zadatak 2 uzima A i završava. Locki su u različitom redoslijedu, ali zadaci se nikad nisu preklapali. Krug nije nastao.','gotovo','gotovo','gotovo','gotovo']]};
+  var k=0;
+  mk(r,'<p class="viz-t">Isprobajte: dva zadatka, dva locka</p><div class="ctl"><label for="{u}m">Scenarij</label><select id="{u}m"><option value="diff">Različit redoslijed: zadatak 1 uzima A pa B, zadatak 2 uzima B pa A, i preklapaju se</option><option value="late">Različit redoslijed, ali zadatak 2 kasni</option><option value="same">Isti redoslijed: oba zadatka uzimaju A, pa B</option></select></div><div class="btns"><button type="button" id="{u}nx">Sljedeći korak</button><button type="button" id="{u}rs">Počni ponovno</button></div><div id="{u}o" role="status" aria-live="polite"></div>'+
+   '<p class="cap">Zastoj treba lošiji slijed događaja, pa se ne pojavljuje u svakom izvođenju. Fiksni redoslijed lockova uklanja krug, što je jedan od četiri uvjeta zastoja.</p>');
+  function draw(){var m=g(r,'m').value,h='<ol>';for(var i=0;i<=k&&i<4;i++)h+='<li>'+sc[m][i][0]+'</li>';h+='</ol>';
+    var s=sc[m][k];h+='<div class="tw"><table><tr><th>Zadatak</th><th>Drži</th><th>Čeka ili traži</th></tr><tr><td>1</td><td>'+s[1]+'</td><td>'+s[2]+'</td></tr><tr><td>2</td><td>'+s[3]+'</td><td>'+s[4]+'</td></tr></table></div>';
+    if(k>=3)h+='<b>'+(m==='diff'?'Zastoj (deadlock).':'Nema zastoja.')+'</b>';g(r,'o').innerHTML=h;g(r,'nx').disabled=k>=3}
+  g(r,'nx').onclick=function(){if(k<3){k++;draw();if(k>=3)g(r,'rs').focus()}};g(r,'rs').onclick=function(){k=0;draw()};g(r,'m').onchange=function(){k=0;draw()};draw()};
+
+/* Block division */
+builders.blocks=function(r){
+  mk(r,'<p class="viz-t">Isprobajte: podijelite n vrijednosti u p blokova</p>'+slider('N','Broj vrijednosti n',4,64,1,20)+slider('P','Broj procesora p',1,16,1,8)+OUT+
+   '<p class="cap">Tri faze: svaki procesor zbraja svoj blok, p zbrojeva blokova dobiva prefiksni zbroj (mali stablasti), zatim svaki procesor radi prefiksni zbroj svog bloka počevši od svog pomaka. Mali broj na svakom bloku je njegov redni broj. Veličine blokova razlikuju se najviše za 1. Vrijeme bloka (formula s predavanja): 2(⌈n/p⌉ + ⌈lg p⌉). Zadatak iz kolegija koristi n = 20, p = 8.</p>');
+  bind(r,['N','P'],function(){var n=val(r,'N'),p=Math.min(val(r,'P'),n),base=Math.floor(n/p),extra=n%p,h='<div class="cells">',i0=0;
+    setv(r,'N',n);setv(r,'P',p);
+    for(var b=0;b<p;b++){var sz=base+(b<extra?1:0);h+='<span class="blk b'+(b%2)+'"><i>'+b+'</i>';for(var j=0;j<sz;j++)h+='<span class="mc">'+(i0+j)+'</span>';h+='</span>';i0+=sz}
+    h+='</div>';
+    var lg=Math.ceil(Math.log(p)/Math.LN2-1e-9);
+    g(r,'o').innerHTML=h+'Veličine blokova: <b>'+base+'</b>'+(extra?' ili <b>'+(base+1)+'</b> (blokova s jednim više: '+extra+')':'')+'<br>Vrijeme bloka 2(⌈n/p⌉ + ⌈lg p⌉) = 2('+Math.ceil(n/p)+' + '+lg+') = <b>'+2*(Math.ceil(n/p)+lg)+'</b> koraka'})};
+
+/* Cost of synchronizing */
+builders.cost=function(r){
+  var rows=[['Lokalni brojač, jedno zbrajanje na kraju',1,'b1'],['Sekvencijalno',5,'b1'],['Parallel.For s lokalnim stanjem',8,'b2'],['Bez zaštite (krivi rezultat)',12,'b3'],['Interlocked',203,'b2'],['lock',456,'b2'],['Vrsta locka',711,'b2']];
+  var mx=Math.log(1000),h='';
+  rows.forEach(function(x){h+=bar(x[0],Math.log(x[1]*1+1),Math.log(1000),x[2],fmt(x[1],0)+' ms'+(x[1]>5?' ('+fmt(x[1]/5,0)+'×)':''))});
+  mk(r,'<p class="viz-t">Usporedba: koliko košta jedna sinkronizacija po koraku?</p><div id="{u}c">'+h+'</div>'+
+   '<p class="cap">Mjerenje s kolegija: najbolje od 3, 12 zadataka, 12.000.000 povećanja. Duljina stupca koristi logaritamsku ljestvicu, pa je svaki korak stupca faktor deset. Broj u zagradi je usporenje u odnosu na sekvencijalnih 5 ms. Rješenje je brojati u lokalnoj varijabli i sinkronizirati jednom po zadatku. Drugi stroj dao je lock oko 155 ms, a Interlocked oko 246 ms. Izmjerite na svom računalu.</p>')};
+
+/* aPRAM barrier cost */
+builders.apram=function(r){
+  mk(r,'<p class="viz-t">Isprobajte: koliko košta jedan PRAM korak na stvarnom stroju?</p>'+slider('D','Vrijeme globalnog pristupa d',2,16,1,4)+slider('B','Vrijeme barijere B',2,64,1,16)+OUT+'<div id="{u}c"></div>'+
+   '<p class="cap">Na aPRAM-u jedan PRAM korak košta 2B + 2d + 1: dvije barijere, dva globalna pristupa i jedan lokalni korak. S p/B procesora košta 5B + 2d − 2 po koraku, ali posao se smanjuje (primjer iz kolegija: 5.504 naspram 41.984, otprilike 7,6 puta manje). Stvarna vremena barijere: 52 ns za 1 zadatak, 3.113 za 12 zadataka, 19.037 za 24 zadatka. Vrijednosti d = 4 i B = 16 u kolegiju su izmišljene.</p>');
+  bind(r,['D','B'],function(){var d=val(r,'D'),B=Math.max(val(r,'B'),d);setv(r,'D',d);setv(r,'B',B);
+    var bar2=2*B,glob=2*d,tot=bar2+glob+1,few=5*B+2*d-2;
+    g(r,'o').innerHTML='Jedan PRAM korak: 2B + 2d + 1 = <b>'+tot+'</b> jedinica. <b>'+fmt(100*bar2/tot,0)+' %</b> od toga su barijere.<br>S p/B procesora: 5B + 2d − 2 = <b>'+few+'</b> jedinica po koraku.';
+    g(r,'c').innerHTML=bar('Barijere (2B)',bar2,tot,'b3',bar2)+bar('Globalni pristupi (2d)',glob,tot,'b2',glob)+bar('Lokalni korak',1,tot,'b1','1')})};
+
+/* Bernstein */
+builders.bern=function(r){
+  var P=[['a = x + y','b = x * 2',['x','y'],['a'],['x'],['b']],['x = 5','b = x * 2',[],['x'],['x'],['b']],['zbroj += a[i]','zbroj += a[j]',['zbroj','a[i]'],['zbroj'],['zbroj','a[j]'],['zbroj']]];
+  mk(r,'<p class="viz-t">Isprobajte: smiju li ova dva dijela raditi zajedno?</p><div class="ctl"><label for="{u}p">Par naredbi</label><select id="{u}p">'+P.map(function(x,i){return '<option value="'+i+'">'+esc(x[0])+'  i  '+esc(x[1])+'</option>'}).join('')+'</select></div>'+OUT+
+   '<p class="cap">I je skup varijabli koje dio čita. O je skup koje piše. Dijelovi 1 i 2 mogu raditi zajedno ako su I₁∩O₂, O₁∩I₂ i O₁∩O₂ svi prazni. Čitanje zajedničkih podataka je dopušteno. Narušen uvjet znači da rezultat ovisi o tome koji dio se izvodi prvi.</p>');
+  function inter(a,b){return a.filter(function(x){return b.indexOf(x)>=0})}
+  function f(s){return s.length?'{'+s.join(', ')+'}':'∅'}
+  function draw(){var x=P[g(r,'p').value],i1=x[2],o1=x[3],i2=x[4],o2=x[5],a=inter(i1,o2),b=inter(o1,i2),c=inter(o1,o2),ok=!a.length&&!b.length&&!c.length;
+    g(r,'o').innerHTML='<div class="tw"><table><tr><th>Dio</th><th>I (čita)</th><th>O (piše)</th></tr><tr><td>1: <code>'+esc(x[0])+'</code></td><td>'+f(i1)+'</td><td>'+f(o1)+'</td></tr><tr><td>2: <code>'+esc(x[1])+'</code></td><td>'+f(i2)+'</td><td>'+f(o2)+'</td></tr></table></div>I₁∩O₂ = <b>'+f(a)+'</b> &nbsp; O₁∩I₂ = <b>'+f(b)+'</b> &nbsp; O₁∩O₂ = <b>'+f(c)+'</b><br><b>'+(ok?'Svi prazni: dijelovi mogu raditi zajedno.':'Nisu prazni: dijelovi ne smiju raditi zajedno.')+'</b>'}
+  g(r,'p').addEventListener('change',draw);draw()};
+
+/* ---------- more widgets ---------- */
+function tl(rows,total,unit){ /* timeline rows: {label, segs:[[start,len,cls,text]]} */
+  var h='<div class="tlw">';
+  rows.forEach(function(r){h+='<div class="tlr"><span class="tll">'+esc(r.label)+'</span><span class="tlt">';
+    r.segs.forEach(function(s){h+='<i class="'+s[2]+'" style="left:'+(100*s[0]/total)+'%;width:'+(100*s[1]/total)+'%" title="'+esc(s[3]||'')+'">'+esc(s[3]||'')+'</i>'});
+    h+='</span></div>'});
+  h+='<div class="tlr"><span class="tll"></span><span class="tlax">0<em>'+total+' '+(unit||'')+'</em></span></div></div>';return h}
+function btn(id,t){return '<button type="button" id="{u}'+id+'">'+t+'</button>'}
+function sel(id,label,opts){return '<div class="ctl"><label for="{u}'+id+'">'+label+'</label><select id="{u}'+id+'">'+opts.map(function(o){return '<option value="'+o[0]+'">'+esc(o[1])+'</option>'}).join('')+'</select></div>'}
+
+function diag(is,pu,ds){function row(l,n,c){var h='<div class="drow"><span class="dl">'+l+'</span><span class="chips">';for(var i=0;i<n;i++)h+='<span class="'+c+'">'+(i+1)+'</span>';return h+'</span></div>'}
+  return '<div class="diag">'+row('Tokovi instrukcija',is,'ci')+'<div class="darr">↓</div>'+row('Procesne jedinice',pu,'cp')+'<div class="darr">↓</div>'+row('Tokovi podataka',ds,'cd')+'</div>'}
+/* Flynn taxonomy */
+builders.flynn=function(r){
+  var N=8,k=0;
+  mk(r,'<p class="viz-t">Isprobajte: dodajte 1 svakom od 8 brojeva na svakoj vrsti hardvera</p>'+
+   sel('c','Klasa hardvera',[['SISD','SISD: jedan tok instrukcija, jedan tok podataka'],['SIMD','SIMD: jedan tok instrukcija, mnogo tokova podataka'],['MISD','MISD: mnogo tokova instrukcija, jedan tok podataka'],['MIMD','MIMD: mnogo tokova instrukcija, mnogo tokova podataka']])+
+   '<div class="ctl" id="{u}wrap"><label for="{u}W"><span id="{u}wl"></span> <b id="{u}Wv"></b></label><input type="range" id="{u}W" min="2" max="8" step="1" value="4"></div>'+
+   '<div class="btns">'+btn('nx','Sljedeći korak')+btn('rs','Pokreni ponovno')+'</div><div id="{u}o" role="status" aria-live="polite"></div>'+
+   '<p class="cap">Tok instrukcija je niz naredbi koje jedna upravljačka jedinica dohvaća. Tok podataka je niz vrijednosti nad kojima naredbe rade. Klasa pokazuje koji paralelizam hardver nudi, a program ne može iskoristiti ono što hardver nema. SISD je osnova za mjerenje ubrzanja. Stvarno računalo je MIMD s SIMD jedinicama unutar sebe. Svaki C# Task izvodi se na MIMD hardveru. MISD je rijedak, pa njegov primjer ovdje samo ilustrira ideju.</p>');
+  function cls(){return g(r,'c').value}
+  function width(){var c=cls();return c==='SISD'?1:c==='MISD'?1:val(r,'W')}
+  function draw(){var c=cls(),w=width(),steps=c==='MISD'?3:Math.ceil(N/w),h='';
+    g(r,'wrap').style.display=(c==='SIMD'||c==='MIMD')?'':'none';
+    g(r,'wl').textContent=c==='SIMD'?'Trake vektorske jedinice':'Jezgre';setv(r,'W',w);
+    var is=c==='SISD'?1:c==='SIMD'?1:c==='MISD'?3:w,ds=c==='SISD'?1:c==='SIMD'?w:c==='MISD'?1:w;
+    if(c==='MISD'){
+      var ops=['dodaj 1','pomnoži s 2','oduzmi 3'],v=[5,6,12,9],h2='<div class="cells">';
+      h2+='<span class="cell wide'+(k===0?' hi':'')+'"><i>jedan podatak</i>5</span>';
+      for(var q=0;q<3;q++){h2+='<span class="cell wide'+(k===q+1?' hi':'')+'"><i>jedinica '+(q+1)+': '+ops[q]+'</i>'+(k>q?v[q+1]:'?')+'</span>'}
+      h2+='</div>';h=h2;steps=3;
+      g(r,'o').innerHTML=diag(3,3,1)+'Tokovi instrukcija: <b>3</b> (tri različite naredbe) &nbsp; Tokovi podataka: <b>1</b> (jedna vrijednost prolazi kroz sve jedinice)<br>'+h+'<b>Korak '+Math.min(k,3)+' od 3.</b> '+(k===0?'Vrijednost 5 ulazi u prvu jedinicu.':'Jedinica '+k+' primijenila je "'+ops[k-1]+'" i proslijedila vrijednost dalje.')}
+    else{
+      h='<div class="cells">';
+      for(var i=0;i<N;i++){var done=Math.floor(i/w)<k,now=Math.floor(i/w)===k-1;h+='<span class="cell'+(now?' hi':'')+'"><i>'+i+'</i>'+(done?'+1':'0')+'</span>'}
+      h+='</div>';
+      g(r,'o').innerHTML=diag(is,c==='SISD'?1:w,ds)+'Tokovi instrukcija: <b>'+is+'</b> &nbsp; Tokovi podataka: <b>'+ds+'</b><br>'+h+'<b>Korak '+k+' od '+steps+'.</b> '+(k===0?'Još ništa nije obrađeno. Pritisnite Sljedeći korak.':c==='SISD'?'Jedna naredba radi nad jednim brojem.':c==='SIMD'?'Jedna vektorska naredba odjednom dodaje 1 svim brojevima u vektoru (trake: '+w+').':'Jezgre: '+w+'. Svaka izvodi vlastiti tok naredbi nad vlastitim brojevima.')+(k===steps?' Gotovo u '+steps+' '+(steps>1?'koraka':'korak')+(c==='SISD'?'.':' umjesto '+N+' na SISD-u.'):'')}
+    g(r,'nx').disabled=k>=steps}
+  g(r,'c').onchange=function(){k=0;draw()};g(r,'W').oninput=function(){k=0;draw()};
+  g(r,'nx').onclick=function(){k++;draw()};g(r,'rs').onclick=function(){k=0;draw()};draw()};
+
+/* Parallelism versus concurrency */
+builders.concur=function(r){
+  mk(r,'<p class="viz-t">Isprobajte: dva zadatka na jednoj jezgri i na dvije jezgre</p>'+
+   sel('w','Zadaci',[['compute','Samo računanje'],['net','Računanje, čekanje na mrežu, računanje']])+
+   sel('c','Jezgre',[['1','1 jezgra: konkurentnost (sustav prebacuje između zadataka)'],['2','2 jezgre: paralelizam (oba zadatka rade istovremeno)']])+
+   '<div id="{u}o" role="status" aria-live="polite"></div>'+
+   '<p class="cap">Konkurentnost ne ubrzava računanje: na jednoj jezgri dva zadatka po 4 jedinice traju 8 jedinica. Održava program odzivnim dok čeka mrežu ili disk. Vrijeme čekanja jednog zadatka iskorištava drugi zadatak. Paralelizmu je potrebna druga jezgra. Ilustracija s izmišljenim duljinama zadataka.</p>');
+  function draw(){var w=g(r,'w').value,c=g(r,'c').value,rows,total;
+    if(w==='compute'){
+      if(c==='1'){rows=[{label:'Zadatak A',segs:[[0,2,'sa','A'],[4,2,'sa','A']]},{label:'Zadatak B',segs:[[2,2,'sb','B'],[6,2,'sb','B']]}];total=8}
+      else{rows=[{label:'Zadatak A',segs:[[0,4,'sa','A']]},{label:'Zadatak B',segs:[[0,4,'sb','B']]}];total=4}}
+    else{
+      if(c==='1'){rows=[{label:'Zadatak A',segs:[[0,1,'sa','A'],[1,3,'sw','čekanje'],[4,1,'sa','A']]},{label:'Zadatak B',segs:[[1,1,'sb','B'],[2,3,'sw','čekanje'],[5,1,'sb','B']]}];total=6}
+      else{rows=[{label:'Zadatak A',segs:[[0,1,'sa','A'],[1,3,'sw','čekanje'],[4,1,'sa','A']]},{label:'Zadatak B',segs:[[0,1,'sb','B'],[1,3,'sw','čekanje'],[4,1,'sb','B']]}];total=5}}
+    var seq=w==='compute'?8:10;
+    g(r,'o').innerHTML=tl(rows,total,'vremenske jedinice')+'Vrijeme završetka: <b>'+total+'</b>. Jedan za drugim bi trajalo '+seq+'.'+(c==='1'&&w==='net'?' Jedna jezgra je dovoljna da se čekanje preklopi.':'')}
+  g(r,'w').onchange=draw;g(r,'c').onchange=draw;draw()};
+
+/* Pipeline */
+builders.pipeline=function(r){
+  mk(r,'<p class="viz-t">Isprobajte: cjevovod završava brže nego jedan za drugim</p>'+slider('S','Stupnjevi (faze)',2,8,1,5)+slider('I','Stavke (instrukcije)',1,10,1,4)+OUT+
+   '<p class="cap">S k stupnjeva i n stavki, cjevovod treba k + n − 1 ciklusa. Jedan za drugim treba k · n. Primjer s predavanja: 4 instrukcije s 5 faza traju 5 + 3 = 8 ciklusa, a ne 20. Najsporiji stupanj određuje tempo, jer svaka stavka na njega čeka.</p>');
+  bind(r,['S','I'],function(){var k=val(r,'S'),n=val(r,'I'),T=k+n-1;setv(r,'S',k);setv(r,'I',n);
+    var h='<div class="tw"><table class="pl"><tr><th></th>';for(var c=1;c<=T;c++)h+='<th>'+c+'</th>';h+='</tr>';
+    for(var i=0;i<n;i++){h+='<tr><th>stavka '+(i+1)+'</th>';for(var c2=0;c2<T;c2++){var st=c2-i;h+='<td class="'+(st>=0&&st<k?'on':'')+'">'+(st>=0&&st<k?st+1:'')+'</td>'}h+='</tr>'}
+    h+='</table></div>';
+    g(r,'o').innerHTML=h+'Cjevovod: k + n − 1 = <b>'+T+'</b> ciklusa. Jedan za drugim: k · n = <b>'+k*n+'</b> ciklusa. Ubrzanje: <b>'+fmt(k*n/T,2)+'</b>. Broj u ćeliji je stupanj u kojem se stavka nalazi.'})};
+
+/* Closure */
+builders.closure=function(r){
+  mk(r,'<p class="viz-t">Isprobajte: što zadaci ispisuju?</p>'+
+   '<div class="row2"><label><input type="checkbox" id="{u}cp"> Prvo kopiraj varijablu petlje: <code>int j = i;</code></label></div>'+
+   '<div class="btns">'+btn('run','Pokreni zadatke')+'</div><pre><code id="{u}code"></code></pre><div id="{u}o" role="status" aria-live="polite"></div>'+
+   '<p class="cap">Lambda čuva samu varijablu, a ne njezinu vrijednost. Biblioteka odlučuje kada se tijelo svakog zadatka izvodi. Do tada je petlja završila i i je 40, pa svaki zadatak ispisuje 40. Uz kopiranje, svaki zadatak ima vlastitu varijablu. Redoslijed ispisa može se razlikovati od pokretanja do pokretanja. Petlja foreach u svakoj iteraciji stvara novu varijablu, ali petlja for ne.</p>');
+  function code(){var c=g(r,'cp').checked;
+    g(r,'code').textContent='for (int i = 0; i < 40; i += 10)\n{\n'+(c?'    int j = i;\n':'')+'    tasks.Add(Task.Run(() => Console.Write('+(c?'j':'i')+' + " ")));\n}';}
+  function run(){var c=g(r,'cp').checked,out=c?[0,10,20,30]:[40,40,40,40];
+    if(c)out.sort(function(){return Math.random()-0.5});
+    g(r,'o').innerHTML='Ispis: <b>'+out.join(' ')+'</b>'+(c?' (bilo kojim redoslijedom)':'. Svi zadaci vide konačnu vrijednost i.')}
+  g(r,'cp').onchange=function(){code();g(r,'o').textContent=''};g(r,'run').onclick=run;code();run()};
+
+/* Monte Carlo pi */
+builders.pi=function(r){
+  var seed=12345;function rnd(){seed=(seed*1664525+1013904223)%4294967296;return seed/4294967296}
+  mk(r,'<p class="viz-t">Isprobajte: bacajte slučajne točke za procjenu broja π</p>'+slider('N','Točke (10 na potenciju x)',1,5,1,3)+
+   '<div class="btns">'+btn('go','Baci ponovno')+'</div><canvas id="{u}cv" width="300" height="300" role="img" aria-label="Slučajne točke u kvadratu s četvrtinom kruga"></canvas>'+OUT+
+   '<p class="cap">Točka (x, y) čiji su x i y između 0 i 1 nalazi se unutar četvrtine kruga ako je x² + y² ≤ 1. Udio točaka unutra iznosi oko π/4, pa je π ≈ 4K/N, pri čemu je K broj točaka unutra. Greška se smanjuje kao 1/√N: deset puta manja greška traži 100 puta više točaka. Točke su neovisne, pa svaki zadatak može bacati vlastite točke vlastitim generatorom slučajnih brojeva i zbrajati vlastiti brojač. Dijeljenje jednog brojača ili jednog Random objekta je zamka.</p>');
+  function draw(){var e=val(r,'N'),n=Math.pow(10,e),cv=g(r,'cv'),c=cv.getContext('2d'),st=getComputedStyle(document.documentElement),K=0;
+    setv(r,'N',e+' (N = '+fmt(n,0)+')');
+    c.clearRect(0,0,300,300);c.strokeStyle=st.getPropertyValue('--faint');c.lineWidth=1;c.strokeRect(0.5,0.5,299,299);
+    c.beginPath();c.arc(0,300,300,-Math.PI/2,0);c.strokeStyle=st.getPropertyValue('--accent');c.lineWidth=2;c.stroke();
+    var shown=Math.min(n,3000);
+    for(var i=0;i<n;i++){var x=rnd(),y=rnd(),inn=x*x+y*y<=1;if(inn)K++;if(i<shown){c.fillStyle=inn?st.getPropertyValue('--accent'):st.getPropertyValue('--warn');c.fillRect(x*300,300-y*300,2,2)}}
+    var p=4*K/n;
+    g(r,'o').innerHTML='Unutra: <b>'+fmt(K,0)+'</b> od <b>'+fmt(n,0)+'</b> &nbsp; π ≈ 4K/N = <b>'+fmt(p,5)+'</b> &nbsp; Greška: <b>'+fmt(Math.abs(p-Math.PI),5)+'</b>'+(n>shown?'<br>Nacrtano je samo prvih '+fmt(shown,0)+' točaka.':'')}
+  g(r,'N').addEventListener('input',draw);g(r,'go').onclick=draw;draw()};
+
+/* Wavefront */
+builders.wave=function(r){
+  var k=0;
+  mk(r,'<p class="viz-t">Isprobajte: ispunite tablicu duž njezinih dijagonala</p>'+slider('M','Veličina tablice m × m',2,8,1,6)+'<div class="btns">'+btn('nx','Sljedeći korak')+btn('rs','Pokreni ponovno')+'</div><div id="{u}o" role="status" aria-live="polite"></div>'+
+   '<p class="cap">Ćelija (i, j) treba svoje lijevo, gornje i gornje lijevo susjede. Sve ćelije na jednoj antidijagonali (i + j konstantan) trebaju samo ranije dijagonale, pa su neovisne i mogu raditi paralelno. Čekanje između dijagonala je stvarna ovisnost. Tablica m × m treba 2m − 1 koraka umjesto m². Primjer s predavanja: 6 × 6 traje 11 koraka umjesto 36.</p>');
+  function draw(){var m=val(r,'M'),T=2*m-1;setv(r,'M',m);if(k>T)k=T;
+    var h='<div class="grid" style="grid-template-columns:repeat('+m+',1fr)">';
+    for(var i=0;i<m;i++)for(var j=0;j<m;j++){var d=i+j+1;h+='<span class="gc'+(d===k?' hi':d<k?' dn':'')+'">'+d+'</span>'}
+    h+='</div>';
+    g(r,'o').innerHTML=h+'<b>Korak '+k+' od '+T+'.</b> '+(k===0?'Još se ništa ne računa.':'Označene ćelije se računaju zajedno: '+Math.min(k,2*m-k)+'.')+' Broj u ćeliji je njezin korak. Sekvencijalno: '+m*m+' koraka. Wavefront: '+T+' koraka.';
+    g(r,'nx').disabled=k>=T}
+  g(r,'M').addEventListener('input',function(){k=0;draw()});g(r,'nx').onclick=function(){k++;draw()};g(r,'rs').onclick=function(){k=0;draw()};draw()};
+
+/* Odd-even sort */
+builders.oddeven=function(r){
+  var a0=[7,6,5,4,3,2,1],a,ph;
+  mk(r,'<p class="viz-t">Isprobajte: odd-even sort, jednu fazu po jednu</p><div class="btns">'+btn('nx','Sljedeća faza')+btn('rs','Pokreni ponovno')+'</div><div id="{u}o" role="status" aria-live="polite"></div>'+
+   '<p class="cap">Neparna faza: usporedi parove (1, 2), (3, 4), (5, 6). Parna faza: usporedi (0, 1), (2, 3), (4, 5). Parovi jedne faze nemaju zajednički element, pa se sve usporedbe izvode istovremeno (vrijede Bernsteinovi uvjeti). Element se u jednoj fazi pomakne za jedno mjesto, pa se faze moraju izmjenjivati. Sortiranje uvijek izvodi n faza, čak i na već sortiranom nizu.</p>');
+  var hi=[];
+  function reset(){a=a0.slice();ph=0;hi=[];draw()}
+  function step(){if(ph>=a.length)return;ph++;var start=ph%2===1?1:0;hi=[];for(var i=start;i+1<a.length;i+=2){if(a[i]>a[i+1]){var t=a[i];a[i]=a[i+1];a[i+1]=t;hi.push(i,i+1)}}draw()}
+  function draw(){var h='<div class="cells">';a.forEach(function(v,i){h+='<span class="cell'+(hi.indexOf(i)>=0?' hi':'')+'"><i>'+i+'</i>'+v+'</span>'});h+='</div>';
+    var sorted=a.every(function(v,i){return i===0||a[i-1]<=v});
+    g(r,'o').innerHTML=h+'<b>Faza '+ph+' od '+a.length+'.</b> '+(ph===0?'Početak: sedam elemenata u obrnutom redoslijedu.':(ph%2===1?'Neparna':'Parna')+' faza. Plave ćelije su zamijenjene.')+(sorted&&ph>0?' Niz je sortiran.':'');
+    g(r,'nx').disabled=ph>=a.length}
+  g(r,'nx').onclick=step;g(r,'rs').onclick=reset;reset()};
+
+/* CAS */
+builders.cas=function(r){
+  var st;
+  mk(r,'<p class="viz-t">Isprobajte: dva zadatka dodaju 10 istom stanju računa</p>'+
+   '<div class="row2"><label><input type="checkbox" id="{u}pl"> Koristi obično pisanje umjesto <code>CompareExchange</code> (promjena ponovno pokreće primjer)</label></div>'+
+   '<div class="btns">'+btn('a','Izvedi sljedeći korak zadatka A')+btn('b','Izvedi sljedeći korak zadatka B')+btn('rnd','Slučajni redoslijed')+btn('rs','Ponovno')+'</div><div id="{u}o" role="status" aria-live="polite"></div>'+
+   '<p class="cap">Svaki zadatak čita stanje (staro), izračuna staro + 10 (novo), zatim piše. CompareExchange(ref x, novo, staro) upisuje novo samo ako x još uvijek jednak staro, pa provjerava i mijenja u jednom nedjeljivom koraku. Ako je drugi zadatak stigao prije, ništa se ne upisuje i zadatak ponovno čita. Lock oko oba koraka također radi i obuhvaća više varijabli, ali CAS ne treba lock objekt. Savjet: neka oba zadatka čitaju prije nego jedan od njih piše.</p>');
+  var names=['čitanje stanja','izračun staro + 10','upis nove vrijednosti'];
+  function plain(){return g(r,'pl').checked}
+  function reset(){st={x:0,t:[{pc:0,old:null,nw:null},{pc:0,old:null,nw:null}],msg:''};draw()}
+  function step(i){var t=st.t[i];if(t.pc>=3){st.msg='Zadatak '+'AB'[i]+' je gotov.';draw();return}
+    if(t.pc===0){t.old=st.x;st.msg='Zadatak '+'AB'[i]+' čita '+st.x+'.';t.pc=1}
+    else if(t.pc===1){t.nw=t.old+10;st.msg='Zadatak '+'AB'[i]+' izračunava '+t.nw+'.';t.pc=2}
+    else{if(plain()){st.msg='Zadatak '+'AB'[i]+' upisuje '+t.nw+' preko '+st.x+'.'+(st.x!==t.old?' Jedno ažuriranje je izgubljeno.':'');st.x=t.nw;t.pc=3}
+      else if(st.x===t.old){st.x=t.nw;st.msg='CompareExchange: x je još uvijek '+t.old+', pa je zadatak '+'AB'[i]+' upisao '+t.nw+'.';t.pc=3}
+      else{st.msg='CompareExchange: x je '+st.x+', a ne '+t.old+'. Ništa se ne upisuje. Zadatak '+'AB'[i]+' ponovno čita.';t.pc=0}}
+    draw()}
+  function draw(){var h='<div class="cells"><span class="cell wide"><i>zajedničko stanje x</i>'+st.x+'</span>';
+    st.t.forEach(function(t,i){h+='<span class="cell wide"><i>zadatak '+'AB'[i]+': staro / novo</i>'+(t.old==null?'-':t.old)+' / '+(t.nw==null?'-':t.nw)+'</span>'});
+    h+='</div>';st.t.forEach(function(t,i){h+='Zadatak '+'AB'[i]+' sljedeći korak: '+(t.pc<3?names[t.pc]:'gotovo')+'<br>'});
+    if(st.msg)h+=esc(st.msg)+'<br>';
+    if(st.t[0].pc>=3&&st.t[1].pc>=3)h+='<b>'+(st.x===20?'Ispravno: 20.':'Izgubljeno ažuriranje! Stanje je '+st.x+', a ne 20.')+'</b>';
+    g(r,'o').innerHTML=h;g(r,'a').disabled=st.t[0].pc>=3;g(r,'b').disabled=st.t[1].pc>=3}
+  g(r,'a').onclick=function(){step(0)};g(r,'b').onclick=function(){step(1)};g(r,'rs').onclick=reset;g(r,'pl').onchange=reset;
+  g(r,'rnd').onclick=function(){reset();var n=0;while((st.t[0].pc<3||st.t[1].pc<3)&&n++<60){var o=[0,1].filter(function(i){return st.t[i].pc<3});step(o[Math.floor(Math.random()*o.length)])}};
+  reset()};
+
+/* PRAM access rules */
+builders.pram=function(r){
+  mk(r,'<p class="viz-t">Isprobajte: koje pristupe memoriji dopušta svaka PRAM varijanta?</p>'+
+   sel('v','PRAM varijanta',[['EREW','EREW: ekskluzivno čitanje, ekskluzivno pisanje'],['CREW','CREW: konkurentno čitanje, ekskluzivno pisanje'],['COMMON','CRCW COMMON: konkurentna pisanja moraju se slagati'],['ARBITRARY','CRCW ARBITRARY: pobjeđuje jedan pisac, bilo koji'],['PRIORITY','CRCW PRIORITY: pobjeđuje pisac s najvišim prioritetom']])+
+   '<div id="{u}o" role="status" aria-live="polite"></div>'+
+   '<p class="cap">Procesori rade u sinkronom koraku (lock step): u jednom koraku svi čitaju, računaju i pišu. Varijante se razlikuju samo po tome koje istovremene pristupe jednoj ćeliji dopuštaju. Slabiji model radi nepromijenjen na jačem, pa je poredak PRIORITY ≥ ARBITRARY ≥ COMMON ≥ CREW ≥ EREW. Obrnuto, simulacija CRCW koraka na EREW košta O(log p) po koraku. Primjer s predavanja: "postoji li nula?" traje 1 korak na CRCW, a log2(8) = 3 koraka na EREW.</p>');
+  function draw(){var v=g(r,'v').value,crew=v!=='EREW',crcw=['COMMON','ARBITRARY','PRIORITY'].indexOf(v)>=0;
+    var rows=[['4 procesora čitaju istu ćeliju',crew?'dopušteno: sva četiri čitaju vrijednost':'nije dopušteno: čitanja moraju koristiti različite ćelije'],
+      ['4 procesora pišu istu vrijednost (5)',crcw?'dopušteno: ćelija sadrži 5':'nije dopušteno: samo jedan procesor smije pisati u ćeliju'],
+      ['4 procesora pišu različite vrijednosti (3, 1, 4, 2)',v==='COMMON'?'nije dopušteno: vrijednosti se moraju slagati':v==='ARBITRARY'?'dopušteno: ćelija sadrži jednu od vrijednosti 3, 1, 4, 2, a model ne kaže koju':v==='PRIORITY'?'dopušteno: ćelija sadrži vrijednost procesora najvišeg prioriteta, na primjer 3 od procesora 0':'nije dopušteno: samo jedan procesor smije pisati u ćeliju']];
+    var h='<div class="tw"><table><tr><th>Situacija</th><th>Rezultat</th></tr>';rows.forEach(function(x){h+='<tr><td>'+x[0]+'</td><td class="'+(x[1].indexOf('nije dopušteno')===0?'bad':'ok')+'">'+x[1]+'</td></tr>'});
+    g(r,'o').innerHTML=h+'</table></div>'}
+  g(r,'v').onchange=draw;draw()};
+
+/* Barrier */
+builders.barrier=function(r){
+  mk(r,'<p class="viz-t">Isprobajte: četiri zadatka, dva koraka, s barijerom i bez nje</p>'+
+   slider('A','Vrijeme koraka 1 zadatka 1',1,12,1,3)+slider('B','Vrijeme koraka 1 zadatka 2',1,12,1,5)+slider('C','Vrijeme koraka 1 zadatka 3',1,12,1,4)+slider('D','Vrijeme koraka 1 zadatka 4',1,12,1,10)+
+   '<div class="row2"><label><input type="checkbox" id="{u}bar" checked> Barijera između koraka 1 i koraka 2</label></div><div id="{u}o" role="status" aria-live="polite"></div>'+
+   '<p class="cap">Korak 2 traje 3 jedinice u svakom zadatku i treba rezultate koraka 1 iz drugih zadataka. S barijerom svaki zadatak čeka najsporijeg, pa najsporiji zadatak određuje vrijeme. Bez barijere brzi zadatak počinje korak 2 i čita podatke koje spori zadatak još nije upisao. To je zamka sinkronog koraka (lock step): algoritam koji je ispravan na PRAM-u, gdje se svi procesori kreću zajedno, može biti pogrešan u C#-u. Vremenske jedinice su izmišljene.</p>');
+  bind(r,['A','B','C','D'],draw);g(r,'bar').onchange=draw;
+  function draw(){var d=['A','B','C','D'].map(function(k){var v=val(r,k);setv(r,k,v);return v}),b=g(r,'bar').checked,mx=Math.max.apply(null,d),rows=[],idle=0;
+    d.forEach(function(x,i){var s=[[0,x,'sa','korak 1']];if(b){if(mx>x){s.push([x,mx-x,'sw','čekanje']);idle+=mx-x}s.push([mx,3,'sb','korak 2'])}else s.push([x,3,'sb','korak 2']);rows.push({label:'Zadatak '+(i+1),segs:s})});
+    var total=(b?mx:mx)+3;
+    var early=!b&&d.some(function(x){return x<mx});
+    g(r,'o').innerHTML=tl(rows,total,'vremenske jedinice')+'Vrijeme završetka: <b>'+total+'</b>'+(b?' &nbsp; Ukupno čekanje na barijeri: <b>'+idle+'</b> jedinica zadatka':'')+(early?'<br><b>Opasnost:</b> neki zadaci počinju korak 2 prije nego što najsporiji zadatak završi korak 1. Čitaju nedovršene podatke.':'')}
+  draw()};
+
+/* async/await */
+builders.async=function(r){
+  mk(r,'<p class="viz-t">Isprobajte: 1 sekunda čekanja, ponovljeno</p>'+slider('N','Broj čekanja',1,100,1,3)+slider('P','Dretve koje bazen pokreće na početku',1,16,1,12)+OUT+
+   '<p class="cap">Čekanje ne treba jezgru. await vraća dretvu bazenu dok zadatak čeka, pa se sva čekanja preklapaju. Thread.Sleep drži dretvu, pa se istovremeno izvodi samo onoliko čekanja koliko ima slobodnih dretvi. Mjerenje s predavanja: tri čekanja po 1 s traju 3003 ms jedno za drugim i 1001 ms s WhenAll, a 100 čekanja s await traje 1004 ms. 100 puta Thread.Sleep trajalo je 7006 ms, jer bazen sporo dodaje dretve. Traka Sleep ovdje je jednostavan model bez tog rasta, pa je dulja od mjerenja za 100 čekanja.</p>');
+  bind(r,['N','P'],function(){var n=val(r,'N'),p=val(r,'P');setv(r,'N',n);setv(r,'P',p);
+    var one=n*1000,sl=Math.ceil(n/p)*1000,aw=1000,mx=Math.max(one,sl,aw);
+    g(r,'o').innerHTML=bar('Jedno za drugim',one,mx,'b3',fmt(one,0)+' ms')+bar('Thread.Sleep u bazenu (model)',sl,mx,'b2',fmt(sl,0)+' ms')+bar('await s WhenAll',aw,mx,'b1',fmt(aw,0)+' ms')+'<br>Uz await, broj čekanja: <b>'+n+'</b>. Ne troše se dodatna jezgra ni blokirana dretva.'})};
+/* Dining philosophers */
+builders.dining=function(r){
+  var S;
+  mk(r,'<p class="viz-t">Isprobajte: pet filozofa, pet vilica</p>'+
+   sel('m','Strategija',[['naive','Svaki uzima lijevu vilicu, zatim desnu'],['order','Svaki prvo uzima vilicu s nižim brojem'],['waiter','Najviše četiri smiju istodobno uzeti vilicu (konobar)']])+
+   '<div class="btns">'+btn('nx','Sljedeća runda')+btn('rs','Počni ispočetka')+'</div><div id="{u}o" role="status" aria-live="polite"></div>'+
+   '<p class="cap">Filozof i koristi vilicu broj i i vilicu broj (i + 1) mod 5. U svakoj rundi filozofi djeluju redom od 0 do 4: filozof uzima sljedeću vilicu koja mu treba ako je ta vilica slobodna. Filozof s dvije vilice jede i odlaže obje u sljedećoj rundi. Redoslijed i konobar uklanjaju kružno čekanje. Vraćanje vilice i ponovni pokušaj uklanjaju uvjet nepostojanja prisilnog oduzimanja, ali vode do živog zastoja, pa nisu rješenje. Kolegij je izmjerio: svih 5 od 5 pokušaja s naivnom verzijom završava zastojem nakon 3 s.</p>');
+  var NAMES=['P0','P1','P2','P3','P4'];
+  function reset(){S={held:[[],[],[],[],[]],owner:[-1,-1,-1,-1,-1],ate:[0,0,0,0,0],round:0,dead:false,log:''};draw()}
+  function need(i){var m=g(r,'m').value,f=[i,(i+1)%5];if(m==='order')f.sort(function(a,b){return a-b});return f}
+  function step(){if(S.dead||S.ate.every(function(x){return x}))return;
+    S.round++;var acted=0,log=[];
+    for(var i=0;i<5;i++){
+      if(S.ate[i])continue;
+      if(S.held[i].length===2){S.held[i].forEach(function(f){S.owner[f]=-1});S.held[i]=[];S.ate[i]=1;acted++;log.push(NAMES[i]+' pojeo i odlaže obje vilice');continue}
+      var nd=need(i),nf=nd[S.held[i].length],holders=S.held.filter(function(h){return h.length>0}).length;
+      if(g(r,'m').value==='waiter'&&S.held[i].length===0&&holders>=4){log.push(NAMES[i]+' čeka konobara');continue}
+      if(S.owner[nf]===-1){S.owner[nf]=i;S.held[i].push(nf);acted++;log.push(NAMES[i]+' uzima vilicu '+nf+(S.held[i].length===2?' i počinje jesti':''))}
+      else log.push(NAMES[i]+' čeka vilicu '+nf)}
+    S.dead=acted===0&&!S.ate.every(function(x){return x});S.log=log.join('. ')+'.';draw()}
+  function draw(){var h='<div class="cells">';
+    for(var i=0;i<5;i++)h+='<span class="cell wide'+(S.held[i].length===2?' hi':'')+'"><i>'+NAMES[i]+(S.ate[i]?' · pojeo':'')+'</i>'+(S.held[i].length?'vilice '+S.held[i].join(', '):'-')+'</span>';
+    h+='</div>';
+    var done=S.ate.every(function(x){return x});
+    g(r,'o').innerHTML=h+'<b>Runda '+S.round+'.</b> '+esc(S.log||'Nitko još ne drži vilicu.')+(S.dead?'<br><b>Zastoj: svaki filozof drži jednu vilicu i čeka sljedeću. Nitko se ne može pomaknuti.</b>':done?'<br><b>Svi su jeli. Nema zastoja.</b>':'');
+    g(r,'nx').disabled=S.dead||done}
+  g(r,'m').onchange=reset;g(r,'nx').onclick=step;g(r,'rs').onclick=reset;reset()};
+
+/* Semaphore car park */
+builders.sema=function(r){
+  var st;
+  mk(r,'<p class="viz-t">Isprobajte: parkiralište s K mjesta</p>'+slider('K','Mjesta K = SemaphoreSlim(K)',1,6,1,3)+
+   '<div class="btns">'+btn('ar','Dolazi automobil (Wait)')+btn('lv','Najstariji automobil odlazi (Release)')+btn('bk','Automobil se pokvario (bez Release)')+btn('rs','Ponovno')+'</div><div id="{u}o" role="status" aria-live="polite"></div>'+
+   '<p class="cap">Wait uzima dopuštenje, Release ga vraća, a istodobno unutar je najviše K zadataka. Lock je semafor s K = 1. Ako zadatak preskoči Release, na primjer zbog iznimke, dopuštenje se zauvijek gubi. Stavite Release u blok finally. Kolegij je izmjerio: kad je Release preskočen, završilo je 7 od 15 zadataka. S finally završilo je 15 od 15 zadataka.</p>');
+  function reset(){st={inside:[],stuck:0,q:[],n:0};draw()}
+  function K(){return val(r,'K')}
+  function admit(){while(st.inside.length+st.stuck<K()&&st.q.length)st.inside.push(st.q.shift())}
+  function draw(){setv(r,'K',K());admit();
+    var free=K()-st.inside.length-st.stuck;
+    var h='<div class="cells">';for(var i=0;i<K();i++){var txt=i<st.inside.length?'automobil '+st.inside[i]:i<st.inside.length+st.stuck?'izgubljeno':'slobodno';h+='<span class="cell wide'+(i<st.inside.length?' hi':'')+'"><i>mjesto '+(i+1)+'</i>'+txt+'</span>'}h+='</div>';
+    g(r,'o').innerHTML=h+'Slobodna dopuštenja: <b>'+Math.max(0,free)+'</b> &nbsp; Izgubljena dopuštenja: <b>'+st.stuck+'</b> &nbsp; Automobili na čekanju: <b>'+st.q.length+'</b>'+(st.q.length?' ('+st.q.map(function(x){return 'automobil '+x}).join(', ')+')':'')+(st.stuck>=K()?'<br><b>Sva dopuštenja su izgubljena. Svaki novi automobil čeka zauvijek.</b>':'');
+    g(r,'lv').disabled=!st.inside.length;g(r,'bk').disabled=!st.inside.length}
+  g(r,'ar').onclick=function(){st.q.push(++st.n);draw()};
+  g(r,'lv').onclick=function(){st.inside.shift();draw()};
+  g(r,'bk').onclick=function(){st.inside.shift();st.stuck++;draw()};
+  g(r,'rs').onclick=reset;g(r,'K').addEventListener('input',draw);reset()};
+
+/* BlockingCollection */
+builders.blockcol=function(r){
+  var st;
+  mk(r,'<p class="viz-t">Isprobajte: proizvođač i potrošač dijele ograničeni red</p>'+slider('C','Kapacitet BlockingCollection',1,8,1,4)+
+   '<div class="btns">'+btn('p','Proizvedi stavku')+btn('c','Potroši stavku')+btn('d','CompleteAdding')+btn('rs','Ponovno')+'</div><div id="{u}o" role="status" aria-live="polite"></div>'+
+   '<p class="cap">Kapacitet sprječava da brz proizvođač napuni memoriju: Add čeka kad je red pun. Take čeka kad je red prazan. Nakon CompleteAdding i praznog reda, petlja <code>foreach (var x in bc.GetConsumingEnumerable())</code> završava sama od sebe. Čeka i uzima stavku u jednoj operaciji. Petlja <code>while (!bc.IsCompleted) bc.Take()</code> prvo provjerava, zatim uzima, što nije atomarno, pa kod više potrošača Take može baciti iznimku. Kolegij je izmjerio: uz 4 potrošača u 20 pokretanja, Take je bacio iznimku 54 puta s provjerom i 0 puta s foreach.</p>');
+  function reset(){st={q:[],n:0,done:false,msg:''};draw()}
+  function draw(){var cap=val(r,'C');setv(r,'C',cap);if(st.q.length>cap)st.q.length=cap;
+    var h='<div class="cells">';for(var i=0;i<cap;i++)h+='<span class="cell'+(i<st.q.length?' hi':'')+'"><i>mjesto '+(i+1)+'</i>'+(i<st.q.length?st.q[i]:'-')+'</span>';h+='</div>';
+    var fin=st.done&&st.q.length===0;
+    g(r,'o').innerHTML=h+(st.msg?esc(st.msg)+'<br>':'')+(fin?'<b>Red je završen i prazan: petlja potrošača završava.</b>':'Stavki u redu: <b>'+st.q.length+'</b> od '+cap);
+    g(r,'p').disabled=st.done;g(r,'c').disabled=fin;g(r,'d').disabled=st.done}
+  g(r,'p').onclick=function(){var cap=val(r,'C');if(st.q.length>=cap){st.msg='Red je pun: proizvođač čeka (Add blokira).'}else{st.q.push('#'+(++st.n));st.msg='Proizvođač je dodao stavku #'+st.n+'.'}draw()};
+  g(r,'c').onclick=function(){if(st.q.length===0){st.msg='Red je prazan: potrošač čeka (Take blokira).'}else{st.msg='Potrošač je uzeo '+st.q.shift()+'.'}draw()};
+  g(r,'d').onclick=function(){st.done=true;st.msg='Proizvođač je pozvao CompleteAdding. Više stavki neće doći.';draw()};
+  g(r,'rs').onclick=reset;g(r,'C').addEventListener('input',draw);reset()};
+
+/* Lost node */
+builders.lostnode=function(r){
+  var S;
+  mk(r,'<p class="viz-t">Isprobajte: dva zadatka guraju na isti povezani stog</p>'+
+   '<div class="row2"><label><input type="checkbox" id="{u}cas"> Za posljednji korak koristi compare-and-swap</label></div>'+
+   '<div class="btns">'+btn('a','Korak zadatka A (push čvora A)')+btn('b','Korak zadatka B (push čvora B)')+btn('rs','Ponovno')+'</div><div id="{u}o" role="status" aria-live="polite"></div>'+
+   '<p class="cap">Push ima dva koraka: poveži novi čvor s vrhom koji si pročitao, zatim postavi vrh na novi čvor. Pokrenite A i B jedan za drugim i oba čvora ostaju. Korak A jednom (čita vrh), korak B tri puta, zatim završi A: A vraća vrh na A, a čvor B se gubi. Uz CAS posljednji korak uspijeva samo ako vrh još uvijek sadrži pročitanu vrijednost. Inače zadatak ponovno čita i pokušava ponovno. Kolegij je izbrojio 188.117 čvorova koji su ostali bez zaštite i 1.200.000 uz CAS push.</p>');
+  var NAMES=['A','B'];
+  function reset(){S={top:'S0',next:{S0:null},t:[{pc:0,seen:null},{pc:0,seen:null}],lost:null,log:'Stog: samo S0. Oba zadatka još nisu počela.'};draw()}
+  function chain(){var c=[],n=S.top;while(n){c.push(n);n=S.next[n]}return c}
+  function step(i){var t=S.t[i],n=NAMES[i],cas=g(r,'cas').checked;
+    if(t.pc===0){t.seen=S.top;t.pc=1;S.log='Zadatak '+n+' je pročitao vrh = '+t.seen+'.'}
+    else if(t.pc===1){S.next[n]=t.seen;t.pc=2;S.log='Zadatak '+n+' je povezao čvor '+n+' s '+t.seen+'.'}
+    else if(t.pc===2){
+      if(cas&&S.top!==t.seen){S.log='Zadatak '+n+': CAS nije uspio, vrh je '+S.top+', a ne '+t.seen+'. Ponovi od čitanja.';t.pc=0}
+      else{S.top=n;t.pc=3;S.log='Zadatak '+n+' je postavio vrh = '+n+'.'}}
+    draw()}
+  function draw(){var c=chain(),all=['A','B'].filter(function(x){return S.t[NAMES.indexOf(x)].pc===3}),lost=all.filter(function(x){return c.indexOf(x)<0});
+    var h='<div class="cells">'+c.map(function(x,i){return '<span class="cell'+(i===0?' hi':'')+'"><i>'+(i===0?'vrh':'ispod')+'</i>'+x+'</span>'}).join('')+'</div>';
+    var ps=['A','B'].map(function(x,i){var t=S.t[i];return 'Zadatak '+x+': '+['čitanje vrha','povezivanje čvora','postavljanje vrha','gotovo'][t.pc]+(t.pc<3?' je sljedeće':'')}).join(' &nbsp; ');
+    g(r,'o').innerHTML=h+esc(S.log)+'<br>'+ps+(lost.length?'<br><b>Izgubljeno: čvor '+lost.join(', ')+' je gurnut, ali nije u stogu.</b>':(all.length===2?'<br><b>Oba čvora su u stogu. Ništa nije izgubljeno.</b>':''));
+    g(r,'a').disabled=S.t[0].pc===3;g(r,'b').disabled=S.t[1].pc===3}
+  g(r,'a').onclick=function(){step(0)};g(r,'b').onclick=function(){step(1)};g(r,'rs').onclick=reset;g(r,'cas').onchange=reset;reset()};
+
+/* Failed scans */
+builders.failscan=function(r){
+  var S;
+  mk(r,'<p class="viz-t">Isprobajte: korak po korak prefiksna suma od 1 do 8</p>'+
+   sel('m','Verzija',[['two','Dva polja (ispravno)'],['one','Jedno polje (utrka podataka)']])+
+   '<div class="btns">'+btn('nx','Sljedeći korak')+btn('rs','Ponovno')+'</div><div id="{u}o" role="status" aria-live="polite"></div>'+
+   slider('k','Veličina polja n = 2^k, k =',2,22,1,22)+'<div id="{u}c"></div>'+
+   '<p class="cap">Korak j dodaje element 2^j mjesta lijevo. S dva polja svako čitanje vidi prethodni korak, pa je rezultat točan nakon log₂ n koraka. S jednim poljem zadatak može pročitati element koji je neki drugi zadatak već promijenio. Redak s jednim poljem prikazuje jedan mogući redoslijed, slijeva nadesno. Na PRAM-u je ovo točno jer se svako čitanje odvija prije svakog pisanja. C# nema sinkronizirani korak. Trošak točne verzije je n log₂ n − (n − 1) zbrajanja. Obična petlja treba n − 1. Za n = 2²² kolegij je izbrojio 88.080.385 zbrajanja, otprilike 21 put više, i 405,3 ms naspram 56,5 ms.</p>');
+  function reset(){S={b:[1,2,3,4,5,6,7,8],j:0};draw()}
+  function step(){var off=1<<S.j,old=S.b.slice(),mode=g(r,'m').value,src=mode==='two'?old:S.b;
+    for(var i=7;i>=0;i--)if(i>=off){if(mode==='two')S.b[i]=old[i]+old[i-off]}
+    if(mode==='one'){for(var i=0;i<8;i++)if(i>=off)S.b[i]=S.b[i]+S.b[i-off]}
+    S.j++;draw()}
+  function draw(){var k=val(r,'k'),n=Math.pow(2,k),two=n*k-(n-1),seq=n-1,mx=two;
+    setv(r,'k',k+' (n = '+fmt(n)+')');
+    var right=[1,3,6,10,15,21,28,36],ok=S.b.every(function(x,i){return x===right[i]}),fin=(1<<S.j)>=8;
+    var h='<div class="cells">'+S.b.map(function(x,i){return '<span class="cell'+(x===right[i]&&fin?' hi':'')+'"><i>b['+i+']</i>'+x+'</span>'}).join('')+'</div>';
+    g(r,'o').innerHTML=h+'Gotovi koraci: <b>'+S.j+'</b> od 3'+(fin?(ok?'<br><b>Točno: 1 3 6 10 15 21 28 36.</b>':'<br><b>Netočno: ispravan rezultat je 1 3 6 10 15 21 28 36.</b>'):'');
+    g(r,'nx').disabled=fin;
+    function bar(l,v,c){return '<div class="br"><span>'+l+'</span><span class="bb"><i class="'+c+'" style="width:'+Math.max(1,v/mx*100)+'%"></i></span><span class="bv">'+fmt(v)+'</span></div>'}
+    g(r,'c').innerHTML=bar('Obična petlja (n − 1)',seq,'b1')+bar('Korak po korak, dva polja',two,'b3')+'<p class="cap">Zbrajanja, puta više nego obična petlja: <b>'+fmt(two/seq,1)+'</b></p>'}
+  g(r,'nx').onclick=step;g(r,'rs').onclick=reset;g(r,'m').onchange=reset;g(r,'k').addEventListener('input',draw);reset()};
+
+/* Barrier cost */
+builders.barcost=function(r){
+  mk(r,'<p class="viz-t">Isprobajte: koliko košta jedan PRAM korak na aPRAM-u</p>'+slider('B','Trošak barijere B',4,64,1,16)+slider('d','Trošak globalnog pristupa d',2,16,1,4)+OUT+
+   '<p class="cap">Jedan simulirani PRAM korak ima dvije barijere, dva globalna pristupa i jedan lokalni korak: 2B + 2d + 1. Uz vrijednosti kolegija d = 4 i B = 16 to je 41, od čega je 32 vrijeme barijere. Pravilo 2 ≤ d ≤ B vrijedi, pa d ne može premašiti B. Izmjerena barijera na kolegijskom stroju trajala je 52 ns uz 1 zadatak, 3.113 ns uz 12 zadataka i 19.037 ns uz 24 zadatka, otprilike 60 puta više pri porastu s 1 na 12.</p>');
+  bind(r,['B','d'],function(){var B=val(r,'B'),d=Math.min(val(r,'d'),B);setv(r,'B',B);setv(r,'d',d);
+    var tot=2*B+2*d+1,bar=2*B,gl=2*d,loc=1;
+    function seg(w,c,t){return '<i class="'+c+'" style="width:'+(w/tot*100)+'%;display:block;height:100%;float:left" title="'+t+'"></i>'}
+    var meas=[[1,52],[12,3113],[24,19037]];
+    g(r,'o').innerHTML='<div class="bb" style="height:20px">'+seg(bar,'b3','barijere')+seg(gl,'b2','globalni pristupi')+seg(loc,'b1','lokalno')+'</div>'+
+     'Ukupno po koraku: <b>'+tot+'</b> &nbsp; Barijere: <b>'+bar+'</b> ('+fmt(bar/tot*100,0)+'%) &nbsp; Globalni pristupi: <b>'+gl+'</b> &nbsp; Lokalno: <b>'+loc+'</b>'+
+     '<div class="gl-t">Izmjereno vrijeme barijere</div>'+meas.map(function(m){return '<div class="br"><span>Zadataka: '+m[0]+'</span><span class="bb"><i class="b3" style="width:'+Math.max(1,m[1]/19037*100)+'%"></i></span><span class="bv">'+fmt(m[1])+' ns</span></div>'}).join('')})};
+
+/* Domain border */
+builders.domain=function(r){
+  mk(r,'<p class="viz-t">Isprobajte: trake ili blokovi na 4 jezgre</p>'+slider('N','Stranica polja N (N × N ćelija)',4,16,2,8)+
+   '<div class="ctl"><label>Podjela</label><div class="btns"><button type="button" id="{u}s">Trake</button><button type="button" id="{u}k">Blokovi</button></div></div>'+OUT+
+   '<p class="cap">Ćelije na rubu dijela su one koje razmjenjuju podatke sa susjedom, pa kraći rub znači manje komunikacije. Kolegij računa rub dijela: trake 2 · N, blokovi 2 · N/2 = N. Za polje 8 × 8 to daje 16 i 8. Kolegij ne daje odgovor za 100 jezgri.</p>');
+  var mode='s';
+  function draw(){var N=val(r,'N');setv(r,'N',N);
+    var cols=['var(--accent)','var(--warn)','var(--faint)','var(--nbc)'],c=22,h='<svg viewBox="0 0 '+(N*c+2)+' '+(N*c+2)+'" role="img" aria-label="Polje podijeljeno među 4 jezgre" style="max-width:300px">';
+    for(var y=0;y<N;y++)for(var x=0;x<N;x++){var o=mode==='s'?Math.floor(y/(N/4)):(y<N/2?0:2)+(x<N/2?0:1);
+      var edge=mode==='s'?(y%(N/4)===0&&y>0||y%(N/4)===N/4-1&&y<N-1):((x===N/2-1||x===N/2)||(y===N/2-1||y===N/2));
+      h+='<rect x="'+(x*c+1)+'" y="'+(y*c+1)+'" width="'+(c-1)+'" height="'+(c-1)+'" fill="'+cols[o]+'" opacity="'+(edge?1:.3)+'"/>'}
+    g(r,'o').innerHTML=h+'</svg><br>Rub jednog dijela (ćelije): <b>'+(mode==='s'?2*N:N)+'</b> ('+(mode==='s'?'2 · N':'2 · N/2')+'). Pune ćelije dodiruju susjeda. Blijede ćelije su unutrašnje.'+(N%4?'':'');
+    g(r,'s').style.borderColor=mode==='s'?'var(--accent)':'';g(r,'k').style.borderColor=mode==='k'?'var(--accent)':''}
+  g(r,'N').addEventListener('input',draw);g(r,'s').onclick=function(){mode='s';draw()};g(r,'k').onclick=function(){mode='k';draw()};draw()};
+
+document.querySelectorAll('.viz[data-w]').forEach(function(e){var b=builders[e.getAttribute('data-w')];if(b)try{b(e)}catch(x){e.textContent='Ovaj interaktivni widget nije se mogao učitati.'}});
+})();
+</script>
